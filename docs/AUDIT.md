@@ -14,12 +14,12 @@ how) overrides it only after a webmaster's written consent.
 |---|---|---|---|---|---|---|
 | INSPIRE-HEP | REST `inspirehep.net/api/jobs?q=status:open&sort=mostrecent&size=…`; `/api/jobs/facets` | Job paths allowed. Metadata is CC0. Limit 15 requests per 5 s. Bulk email collection is forbidden, so drop `contact_details` | position, institutions, deadline_date, arxiv_categories, ranks, regions (no country), description HTML, urls | ranks: PHD → phd; POSTDOC → postdoc; JUNIOR/SENIOR/STAFF → faculty; VISITOR, MASTER → other (high confidence) | 388 (hep-th 168, math-ph 43, cond-mat 32) | **Include** |
 | AcademicJobsOnline | JSON `academicjobsonline.org/ajo/public_job_boards?limit=500&page=N` (gzip) | Crawl-delay 5. `/ajo` allowed. No ToS found; the feed invites reuse | name, univ, unit, subject, type, country/city, open/close/deadline, description, qualifications, url | type: Postdoctoral → postdoc; TT/NTT faculty → faculty; Fellowship or award → fellowship; Student programs → phd (check the title). `deadline_raw` is often `0000-00-00`, so fall back to `close_date` | 1,109 (about 460 physics-ish) | **Include** |
-| MathJobs (AMS) | JSON `mathjobs.org/jobs/public_job_boards?…` (same software) | Same as AJO | Same as AJO | Same as AJO. Validate `type`: 20 records say "BEGIN" | about 1,007 | **Include** |
+| MathJobs (AMS) | JSON `www.mathjobs.org/jobs/public_job_boards?…` (same software) | robots.txt empty (allow all); no crawl-delay, so 2 s default | Same as AJO | Same as AJO. Validate `type`: some records say "BEGIN" | 1,007 (2026-11-22); about 960 after merging AJO cross-posts | **Include** (Phase 4) |
 | EURAXESS | HTML only; any query string returns 403 | Content is CC BY 4.0, but the WAF blocks access | (R1–R4 profile on job pages) | R1 → phd, R2 → postdoc, R3/R4 → faculty | Unmeasurable | **Link-out** `euraxess.ec.europa.eu/jobs/search?keywords={q}` |
 | jobs.ac.uk | HTML only; RSS is 404 | ToS behind a bot challenge | n/a | n/a | About 700 physics jobs (unverified) | **Link-out** `jobs.ac.uk/search/?keywords={q}` |
 | Physics Today / APS | Madgex RSS works | ToS forbid automated harvesting | Thin: title, blurb, date | n/a | PT 6.7k total | **Link-out** (one each) |
 | Nature Careers | Madgex RSS | robots.txt disallows `/jobsrss/` | n/a | n/a | About 375 physics | **Link-out** `/naturecareers/jobs/?keywords={q}` |
-| Times Higher Ed Unijobs | Madgex RSS works and robots.txt allows it | ToS not yet read | Thin | Title heuristic | About 300 physics | **Link-out** for now; reconsider in phase 4 after reading the ToS |
+| Times Higher Ed Unijobs | Madgex RSS works, but the root robots.txt has `Disallow: /unijobs/jobsrss/*` (the /unijobs/robots.txt doesn't, but only the root file counts) | Website Terms of Use (07 Jul 2026) §10 forbid "data mining, robot, spider, scraping or similar automated data gathering, extraction or publication tools for any purpose" | Thin | Title heuristic | About 300 physics | **Link-out** (decided in Phase 4) |
 | AcademicPositions, FindAPostDoc, FindAPhD | Cloudflare 403 | n/a | n/a | n/a | n/a | **Link-out** |
 | ICTP, EMS, physics rumor mill | Timed out | n/a | n/a | n/a | Few | **Static link** |
 | HigherEdJobs, Indeed, LinkedIn, AMS EIMS, ScholarshipDb | Bot wall, or ToS forbid scraping | n/a | n/a | n/a | n/a | **Exclude** |
@@ -107,3 +107,10 @@ NCBS (www.ncbs.res.in) has never answered a GitHub runner: connection timeouts o
 including on robots.txt after three tries in Phase 3. It answers from a residential connection.
 It is a link-out in `config/sources.yaml` (`adapter: link-out`) rather than a reason to build the
 Mac fallback (Phase 10).
+
+### Link-out search URLs (Phase 4, 2026-11-22)
+`config/linkouts.yaml` lists each board's search URL with `{q}`. Checked with the project UA:
+- jobs.ac.uk, Nature Careers and THE return the search page with the query in it.
+- Physics Today, APS (www.apsphysicsjobs.com; careers.aps.org redirects there), AcademicPositions and FindAPostDoc were confirmed by Bhaskar in a real browser, with the query applied (2026-11-23).
+- EURAXESS ignores `?keywords=`. Its own search box produces `jobs/search?f%5B0%5D=keywords%3A{q}` (f[0]=keywords:<query>), which was confirmed in a browser ("chaos" leads with "Stability and chaos in the N-body problem…").
+- FindAPhD shows automated browsers a Cloudflare check, so it's unconfirmed. It uses the same `Keywords=` parameter as FindAPostDoc.

@@ -9,6 +9,7 @@ import { build } from 'esbuild';
 import { copyFile, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { buildIndex, loadIndexConfig, variantCandidates, variantCandidatesYaml } from '../search/build-index.mjs';
+import { loadConfig } from '../crawler/lib/config.mjs';
 
 const argv = process.argv.slice(2);
 const opt = (n, d) => { const i = argv.indexOf(`--${n}`); return i >= 0 ? argv[i + 1] : d; };
@@ -19,8 +20,16 @@ const healthFile = opt('health', '.out/health.json');
 await rm(out, { recursive: true, force: true });
 await mkdir(path.join(out, 'data'), { recursive: true });
 
+// Link-outs are bundled into app.js, so they show even when the index can't load.
+const cfgAll = await loadConfig();
+const linkouts = {
+  boards: (cfgAll.linkouts.boards ?? []).map(({ name, search, home, why }) => ({ name, search, home, why })),
+  static: [...(cfgAll.linkouts.static ?? []),
+    ...cfgAll.sources.filter((s) => s.adapter === 'link-out').map((s) => ({ name: s.name, url: s.url, why: s.note }))],
+};
 await build({
   entryPoints: ['site/app.js', 'site/status.js'],
+  define: { __LINKOUTS__: JSON.stringify(linkouts) },
   bundle: true,
   minify: true,
   format: 'esm',

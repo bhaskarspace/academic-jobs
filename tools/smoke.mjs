@@ -106,6 +106,33 @@ const loadingMore = await page.evaluate(() => [document.getElementById('summary'
 check('… and while "Loading postings…" is up', /Loading/.test(loadingMore[0]) && loadingMore[1] === 'none', loadingMore.join(' / '));
 await page.unroute('**/data/index.json');
 
+// Phase 4
+r = await run('?q=%22Three+Postdoc+Positions%22+oxford&expired=1');
+const ox = r.jobs.find((j) => j.title === 'Postdoctoral Research Associate in Mathematical Physics' && /Oxford/.test(j.where));
+const oxAlso = await page.evaluate(() => [...document.querySelectorAll('.job')].find((j) => /Oxford/.test(j.querySelector('.where')?.textContent ?? '') && /Mathematical Physics/.test(j.querySelector('h2').textContent))?.querySelector('.also')?.textContent ?? '');
+check('merged title names the subject; the other title is shown and found', /Three Postdoc Positions/.test(oxAlso), oxAlso);
+check('Oxford INSPIRE/AJO/MathJobs duplicate shows once, with every source', Boolean(ox) && r.jobs.filter((j) => /Oxford/.test(j.where) && /Mathematical Physics|Three Postdoc/.test(j.title)).length === 1
+  && /INSPIRE/.test(ox.sources) && /AcademicJobsOnline/.test(ox.sources), ox?.sources);
+check('… and INSPIRE institutions show by full name', /University of Oxford/.test(ox?.where ?? '') && !/U\. Oxford \(main\)/.test(ox?.where ?? ''), ox?.where);
+r = await run('?q=holography');
+const lo = await page.evaluate(() => ({ prominent: document.getElementById('linkouts').classList.contains('prominent'), links: [...document.querySelectorAll('#linkouts a.board')].map((a) => a.href) }));
+check('link-out row fills the query into each board\'s search', lo.links.length >= 8 && lo.links.every((h) => /holography/.test(h)) && !lo.prominent, lo.links.slice(0, 3).join(' '));
+r = await run('?q=SYK');
+const syk = await page.evaluate(() => ({ prominent: document.getElementById('linkouts').classList.contains('prominent'), first: document.querySelector('#linkouts a.board')?.href, n: document.querySelectorAll('.job').length }));
+r = await run('?q=zzzzqx+syk');
+const none = await page.evaluate(() => ({ prominent: document.getElementById('linkouts').classList.contains('prominent'), first: document.querySelector('#linkouts a.board')?.href }));
+check('nothing found: the link-out boards take the result list\'s place', none.prominent && /zzzzqx%20syk/.test(none.first), `${none.first}; "SYK" itself: ${syk.n} results${syk.prominent ? ', link-outs shown prominently' : ''}`);
+if (shots) await page.screenshot({ path: path.join(shots, 'no-results.png') });
+await page.goto(`${base}?q=topological`);
+await page.waitForFunction(() => !/Loading/.test(document.getElementById('summary').textContent));
+await page.click('#fields button:nth-child(2)'); // Physics
+r = await run('?q=topological');
+const kept = await page.evaluate(() => ({ url: location.search, on: document.querySelector('#fields [aria-checked="true"]')?.firstChild.textContent }));
+r = await run('?q=topological&f=');
+const over = await page.evaluate(() => document.querySelector('#fields [aria-checked="true"]')?.firstChild.textContent);
+check('the field facet is remembered; a URL parameter overrides it', kept.on === 'Physics' && /f=physics/.test(kept.url) && over === 'All fields', `${kept.on} ${kept.url}; with f= → ${over}`);
+await page.evaluate(() => localStorage.removeItem('aj-prefs'));
+
 await page.setViewportSize({ width: 390, height: 900 });
 r = await run('?q=AdS%2FCFT');
 const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
@@ -114,9 +141,23 @@ if (shots) await page.screenshot({ path: path.join(shots, 'phone-adscft.png') })
 
 await page.goto(`${base}status.html`);
 await page.waitForFunction(() => !/Loading/.test(document.getElementById('lede').textContent));
-const st = await page.evaluate(() => ({ lede: document.getElementById('lede').textContent, rows: [...document.querySelectorAll('#sources tbody tr')].map((r) => r.querySelector('.id').textContent) }));
+const st = await page.evaluate(() => ({
+  lede: document.getElementById('lede').textContent,
+  summary: document.getElementById('summary').textContent,
+  rows: [...document.querySelectorAll('#sources tbody tr .id')].map((e) => e.textContent),
+  groups: [...document.querySelectorAll('#sources tr.inst th')].map((e) => e.textContent),
+  pills: [...document.querySelectorAll('#sources tbody tr .pill')].map((e) => e.className.replace('pill ', '')),
+  dateWraps: [...document.querySelectorAll('#sources td.date')].some((td) => { const r = document.createRange(); r.selectNodeContents(td); return new Set([...r.getClientRects()].map((x) => Math.round(x.top))).size > 1; }),
+}));
 const health = await (await fetch(`${base}data/health.json`)).json().catch(() => null);
 check('status page lists every source', st.rows.length > 0 && (!health || Object.keys(health.sources).every((id) => st.rows.includes(id))) && !/null|undefined/.test(st.lede), `${st.rows.length} sources: ${st.lede}`);
+
+check('status summary line counts OK, link-outs, warnings, failing', /^\d+ OK · \d+ link-outs? · \d+ warnings? · \d+ failing/.test(st.summary), st.summary);
+const ORDER = { fail: 0, warn: 1, skip: 2, ok: 3, idle: 4 };
+check('… problem rows first, institution pages grouped, Last OK on one line',
+  st.pills.length > 0 && st.groups.some((g) => /IISER Pune/.test(g)) && !st.dateWraps
+  && st.pills.slice(0, st.pills.findIndex((p) => ORDER[p] >= 2) >>> 0).every((p) => ORDER[p] < 2),
+  `groups: ${st.groups.join(' | ')}`);
 
 check('no console errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 await browser.close();

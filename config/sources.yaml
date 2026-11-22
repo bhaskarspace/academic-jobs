@@ -27,6 +27,13 @@ sources:
     pageSize: 500
     # robots.txt: Crawl-delay 5 (applied automatically)
 
+  - id: mathjobs
+    name: MathJobs
+    adapter: ajo          # same software and JSON feed as AJO
+    url: https://www.mathjobs.org/jobs/public_job_boards
+    pageSize: 500
+    # robots.txt is empty (allow all); default 2 s between requests.
+
   - id: iiser-pune-openings
     name: IISER Pune
     adapter: html-list

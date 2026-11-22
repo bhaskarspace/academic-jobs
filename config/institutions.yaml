@@ -1,0 +1,19 @@
+# Institution aliases, used to block cross-source duplicate detection (crawler/lib/dedupe.mjs) and
+# to show a full name where a source gives only an abbreviation.
+# INSPIRE names come from its institution records (crawler/adapters/inspire.mjs); add an alias here
+# only when that record has no full name or the two sources still disagree.
+#   canonical name: [variant, ...]      matched case- and accent-insensitively, on the whole
+#                                       institution string or on its part before the first comma
+aliases:
+  University of Oxford: [U. Oxford (main), Oxford U., Oxford U]
+  New York University: [New York U. (main), New York U., NYU]
+  College of William & Mary: [Coll. William and Mary, William & Mary, William and Mary]
+  University of Copenhagen: [Bohr Inst., Niels Bohr Institute]
+  Institute of Theoretical Physics, Chinese Academy of Sciences: [Beijing, Inst. Theor. Phys., ITP-CAS]
+  California Institute of Technology: [Caltech, Caltech, Pasadena (main)]
+  Washington University in St. Louis: [WUSTL, Washington U., St. Louis]
+  Stanford University: [Stanford U., SLAC]
+
+# Pairs that look like duplicates but aren't. Each entry is two source IDs (as in postings.json
+# `sources[].sourceId`, e.g. inspire:123456 and ajo:31234); they are never merged by similarity.
+notDuplicates: []

@@ -15,6 +15,9 @@ import { Http, sha1, errorCode } from './lib/http.mjs';
 import { loadState, saveState, resolveId, resolveExisting } from './lib/state.mjs';
 import { makeCategorizer, makeFieldTagger } from './lib/categorize.mjs';
 import { normalize, mergePostings } from './lib/normalize.mjs';
+import { findDuplicates } from './lib/dedupe.mjs';
+import { makeSubjectTest } from '../search/subject.mjs';
+import { loadIndexConfig } from '../search/build-index.mjs';
 import { diffLinks, updateGone, skipReason, warningsFor, suspectRun, SOFT_GONE_ADAPTERS } from './lib/health.mjs';
 import { caExpiries } from './lib/ca.mjs';
 
@@ -136,10 +139,24 @@ async function main() {
       groups.get(id).push(p);
     }
   }
+  // Cross-source duplicates that share no URL (same advert, different title and link): merged by
+  // institution + deadline + description similarity (crawler/lib/dedupe.mjs). Recomputed every
+  // run; IDs are untouched, and the merged posting takes the ID seen first.
+  const firstSeenOf = (id) => state.ids.postings[id]?.firstSeen ?? now;
+  const pre = [...groups].map(([id, list]) => ({ id, ...mergePostings(list.map((q) => ({ ...q, sources: [...q.sources] }))), firstSeen: firstSeenOf(id) }));
+  const dups = findDuplicates(pre, cfg.institutions);
+  for (const { keep, drop, score, titles } of dups) {
+    if (!groups.has(keep) || !groups.has(drop)) continue;
+    groups.get(keep).push(...groups.get(drop));
+    groups.delete(drop);
+    if (flag('verbose-dedupe')) console.error(`dedupe ${score}: ${keep} <- ${drop}  ${titles.map((t) => t.slice(0, 55)).join('  ||  ')}`);
+  }
+  const { variants, concepts } = await loadIndexConfig();
+  const namesSubject = makeSubjectTest({ fields: cfg.fields, concepts, variants });
   const postings = [...groups].map(([id, list]) => {
-    const p = mergePostings(list);
+    const p = mergePostings(list, { namesSubject });
     const rec = state.ids.postings[id];
-    return { id, ...p, firstSeen: rec.firstSeen, lastSeen: rec.lastSeen };
+    return { id, ...p, firstSeen: list.length > 1 ? [rec.firstSeen, ...dups.filter((d) => d.keep === id).map((d) => firstSeenOf(d.drop))].sort()[0] : rec.firstSeen, lastSeen: rec.lastSeen };
   });
 
   for (const [id, h] of Object.entries(health)) {
@@ -161,9 +178,9 @@ async function main() {
   const report = {};
   for (const s of all) {
     const st = state.sources[s.id] ?? {};
-    report[s.id] = { name: s.name, url: s.url, crawled: Boolean(health[s.id]), ...(health[s.id] ?? { items: st.items ?? 0 }), zeroStreak: st.zeroStreak ?? 0, lastRun: st.lastRun ?? null, lastOk: st.lastOk ?? null };
+    report[s.id] = { name: s.name, institution: s.institution ?? s.name, page: s.page ?? pageLabel(s), url: s.url, crawled: Boolean(health[s.id]), ...(health[s.id] ?? { items: st.items ?? 0 }), zeroStreak: st.zeroStreak ?? 0, lastRun: st.lastRun ?? null, lastOk: st.lastOk ?? null };
   }
-  for (const s of linkOuts) report[s.id] = { name: s.name, url: s.url, linkOut: true, note: s.note ?? null, crawled: false, items: 0, zeroStreak: 0 };
+  for (const s of linkOuts) report[s.id] = { name: s.name, institution: s.institution ?? s.name, url: s.url, linkOut: true, note: s.note ?? null, crawled: false, items: 0, zeroStreak: 0 };
   const certs = caExpiries(new Date(now));
   const robots = await http.robotsReport();
   const out = { built: now, run: process.env.GITHUB_RUN_ID ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}` : null,
@@ -177,8 +194,14 @@ async function main() {
 
   for (const w of out.warnings) console.error(`::warning::${w}`);
   for (const [id, h] of Object.entries(health)) console.error(`${h.ok ? 'ok  ' : 'FAIL'} ${id.padEnd(22)} ${String(h.items).padStart(5)} items  +${h.new ?? 0} -${h.gone ?? 0}  ${(h.ms / 1000).toFixed(1)} s${h.error ? `  ${h.error}` : ''}${h.suspect ? `  ${h.suspect}` : ''}`);
+  console.error(`${dups.length} cross-source duplicates merged by similarity`);
   console.error(`${postings.length} postings after merging; http ${JSON.stringify(http.stats)}${dry ? ' (dry run: state not saved)' : ''}`);
   if (Object.values(health).every((h) => !h.ok)) process.exitCode = 1;
+}
+
+// "openings", "postdoc": the page part of a source's URL, for rows grouped under an institution.
+function pageLabel(s) {
+  try { return decodeURIComponent(new URL(s.url).pathname.split('/').filter(Boolean).at(-1) ?? s.id).replace(/[-_]+/g, ' '); } catch { return s.id; }
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
