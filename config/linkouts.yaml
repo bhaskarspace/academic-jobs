@@ -1,0 +1,60 @@
+# Boards we don't crawl (bot walls, ToS or robots.txt: see docs/AUDIT.md), offered as links with
+# the search filled in. `search` has {q} for the URL-encoded query; `home` is used when the search
+# box is empty. Never fetched by the crawler; the visitor's browser follows the link.
+# Order: broadest coverage first.
+boards:
+  - name: EURAXESS
+    search: https://euraxess.ec.europa.eu/jobs/search?keywords={q}
+    home: https://euraxess.ec.europa.eu/jobs/search
+    why: European research jobs; its firewall blocks automated queries
+  - name: jobs.ac.uk
+    search: https://www.jobs.ac.uk/search/?keywords={q}
+    home: https://www.jobs.ac.uk/
+    why: UK and some European posts; no feed
+  - name: Nature Careers
+    search: https://www.nature.com/naturecareers/jobs/?keywords={q}
+    home: https://www.nature.com/naturecareers/
+    why: robots.txt disallows its feeds
+  - name: Physics Today
+    search: https://jobs.physicstoday.org/jobs/?keywords={q}
+    home: https://jobs.physicstoday.org/
+    why: terms forbid automated harvesting
+  - name: APS Careers
+    search: https://www.apsphysicsjobs.com/jobs/?keywords={q}
+    home: https://www.apsphysicsjobs.com/
+    why: terms forbid automated harvesting
+  - name: THE Unijobs
+    search: https://www.timeshighereducation.com/unijobs/listings/?keywords={q}
+    home: https://www.timeshighereducation.com/unijobs/
+    why: terms forbid automated gathering; robots.txt disallows its feeds
+  - name: AcademicPositions
+    search: https://academicpositions.com/find-jobs?search={q}
+    home: https://academicpositions.com/
+    why: behind a bot wall
+  - name: FindAPostDoc
+    search: https://www.findapostdoc.com/search/?Keywords={q}
+    home: https://www.findapostdoc.com/
+    why: behind a bot wall
+  - name: FindAPhD
+    search: https://www.findaphd.com/phds/?Keywords={q}
+    home: https://www.findaphd.com/
+    why: behind a bot wall
+
+# Pages to check by hand: no search to fill in. Sources with `adapter: link-out` in
+# config/sources.yaml are added to this list automatically.
+static:
+  - name: TIFR Mumbai
+    url: https://www.tifr.res.in/positions
+    why: robots.txt disallows crawling
+  - name: HRI Prayagraj
+    url: https://www.hri.res.in/advertisements/
+    why: robots.txt disallows crawling
+  - name: IPR Gandhinagar
+    url: https://www.ipr.res.in/careers
+    why: robots.txt disallows crawling
+  - name: PRL Ahmedabad
+    url: https://www.prl.res.in/prl-eng/advertisement
+    why: robots.txt returns 403
+  - name: ICTP Trieste
+    url: https://www.ictp.it/
+    why: timed out in the audit

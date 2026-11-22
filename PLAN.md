@@ -1,4 +1,4 @@
-<!-- Status: plan approved 2026-11-22 with amendments to Phases 1 and 2 (folded in below). Phase 1 shipped 2026-11-22 (PRs #1, #2). Phase 2 shipped 2026-11-22 (PR #4; email hotfix #3). Phase 3 in review. Update this line as phases land. -->
+<!-- Status: plan approved 2026-11-22 with amendments to Phases 1 and 2 (folded in below). Phase 1 shipped 2026-11-22 (PRs #1, #2). Phase 2 shipped 2026-11-22 (PR #4; email hotfix #3). Phase 3 shipped 2026-11-22 (PR #6). Phase 4 in review. Update this line as phases land. -->
 
 # Academic job search on codebpr.com/academic-jobs/: plan
 
@@ -263,6 +263,19 @@ Adding a source means one entry in `sources.yaml`, plus a fixture and a test. A 
      - The Oxford INSPIRE/AJO pair above merges into one posting.
      - A second fixture: NYU's Feinberg fellowship appears as AJO "Postdoctoral Asscociate / Carl Feinberg Institute Fellow" (NYU CCPP) and INSPIRE "Feinberg Postdoctoral Prize Fellowship" (New York U. (main)), both closing 1 Dec. Description shingles merge it the same way as the Oxford pair.
      - The link-out buttons open each board's search with the query already filled in.
+   - **How the merge works** (`crawler/lib/dedupe.mjs`).
+     - Institutions must agree: the alias table in `config/institutions.yaml`, or a shared distinctive word ("Universität Hamburg" / "University of Hamburg").
+     - Deadlines must be within 3 days.
+     - Word 3-shingles over the first 300 words must reach a containment of 0.5. That's the share of the smaller set found in the larger, so a trimmed copy of a longer advert counts.
+     - Postings merge only across sources, at most one per source per group, best pair first. Title similarity breaks ties, so an institution's near-identical assistant/associate/full-professor ads each pair with their own counterpart.
+     - **Templated ads.** When both titles name a subject and the subjects share no word, the texts must be near-identical (0.9). This keeps Caltech's physics and maths searches apart (0.70) and Duke Kunshan's economics and maths searches apart.
+     - The merge is recomputed each run and never rewrites IDs; the merged posting keeps the ID seen first. `notDuplicates` in `config/institutions.yaml` blocks a wrong merge.
+     - On the 2026-11-22 data it merges 60 pairs. Most are AJO/MathJobs cross-posts, and about 25 are INSPIRE/AJO pairs that share no URL.
+   - **INSPIRE names** come from its institution records: one bulk API request per 100 institutions, cached for 90 days. That gives the full name and the country (INSPIRE jobs have no country). The ICN stays searchable.
+   - **Times Higher Education** stays a link-out. Its Website Terms of Use (07 Jul 2026, §10) prohibit "data mining, robot, spider, scraping or similar automated data gathering … for any purpose", and the root robots.txt disallows `/unijobs/jobsrss/*`.
+   - **Remembered filters.** The field facet and the approach filter are saved in localStorage, because MathJobs adds about 1,000 maths postings and a physicist should only need to pick Physics once. URL parameters, when present, override the stored choice.
+   - **Status page.** A summary line ("5 OK · 1 link-out · 0 warnings · 0 failing"), failing and suspect rows first, each institution's pages grouped under one name, and Last OK kept on one line.
+   - **Empty results.** When a search finds nothing, the link-out boards take the result list's place, with the query filled in.
 
 5. **PDF extraction and Indian text heuristics.**
    - `pdftotext` with Content-Type sniffing and the PDF-text cache. Category, deadline and field extraction from the PDF text, with confidence levels.

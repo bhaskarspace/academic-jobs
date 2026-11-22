@@ -17,7 +17,10 @@ https://codebpr.com/academic-jobs/, and all searching happens in the browser.
   `adapter`, `url(s)`, `institution`, `country`, `runner: actions|mac`, `tls`, `crawlDelay`,
   `permission`, and the parse hints.
 - `config/categories.yaml`, `config/institutions.yaml`, `config/linkouts.yaml`: category rules,
-  institution aliases, and the link-out boards.
+  institution aliases (plus `notDuplicates`, to block a wrong merge), and the link-out boards (bundled into
+  `app.js` at build time). A source with `adapter: link-out` is listed, never crawled.
+- `crawler/lib/dedupe.mjs` merges cross-source duplicates that share no URL (institution + deadline
+  + description shingles). Run `node crawler/run.mjs --all --dry --verbose-dedupe` to see every merge.
 - `concepts/physics.yaml`: the concept/synonym file. Bhaskar curates it, so keep its comments and
   its ordering.
 - `crawler/run.mjs` is the CLI.

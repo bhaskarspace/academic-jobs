@@ -19,6 +19,8 @@ const FIELD_KEYS = FIELDS.slice(1).map(([k]) => k);
 const APPROACHES = { theory: 'Theory', computational: 'Computational', experimental: 'Experimental' };
 const FIELD_HINT = { 1: 'title', 2: 'institution/subject', 4: 'ad text' };
 
+/* global __LINKOUTS__ */
+const LINKOUTS = typeof __LINKOUTS__ === 'undefined' ? { boards: [], static: [] } : __LINKOUTS__;
 const $ = (id) => document.getElementById(id);
 const el = (tag, props = {}, ...kids) => {
   const e = document.createElement(tag);
@@ -54,12 +56,21 @@ const lastVisitDay = visits.previous ? new Date(visits.previous).toISOString().s
 const state = { q: '', category: '', field: '', approach: '', sort: 'relevance', expired: false, shown: PAGE, generalShown: GENERAL_PAGE };
 let engine = null;
 
+// The field facet and the approach filter are remembered (a physicist picks Physics once). A URL
+// parameter, when present, wins over the stored choice.
+const PREFS = 'aj-prefs';
+const loadPrefs = () => { try { return JSON.parse(localStorage.getItem(PREFS)) ?? {}; } catch { return {}; } };
+const savePrefs = () => { try { localStorage.setItem(PREFS, JSON.stringify({ field: state.field, approach: state.approach })); } catch { /* storage blocked */ } };
+
 function readUrl() {
   const p = new URLSearchParams(location.search);
+  const prefs = loadPrefs();
   state.q = p.get('q') ?? '';
   state.category = CAT_LABEL[p.get('cat')] ? p.get('cat') : '';
-  state.field = FIELD_KEYS.includes(p.get('f')) ? p.get('f') : '';
-  state.approach = APPROACHES[p.get('ap')] ? p.get('ap') : '';
+  const f = p.has('f') ? p.get('f') : prefs.field;
+  state.field = FIELD_KEYS.includes(f) ? f : '';
+  const ap = p.has('ap') ? p.get('ap') : prefs.approach;
+  state.approach = APPROACHES[ap] ? ap : '';
   state.sort = ['relevance', 'deadline', 'newest'].includes(p.get('sort')) ? p.get('sort') : 'relevance';
   state.expired = p.get('expired') === '1';
   $('q').value = state.q;
@@ -72,8 +83,10 @@ function writeUrl() {
   const p = new URLSearchParams();
   if (state.q) p.set('q', state.q);
   if (state.category) p.set('cat', state.category);
-  if (state.field) p.set('f', state.field);
-  if (state.approach) p.set('ap', state.approach);
+  // Written even when empty if a non-empty choice is stored, so a shared link means the same thing.
+  const prefs = loadPrefs();
+  if (state.field || prefs.field) p.set('f', state.field);
+  if (state.approach || prefs.approach) p.set('ap', state.approach);
   if (state.sort !== 'relevance') p.set('sort', state.sort);
   if (state.expired) p.set('expired', '1');
   const qs = p.toString();
@@ -100,7 +113,7 @@ function renderFields(counts) {
     return el('button', {
       type: 'button', role: 'radio', class: `cat${key === 'physics' ? ' group' : ''}`, 'aria-checked': String(state.field === key),
       title: key === 'physics' ? 'Every physics field: hep, gr-qc, cond-mat, quant-ph, math-ph, astro-ph, nucl, nlin' : null,
-      onclick: () => { state.field = key; resetPages(); update(); },
+      onclick: () => { state.field = key; savePrefs(); resetPages(); update(); },
     }, label, el('span', { class: 'n' }, String(n)));
   }));
 }
@@ -182,6 +195,25 @@ function card({ doc: d, matched }) {
   );
 }
 
+// "Also search" row: boards we can't crawl, with the query filled in. When nothing matches here it
+// takes the place of the result list.
+function renderLinkouts(empty) {
+  const q = state.q.trim();
+  const box = $('linkouts');
+  box.classList.toggle('prominent', empty);
+  const boards = LINKOUTS.boards.map((b) => el('a', {
+    href: q ? b.search.replace('{q}', encodeURIComponent(q)) : b.home, target: '_blank', rel: 'noopener', class: 'board', title: b.why,
+  }, b.name));
+  const statics = LINKOUTS.static.map((s) => el('a', { href: s.url, target: '_blank', rel: 'noopener', title: s.why }, s.name));
+  box.replaceChildren(
+    empty
+      ? el('p', { class: 'lo-head' }, q ? `Try “${q}” on the boards this site can't index:` : 'Try the boards this site can\'t index:')
+      : el('span', { class: 'lo-label' }, q ? `Also search for “${q}”: ` : 'Also search: '),
+    el('span', { class: 'lo-boards' }, boards.flatMap((a, i) => (i ? [empty ? ' ' : ' · ', a] : [a]))),
+    el('p', { class: 'lo-static' }, 'Check by hand (not crawlable): ', statics.flatMap((a, i) => (i ? [', ', a] : [a]))),
+  );
+}
+
 function update() {
   writeUrl();
   const { results, mode, counts, general } = search(engine, state.q, {
@@ -199,6 +231,7 @@ function update() {
   if (mode === 'none') msg = `Nothing matches “${state.q.trim()}”. Try a broader topic or another spelling`;
   $('summary').textContent = msg + '.';
   $('results').replaceChildren(...results.slice(0, state.shown).map(card));
+  renderLinkouts(n === 0 && Boolean(state.q.trim()));
   const left = n - state.shown;
   $('more').hidden = left <= 0;
   if (left > 0) $('more').textContent = `Show more (${left} left)`;
@@ -227,7 +260,7 @@ async function init() {
   $('updated').textContent = `Data updated ${new Date(idx.built).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}. ${idx.n} postings indexed.`;
   $('q').addEventListener('input', () => { state.q = $('q').value; debounced(); });
   $('sort').addEventListener('change', () => { state.sort = $('sort').value; update(); });
-  $('approach').addEventListener('change', () => { state.approach = $('approach').value; resetPages(); update(); });
+  $('approach').addEventListener('change', () => { state.approach = $('approach').value; savePrefs(); resetPages(); update(); });
   $('expired').addEventListener('change', () => { state.expired = $('expired').checked; resetPages(); update(); });
   $('more').addEventListener('click', () => { state.shown += PAGE; update(); });
   $('general-more').addEventListener('click', () => { state.generalShown += GENERAL_PAGE; update(); });

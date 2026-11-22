@@ -19,6 +19,7 @@ export function normalize(raw, { categorize, fieldsOf, sourceName, gone = null, 
     // Cleaned here, not in the adapter, so clean-up fixes apply to cached items without a recrawl.
     title: englishTitle(raw.titleOriginal ?? raw.title ?? ''),
     institution: clean(raw.institution ?? '').replace(/\s+/g, ' '),
+    institutionAlt: raw.institutionAlt ?? null,
     country: raw.country ?? null,
     region: raw.region ?? null,
     city: raw.city ?? null,
@@ -52,7 +53,7 @@ export function mergePostings(list) {
       if (!prev || RANK[c.confidence] > RANK[prev]) cats.set(c.category, c.confidence);
     }
     q.fields.forEach((f) => fields.add(f));
-    for (const k of ['deadline', 'posted', 'country', 'institution', 'applyUrl', 'subject']) out[k] ??= q[k];
+    for (const k of ['deadline', 'posted', 'country', 'institution', 'institutionAlt', 'applyUrl', 'subject']) out[k] ??= q[k];
     if (q.body && !bodies.includes(q.body)) bodies.push(q.body);
     out.pdfUrls = [...new Set([...out.pdfUrls, ...q.pdfUrls])];
   }

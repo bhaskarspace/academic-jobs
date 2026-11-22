@@ -50,7 +50,7 @@ export function buildIndex(postings, { variants = {}, concepts = {}, approach = 
   for (const p of postings) {
     const fields = {
       title: p.title,
-      meta: [p.institution, p.subject, p.city, p.region, (p.fields || []).join(' ')].filter(Boolean).join(' \n '),
+      meta: [p.institution, p.institutionAlt, p.subject, p.city, p.region, (p.fields || []).join(' ')].filter(Boolean).join(' \n '),
       body: p.body,
     };
     const terms = new Map();

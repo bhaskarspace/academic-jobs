@@ -8,6 +8,8 @@ const el = (tag, props = {}, ...kids) => {
 };
 const when = (iso) => (iso ? new Date(iso).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : 'never');
 const STREAK_WARN = 3;
+// Problems first: failing, then suspect/warning, then skipped, then fine, then link-outs.
+const ORDER = { fail: 0, warn: 1, skip: 2, ok: 3, idle: 4 };
 
 function state(s) {
   if (s.linkOut) return ['idle', 'Link-out'];
@@ -39,18 +41,37 @@ async function main() {
     $('warnings').hidden = false;
     $('warnings').replaceChildren(...h.warnings.map((w) => el('li', {}, w)));
   }
-  const rows = Object.entries(h.sources).sort(([a], [b]) => a.localeCompare(b));
-  $('sources').tBodies[0].replaceChildren(...rows.map(([id, s]) => {
-    const [cls, label] = state(s);
-    return el('tr', {},
-      el('th', { scope: 'row' }, el('a', { href: s.url }, s.name ?? id), el('span', { class: 'id' }, id)),
-      el('td', {}, el('span', { class: `pill ${cls}` }, label)),
-      el('td', { class: 'num' }, String(s.items ?? 0)),
-      el('td', { class: 'num' }, s.new == null ? '–' : String(s.new)),
-      el('td', { class: 'num' }, s.gone == null ? '–' : String(s.gone)),
-      el('td', {}, when(s.lastOk)),
-      el('td', { class: 'note' }, note(s)));
-  }));
+  const rows = Object.entries(h.sources).map(([id, s]) => ({ id, s, st: state(s) }));
+  // Summary line: "5 OK · 1 link-out · 0 warnings · 0 failing".
+  const n = (k) => rows.filter((r) => r.st[0] === k).length;
+  const linkOuts = rows.filter((r) => r.s.linkOut).length;
+  const parts = [[n('ok'), 'OK'], [linkOuts, linkOuts === 1 ? 'link-out' : 'link-outs'], [n('warn'), n('warn') === 1 ? 'warning' : 'warnings'], [n('fail'), 'failing']];
+  if (n('skip')) parts.push([n('skip'), 'skipped (robots.txt)']);
+  const idle = n('idle') - linkOuts;
+  if (idle) parts.push([idle, 'not crawled this run']);
+  $('summary').replaceChildren(...parts.flatMap(([k, label], i) => [i ? ' · ' : '', el('span', { class: (label === 'failing' || /^warning/.test(label)) && k ? 'bad' : null }, `${k} ${label}`)]));
+  // Each institution's pages under one name; groups with problems first.
+  const groups = new Map();
+  for (const r of rows) {
+    const g = r.s.institution ?? r.s.name ?? r.id;
+    if (!groups.has(g)) groups.set(g, []);
+    groups.get(g).push(r);
+  }
+  const worst = (list) => Math.min(...list.map((r) => ORDER[r.st[0]]));
+  const sorted = [...groups].map(([g, list]) => [g, list.sort((a, b) => ORDER[a.st[0]] - ORDER[b.st[0]] || a.id.localeCompare(b.id))])
+    .sort(([ga, a], [gb, b]) => worst(a) - worst(b) || ga.localeCompare(gb));
+  const row = ({ id, s, st: [cls, label] }, grouped) => el('tr', { class: grouped ? 'page' : null },
+    el('th', { scope: 'row' }, el('a', { href: s.url }, grouped ? (s.page ?? id) : s.name ?? id), el('span', { class: 'id' }, id)),
+    el('td', {}, el('span', { class: `pill ${cls}` }, label)),
+    el('td', { class: 'num' }, s.linkOut ? '–' : String(s.items ?? 0)),
+    el('td', { class: 'num' }, s.new == null ? '–' : String(s.new)),
+    el('td', { class: 'num' }, s.gone == null ? '–' : String(s.gone)),
+    el('td', { class: 'date' }, s.linkOut ? '–' : when(s.lastOk)),
+    el('td', { class: 'note' }, note(s)));
+  $('sources').tBodies[0].replaceChildren(...sorted.flatMap(([g, list]) => (list.length === 1
+    ? [row(list[0], false)]
+    : [el('tr', { class: 'inst' }, el('th', { scope: 'rowgroup', colspan: '7' }, g, el('span', { class: 'count' }, `${list.length} pages`))),
+      ...list.map((r) => row(r, true))])));
   $('robots').tBodies[0].replaceChildren(...Object.entries(h.robots ?? {}).map(([origin, r]) => el('tr', {},
     el('th', { scope: 'row' }, origin.replace(/^https?:\/\//, '')),
     el('td', {}, r.source === 'live' ? `fetched (${r.status})` : r.source === 'cache' ? `unreachable (${r.error || r.status}); used the copy from ${when(r.cachedAt)}` : `unreachable (${r.error || r.status}), no cached copy: nothing fetched`))));

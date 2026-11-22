@@ -17,6 +17,9 @@ export function postingAliases(urls) {
     // AJO links come as /ajo/jobs/123, /ajo/jobs/123/apply, /ajo/jobs/123?..., normalise to the job.
     const ajo = /^https:\/\/academicjobsonline\.org\/ajo\/jobs\/(\d+)/.exec(c);
     if (ajo) { out.push(`https://academicjobsonline.org/ajo/jobs/${ajo[1]}`); continue; }
+    // MathJobs: www or bare host, /jobs/list/N or /jobs/jobs/N (+ /apply etc.).
+    const mj = /^https:\/\/(?:www\.)?mathjobs\.org\/jobs\/(?:list|jobs)\/(\d+)/.exec(c);
+    if (mj) { out.push(`https://mathjobs.org/jobs/list/${mj[1]}`); continue; }
     if (POSTING_URL.some((re) => re.test(c))) out.push(c);
   }
   return [...new Set(out)];

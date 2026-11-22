@@ -145,3 +145,22 @@ table.status td.soon { color: var(--soon); }
 .pill.fail { color: var(--soon); font-weight: 600; }
 .pill.idle { color: var(--muted); }
 h2.sub { font: 600 1.15rem/1.3 var(--serif); margin: 2rem 0 0; }
+
+/* Link-out row: a quiet line under the summary; a block in place of the results when nothing matches. */
+.linkouts { margin: 0 0 1rem; font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+.linkouts a { color: var(--accent); }
+.linkouts .lo-static { display: none; margin: 0.25rem 0 0; }
+.linkouts.prominent { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.1rem; color: var(--fg); font-size: 1rem; }
+.linkouts.prominent .lo-head { margin: 0 0 0.6rem; font-weight: 600; }
+.linkouts.prominent .lo-boards { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.linkouts.prominent .board { display: inline-block; padding: 0.35rem 0.75rem; border-radius: 999px; background: var(--chip); text-decoration: none; }
+.linkouts.prominent .board:hover, .linkouts.prominent .board:focus-visible { background: var(--chip-on); color: var(--chip-on-fg); }
+.linkouts.prominent .lo-static { display: block; margin-top: 0.8rem; font-size: 0.9rem; color: var(--muted); }
+
+/* Status page: summary, institution groups, one-line dates. */
+.status-summary { font-size: 1.05rem; margin: 0 0 1rem; }
+.status-summary .bad { color: var(--soon); font-weight: 600; }
+tr.inst th { padding-top: 1.1rem; font-family: var(--serif); font-size: 1.02rem; border-bottom: 1px solid var(--line); }
+tr.inst th .count { font-family: var(--sans); font-weight: 400; color: var(--muted); font-size: 0.85rem; margin-left: 0.4rem; }
+tr.page th { font-weight: 400; padding-left: 1rem; }
+td.date { white-space: nowrap; }

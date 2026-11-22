@@ -73,3 +73,37 @@ test('standing call page becomes one rolling posting', async () => {
   assert.match(text, /Postdoctoral Research Associate/);
   assert.ok(!/Explore ways of giving/.test(text), 'footer must not leak into the text');
 });
+
+test('INSPIRE: institution abbreviations become full names (bulk lookup, cached), the ICN stays searchable', async () => {
+  const page = JSON.parse(await fx('inspire/page1.json'));
+  page.links.next = null;
+  const ref = /\/institutions\/(\d+)/.exec(page.hits.hits[0].metadata.institutions[0].record.$ref)[1];
+  const inst = { hits: { hits: [{ metadata: { control_number: Number(ref), legacy_ICN: 'U. Hamburg (main)', institution_hierarchy: [{ name: 'II. Institut für Theoretische Physik' }, { name: 'Universität Hamburg' }], addresses: [{ country_code: 'DE' }] } }] } };
+  const calls = [];
+  const http = { json: async (url) => { calls.push(url); return { data: url.includes('/api/institutions') ? inst : page }; } };
+  const cache = memCache();
+  const items = await inspire.crawl(src('inspire'), { http, log: quiet, cache });
+  const it = items.find((i) => i.institutionAlt?.startsWith('U. Hamburg (main)'));
+  assert.ok(it, 'first job is at U. Hamburg');
+  assert.match(it.institution, /^Universität Hamburg, II\. Institut für Theoretische Physik/);
+  assert.equal(it.country, 'DE');
+  assert.equal(calls.filter((u) => u.includes('/api/institutions')).length, 1, 'one bulk request');
+  calls.length = 0;
+  await inspire.crawl(src('inspire'), { http, log: quiet, cache });
+  assert.ok(!calls.some((u) => u.includes(`control_number%3A(${ref}`) || u.includes(`${ref}%20OR`) || u.includes(`${ref})`)), 'cached ids are not looked up again');
+});
+
+test('MathJobs: same feed as AJO; type validated ("BEGIN" dropped), close date when the deadline is 0000-00-00', async () => {
+  const page = JSON.parse(await fx('mathjobs/page1.json'));
+  const http = { json: async () => ({ data: { ...page, total_count: page.results.length } }) };
+  const items = await ajo.crawl(src('mathjobs'), { http, log: quiet });
+  assert.equal(items.length, page.results.length);
+  const pd = items.find((i) => i.sourceId === 'mathjobs:29253');
+  assert.equal(pd.deadline, '2026-10-30');
+  assert.deepEqual(pd.values, ['Postdoctoral']);
+  assert.ok(pd.aliases.includes('https://mathjobs.org/jobs/list/29253'));
+  const begin = items.find((i) => i.sourceId === 'mathjobs:27107');
+  assert.deepEqual(begin.values, []);
+  assert.equal(begin.deadline, '2027-06-30');
+  assert.ok(items.every((i) => i.body.length < 600), 'fixture text is trimmed');
+});
