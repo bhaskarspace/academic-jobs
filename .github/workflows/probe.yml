@@ -1,0 +1,28 @@
+name: probe
+# One-off / on-demand reachability check of every source URL from a GitHub-hosted runner.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Probe (Node fetch)
+        run: node tools/probe.mjs --label runner --json probe-runner.json --md probe-runner.md
+      - name: Probe (curl, for comparison)
+        run: |
+          jq -r '.[][1]' tools/probe-urls.json | while read -r u; do
+            printf '%s\t%s\n' "$(curl -s -o /dev/null -A 'academic-jobs/0.1 (+https://github.com/bhaskarspace/academic-jobs/issues)' \
+              --connect-timeout 15 -m 40 -w '%{http_code} %{time_total}s ssl=%{ssl_verify_result}' "$u" || echo ERR)" "$u"
+            sleep 1
+          done | tee probe-runner-curl.tsv
+      - uses: actions/upload-artifact@v4
+        with:
+          name: probe-runner
+          path: probe-runner*

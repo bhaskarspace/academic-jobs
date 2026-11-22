@@ -1,0 +1,287 @@
+<!-- Status: plan approved 2026-11-22 with amendments to Phases 1 and 2 (folded in below). No phase has shipped yet. Update this line as phases land. -->
+
+# Academic job search on codebpr.com/academic-jobs/: plan
+
+## Context
+Finding a theory postdoc today means checking INSPIRE, AJO, MathJobs and a dozen other boards, plus the recruitment pages of about 60 Indian institutes. Many of those institute ads exist only as PDFs. This tool collects all of them on a schedule into one schema, and a static page searches them in the browser by research concept rather than literal substring. A search for "chaos" should find OTOC, scrambling, RMT and MBL postdocs in both hep-th and cond-mat groups.
+
+The site is static (GitHub Pages project site, the same pattern as `../moksha-patam`), and collection runs in GitHub Actions. **No backend is needed.** The only piece that might need to run somewhere other than Actions is crawling Indian sites, if GitHub's runners can't reach them. The fallback for that is your Mac (launchd), which pushes results to a branch. That fallback costs nothing to host.
+
+Decisions already made with you:
+- The User-Agent is `academic-jobs/0.1 (+https://github.com/bhaskarspace/academic-jobs/issues)`. No email address goes in it.
+- robots.txt is obeyed strictly.
+  - A site that disallows everything becomes a "check this page" link-out.
+  - Where only PDFs are disallowed, the crawler indexes the list-page text and links to the PDF without fetching it.
+  - A per-source `permission:` field (with the date and the webmaster's reply) overrides robots.txt only after written consent.
+
+## What the audits found (2026-11-22, run from your Mac)
+- **Three boards give clean, open data: INSPIRE, AJO and MathJobs.** Together that's about 2,500 open postings.
+- **EURAXESS can't be included.** Its WAF returns 403 for any query or RSS URL, and it has no API. It becomes a link-out.
+- **jobs.ac.uk's subject RSS feeds are gone (404).** It's also link-out only.
+- **Physics Today and APS have working RSS, but their ToS forbid automated harvesting.** Nature Careers' robots.txt disallows `/jobsrss/`. All three become link-outs.
+- **AcademicPositions, FindAPostDoc, FindAPhD, HigherEdJobs, Indeed and LinkedIn are behind Cloudflare/Imperva or forbid scraping.** They become link-outs or are excluded.
+- **Many institute postdoc programmes already post through AJO** (Perimeter, ICTS, KIAS, YMSC, YITP and the Joint European HEP postdoc). AJO also has the Condensed Matter and QCMT subjects, so cond-mat coverage comes mainly from AJO, not INSPIRE (INSPIRE has only 32 cond-mat postings).
+- **The total index is small, roughly 3–6k documents.** That shapes the search design below.
+
+## Source audit
+
+### Job boards
+| Source | Access | robots / ToS | Fields | Category mapping | Volume (open) | Verdict |
+|---|---|---|---|---|---|---|
+| INSPIRE-HEP | REST `inspirehep.net/api/jobs?q=status:open&sort=mostrecent&size=…`; `/api/jobs/facets` | Job paths allowed. Metadata is CC0. Limit 15 requests per 5 s. Bulk email collection is forbidden, so drop `contact_details` | position, institutions, deadline_date, arxiv_categories, ranks, regions (no country), description HTML, urls | ranks: PHD → phd; POSTDOC → postdoc; JUNIOR/SENIOR/STAFF → faculty; VISITOR, MASTER → other (high confidence) | 388 (hep-th 168, math-ph 43, cond-mat 32) | **Include** |
+| AcademicJobsOnline | JSON `academicjobsonline.org/ajo/public_job_boards?limit=500&page=N` (gzip) | Crawl-delay 5. `/ajo` allowed. No ToS found; the feed invites reuse | name, univ, unit, subject, type, country/city, open/close/deadline, description, qualifications, url | type: Postdoctoral → postdoc; TT/NTT faculty → faculty; Fellowship or award → fellowship; Student programs → phd (check the title). `deadline_raw` is often `0000-00-00`, so fall back to `close_date` | 1,109 (about 460 physics-ish) | **Include** |
+| MathJobs (AMS) | JSON `mathjobs.org/jobs/public_job_boards?…` (same software) | Same as AJO | Same as AJO | Same as AJO. Validate `type`: 20 records say "BEGIN" | about 1,007 | **Include** |
+| EURAXESS | HTML only; any query string returns 403 | Content is CC BY 4.0, but the WAF blocks access | (R1–R4 profile on job pages) | R1 → phd, R2 → postdoc, R3/R4 → faculty | Unmeasurable | **Link-out** `euraxess.ec.europa.eu/jobs/search?keywords={q}` |
+| jobs.ac.uk | HTML only; RSS is 404 | ToS behind a bot challenge | n/a | n/a | About 700 physics jobs (unverified) | **Link-out** `jobs.ac.uk/search/?keywords={q}` |
+| Physics Today / APS | Madgex RSS works | ToS forbid automated harvesting | Thin: title, blurb, date | n/a | PT 6.7k total | **Link-out** (one each) |
+| Nature Careers | Madgex RSS | robots.txt disallows `/jobsrss/` | n/a | n/a | About 375 physics | **Link-out** `/naturecareers/jobs/?keywords={q}` |
+| Times Higher Ed Unijobs | Madgex RSS works and robots.txt allows it | ToS not yet read | Thin | Title heuristic | About 300 physics | **Link-out** for now; reconsider in phase 4 after reading the ToS |
+| AcademicPositions, FindAPostDoc, FindAPhD | Cloudflare 403 | n/a | n/a | n/a | n/a | **Link-out** |
+| ICTP, EMS, physics rumor mill | Timed out | n/a | n/a | n/a | Few | **Static link** |
+| HigherEdJobs, Indeed, LinkedIn, AMS EIMS, ScholarshipDb | Bot wall, or ToS forbid scraping | n/a | n/a | n/a | n/a | **Exclude** |
+
+### Indian institutes
+Every institute's posting fields are title, a posted date and/or last date, and a PDF link. Category comes from the title regex with medium confidence, or from text found only in the PDF with low confidence (see Normalisation).
+
+| Group | Include (static HTML, robots OK) | Partial (list page only, PDF not fetched) | Link-out (robots `Disallow: /`, WAF or JS-only for now) | Volume |
+|---|---|---|---|---|
+| **IISERs** | Pune (phase 1). Kolkata: table, `DD.MM.YYYY`, encrypted IDs, so key on PDF URL + title. Mohali: Joomla RSS `?format=feed&type=rss`. TVM: `table.data_table` with ISO dates, paginated. Berhampur: table per advert | Bhopal (`/assets/*` disallowed) | Tirupati: AJAX list; the JS phase may recover it | Pune about 216 rows, Berhampur 86 PDFs |
+| **Research institutes** | IISc, ICTS (crawl-delay 10), IMSc (crawl-delay 10, 125 PDFs), IOP (RSS `/feed/?post_type=job_opening`), SINP (236-row table), RRI, S.N. Bose (ISO-8859-1), IACS (483-row table), IUCAA, TIFR-H (RSS), NCRA, CMI, ISI Kolkata, ISI Bangalore, ARIES (very slow; one request hung 18 minutes, so it needs hard timeouts), NCBS | NISER (`/storage/` disallowed), JNCASR (`/sites/default/files/` disallowed), IIA (`*.pdf` disallowed) | TIFR Mumbai, HRI and IPR (`Disallow: /`). PRL: robots.txt itself returns 403; treat as link-out until clarified | IACS, SINP, PRL and IMSc each 100–500 PDFs |
+| **IITs** (23) | KGP, B, M (crawl-delay 10), K, D, G, R (URL-encode paths with spaces), BBS (www only), H, J, Indore, Mandi, BHU, Palakkad, ISM, Goa (RSS), Dharwad | Patna (`*.pdf` disallowed, Next.js) | Gandhinagar (Cloudflare). Ropar, Tirupati and Jammu (JS SPAs; JS phase). Bhilai (redirects to an error page) | Varies |
+| Suggested additions | TIFR-H, NCBS, CMI, ISI Kolkata/Bangalore, IIA, ARIES, NCRA (all above); later: IMSc-affiliated HBNI, which is HTTP only | | | |
+
+Problems the crawler has to handle (all were seen in the audit):
+- Bare hosts with bad certificates (`iitkgp`, `iitbbs`), so always use the `www.` host.
+- Intermittent connection failures on the first request (KGP, IITB), so retry.
+- Hung connections (ARIES), so use a connect timeout, a total timeout and a per-source watchdog.
+- Spaces and `&` in PDF URLs.
+- Bilingual Hindi/English titles: decode the HTML entities and keep the English after ` / `.
+- Several date formats: `Nov 27, 2026`, `DD.MM.YYYY`, ISO, `01 Dec 2026, 05:00 PM`, and free-text walk-in dates.
+- PDF handler URLs without a `.pdf` extension (TVM), so sniff the Content-Type.
+
+All of the above was tested from your Mac. **Whether GitHub runners can reach these sites is still unknown, and it's the first task of Phase 1.**
+
+## Architecture
+```
+GitHub Actions (cron 00:47 UTC daily = 06:17 IST, off the busy :00/:30 slots; plus workflow_dispatch;
+                concurrency group `crawl`, so a dispatched run never overlaps the cron run)
+  crawl: registry → adapters → raw items      (polite HTTP, robots, cache)
+  normalise → categorise → extract dates → dedupe/merge → status
+  build index (inverted index + display records) → site/dist
+  write health.json; open/close issues on zero-streaks
+  push state to `state` branch (single force-pushed commit)
+  upload-pages-artifact → deploy-pages        (no data in main history)
+[fallback] Mac launchd job: crawls hosts flagged `runner: mac`, pushes to `inbox-mac` branch;
+           Actions merges inbox-mac on its next run.
+Browser: index.html + app.js (~20 KB) fetch data/index.json(.gz by Pages) → search locally
+```
+
+**Stack.** Node 22 ESM, which is moksha-patam's weight class. I'm not adding Python.
+- Dependencies:
+  - `cheerio` to parse HTML.
+  - `fast-xml-parser` for RSS.
+  - `robots-parser`.
+  - `yaml` for the config and concept files, because YAML allows comments, which you need while curating.
+  - `esbuild` to bundle the frontend.
+  - `playwright`, added only in the JS-sites phase.
+- PDF text comes from poppler's `pdftotext`. It's an apt package on runners and a brew package on the Mac, and it's faster and more robust than pdf.js.
+- Tests use `node --test`. Smoke tests use Playwright, as in moksha-patam.
+- The frontend is vanilla JS with no framework, bundled into one `app.js`.
+- There's one shared `stem.js` (a Porter2 implementation) used both at build time and in the browser, so their tokens always agree.
+
+**Pages.** The repo is public, and Pages is set to deploy from GitHub Actions. That's a different setting from moksha-patam, which serves `main` from `/` with the legacy build. The user site's CNAME automatically makes the project site available at `codebpr.com/academic-jobs/`.
+
+**Persistent state: a `state` branch, rewritten as a single orphan commit each run.**
+- The state is the seen-ID map with first-seen and last-seen dates, the per-page link sets used for change detection, ETag/Last-Modified values, zero-run streaks and `health-history.json`. All of it is a few hundred KB.
+- Options I considered and rejected:
+  - Committing data to `main`, which bloats its history.
+  - Actions cache alone, which is evicted after 7 days without use.
+  - Workflow artifacts alone, which expire after 90 days.
+  - Reading state back from the live site, which is fragile: a bad deploy would lose first-seen dates.
+- The run aborts before deploying if it can't read the state branch. It never resets state silently.
+- Every run also uploads the state files as a workflow artifact (`state-<run id>`, 90-day retention), so there are rolling snapshots and one buggy run can't overwrite the only copy.
+- `crawl.yml` has `concurrency: { group: crawl, cancel-in-progress: false }`, so runs queue rather than race on the state branch.
+- The extracted PDF text cache lives in the Actions cache. Losing it only costs refetching.
+
+**The 60-day scheduled-workflow rule.**
+- Each run calls `PUT /repos/{repo}/actions/workflows/{id}/enable` with `actions: write`.
+- The daily push to `state` also counts as repository activity.
+- The status page shows the last run time, so you'll notice if runs stop.
+
+**Search index and copyright trade-off.**
+- I recommend a prebuilt inverted index plus display records. The full text is not shipped.
+  - Each display record holds the title, institution, country, category, fields, dates, sources, URL and a snippet of at most 240 characters.
+  - The index maps each stemmed term (or concept ID) to a list of `[doc, fieldMask, tf]`, with no word positions. Without positions the text can't be reconstructed.
+- What this costs:
+  - No phrase queries. Multi-word concepts from the concept file ("random matrix", "many-body localization") are indexed as single tokens at build time, which covers the cases that matter.
+  - Highlighting only works on the title and snippet. For hidden text the UI shows "matched: *Lyapunov*, *OTOC* (in ad text / PDF)", which still tells you why a job came up.
+- Size: about 5k docs × about 150 terms (pruned by tf-idf, keeping every title term and every concept hit) comes to roughly 0.8M postings. Delta-encoded, that's about 1.5 MB raw and about 500 KB gzipped. One file is fine at this volume, and I'll shard by category if it grows past about 2 MB gzipped.
+
+**HTTP etiquette (`crawler/lib/http.mjs`).**
+- Requests carry the UA above.
+- robots.txt is checked before every path, and its crawl-delay is honoured.
+- Each host gets at most one request every 2 s by default, with crawl-delay raising that. Different hosts run concurrently.
+- Requests use ETag/If-Modified-Since. On a 304 the cached parse is reused.
+- Timeouts are 10 s to connect and 45 s in total, and each source is killed after 5 minutes.
+- Failed requests are retried twice with backoff.
+- `tls: insecure` is allowed only in a source's config, with a reason, and it's shown in the health report.
+- Detail pages and PDFs are fetched only for links not seen before. Known items are just re-checked to update last-seen.
+
+## Normalisation
+`Posting` schema:
+- `id`: assigned once, at first sight, as a hash of the first URL seen, and stored in state with an alias map (every source URL and source ID → id). Later sightings and merges resolve through the aliases, so the ID never changes when the canonical URL does (for example when INSPIRE picks up an AJO ad). That keeps `firstSeen` and "new since your last visit" stable. When two existing IDs merge, the older one wins and the other becomes an alias.
+- `sources[]`: each entry has `{source, url, sourceId}`.
+- `url`: the canonical URL.
+- `title`, `institution`, `country`.
+- `categories`: a set of `{category, confidence}` entries, where category is phd, postdoc, faculty, fellowship or other and confidence is high, medium or low. It's a set because INSPIRE `ranks` is a list (POSTDOC + JUNIOR is common), AJO has "Postdoctoral or Fellowship", and Indian adverts often bundle JRF/SRF/RA in one PDF. The category filter matches if any entry matches.
+- `fields[]`: arXiv-style tags such as hep-th, cond-mat or math-ph.
+- `posted`, `deadline`, `firstSeen`, `lastSeen`.
+- `status`: open, expired, no-deadline or gone-from-source.
+- `matchText` (build-time only, never shipped) and `snippet`.
+
+How each part is computed:
+- **Category** comes from `config/categories.yaml`.
+  - Source-structured mappings come first and give high confidence.
+  - Title regexes come next and give medium confidence:
+    - JRF/SRF, PhD, Integrated PhD → phd.
+    - RA, PDF, NPDF, Post-doctoral, Research Associate → postdoc.
+    - Assistant/Associate Professor (Grade I/II), Faculty → faculty.
+    - Fellowship, Ramanujan, INSPIRE Faculty → fellowship.
+    - Project Assistant/Associate, Project Scientist → other, unless the text says "PhD registration".
+  - Body or PDF text comes last and gives low confidence.
+  - Every rule that fires adds an entry; nothing overwrites. The UI shows a "category guessed" marker on any entry with medium or low confidence.
+- **Fields** come from INSPIRE `arxiv_categories`, the AJO subject (through a mapping table), and concept-file hits (each concept carries default fields).
+- **Deadlines** come from a date-extraction module covering the formats listed in the audit. When an ad has several dates, the one near "last date" or "deadline" wins.
+  - Past the deadline means expired, which is hidden by default and shown with a toggle.
+  - No deadline found gives a `no-deadline` flag. A posting first seen more than 120 days ago gets an extra "possibly stale" tag. Nothing is ever deleted.
+- **Dedupe** works in two steps.
+  1. Exact canonical-URL match. This includes INSPIRE `urls[]` and `reference_letters` pointing at AJO, and the AJO id.
+  2. Otherwise, block by normalised institution (from an alias table in `config/institutions.yaml`), then merge when title token Jaccard is at least 0.8 and the deadlines are within 3 days.
+  - A merged posting keeps every source, and the most structured source supplies each field.
+
+## Matching
+- **v1 (lexical).** Tokenize, stem, drop stopwords, then BM25F with field weights: title 3, fields/subject 2, snippet and description 1, PDF text 0.7.
+  - `concepts/physics.yaml` defines concepts, for example `chaos: [chaos, chaotic, scrambling, OTOC, out-of-time-order, Lyapunov, random matrix, spectral form factor, thermalization, ETH, many-body localization, MBL, nonlinear dynamics, …]`, plus default fields and sub-concepts.
+  - At build time every concept hit becomes a `concept:chaos` token.
+  - At query time "chaos" expands to the concept token plus its member terms, with an exact hit ranked slightly above an expanded one.
+  - The UI shows the matched terms, highlights them in the title and snippet, and puts a "matched via concept *chaos*" chip on the result.
+  - Filters are category (primary), field facets (secondary), country, and whether to include expired postings. Sorting is by relevance, deadline or newest. A "new since your last visit" badge uses localStorage.
+  - Link-out row: "Also search EURAXESS · jobs.ac.uk · Physics Today · APS · Nature · AcademicPositions · FindAPostDoc/FindAPhD · THE" with the query filled in. Static links cover TIFR, HRI, IPR, ICTP and the rest.
+- **Later (semantic, test before committing).** Build a labelled set of about 40 queries × relevant postings (I draft it, you correct it). Measure v1's P@10 and recall@50, then try embeddings: bge-small or MiniLM computed at build time with transformers.js, and the query embedded in the browser.
+  - The browser side costs about 25 MB of model download (cached) plus about 1.5 MB of vectors for 5k docs.
+  - Ship it only if recall@50 improves by at least 10 points over v1+concepts. If the gain is smaller, a cheaper variant gets the same evaluation: build-time embedding similarity used only to suggest new concept-file terms for you to approve.
+
+## Repo layout
+```
+config/sources.yaml          registry: one entry per source/page {id, adapter, url(s), institution, country,
+                             runner: actions|mac, robots override `permission:`, tls, crawlDelay, parse hints}
+config/categories.yaml       category rules;  config/institutions.yaml  aliases
+config/linkouts.yaml         link-out boards + static links
+concepts/physics.yaml        editable concept/synonym file
+crawler/run.mjs              CLI: --source <id> | --all | --runner mac  [--dry] [--no-cache]
+crawler/adapters/            inspire.mjs, ajo.mjs (AJO+MathJobs), rss.mjs, html-list.mjs (selector-driven),
+                             html-table.mjs, wp-json.mjs, (later) js-rendered.mjs
+crawler/lib/                 http.mjs, robots.mjs, pdf.mjs, dates.mjs, normalize.mjs, categorize.mjs,
+                             dedupe.mjs, changes.mjs, state.mjs, health.mjs
+search/                      stem.js, tokenize.js, concepts.js, build-index.mjs, query.js (shared with site)
+site/                        index.html, app.js, styles.css, status.html, status.js
+tools/                       probe.mjs (reachability), build.mjs (esbuild → dist/), eval.mjs (labelled set)
+tests/                       *.test.mjs + fixtures/ (saved HTML/JSON/PDF per adapter)
+docs/AUDIT.md                the source audit table (kept current)
+.github/workflows/           crawl.yml (cron+dispatch: crawl→build→deploy), ci.yml (PR tests), probe.yml
+mac/                         launchd plist + run-mac.sh (only if the probe requires it)
+PLAN.md, CLAUDE.md, README.md
+```
+Adding a source means one entry in `sources.yaml`, plus a fixture and a test. A new adapter is needed only for a genuinely new kind of page.
+
+## Phases (one PR each)
+
+1. **Thin end-to-end slice.**
+   - **First step: the reachability probe.** `probe.yml` runs `tools/probe.mjs` over every institute URL from the audit, from the Actions runner. It records status, time, TLS and robots for each URL in `docs/AUDIT.md` (runner column next to the Mac column).
+     - If IISER Pune is unreachable from Actions, the slice uses a reachable IISER (Berhampur or TVM).
+     - If every Indian site is blocked, Phase 1 also ships the `inbox-mac` path for that one IISER.
+   - Then: the repo scaffold, the schema, `http.mjs` with robots and caching, and three adapters: INSPIRE, AJO, and html-list configured for IISER Pune's openings, academic and postdoctoral pages. Detail pages are parsed, but not PDFs yet.
+   - Also: structured category mapping plus the title regex, deadline parsing, plain stemmed BM25F search with field weights and highlighting, the category picker, deadline/newest sort, hiding expired postings, the `state` branch, keepalive, the daily cron and the Pages deploy.
+   - Amendments:
+     - `categories` is a set with a confidence per entry (see Normalisation).
+     - Stable posting IDs: assigned at first sight, stored in state, with an alias map for later URLs (see Normalisation).
+     - `crawl.yml` gets a `crawl` concurrency group, uploads the state as a workflow artifact on every run, and runs its cron at 00:47 UTC.
+     - Tokenizer tests with physics strings: AdS/CFT, AdS_5, N=4 SYM, SU(N), TTbar, 2+1D, many-body, out-of-time-order, Greek letters (and their spelled-out forms), and holography vs holographic, which Porter2 stems differently. The concept file must list both forms.
+   - Acceptance:
+     - codebpr.com/academic-jobs/ loads.
+     - "holography" + Postdoc returns INSPIRE and AJO hits with highlighted terms.
+     - A Pune JRF appears under PhD with a "guessed" marker, and a bundled JRF/SRF/RA advert appears under both PhD and Postdoc.
+     - An INSPIRE posting ranked POSTDOC + JUNIOR appears under both Postdoc and Faculty.
+     - Sorting by deadline works, and expired postings appear only with the toggle.
+     - `docs/AUDIT.md` shows the runner probe results.
+     - The Actions tab shows a green scheduled run, the `state` branch holds one commit, and `main` has no data commits.
+
+2. **Concept matching v1.**
+   - `concepts/physics.yaml` with about 25 seeded concepts: chaos, holography, black holes, entanglement, topological phases, strongly correlated systems, superconductivity, quantum information, string theory, CFT, integrability, nonequilibrium dynamics, stat-mech, quantum gravity, cosmology, and others.
+   - Build-time concept tokens, query expansion, "matched via" chips and field facets.
+   - **Field-gated expansion.** A literal hit of the query word counts anywhere. An expanded hit (Lyapunov, random matrix, nonlinear dynamics, thermalization) counts only when the posting's fields overlap the concept's default fields. Otherwise control-engineering jobs on AJO and probability postdocs on MathJobs flood "chaos".
+   - **General calls section.** Many strong theory postdocs (ICTS, IMSc, Perimeter, KIAS) and every institute PhD admission call name no topic, so a topic query never matches them. A posting with no concept hits whose fields match the query concept's default fields is listed in a second section under the topic matches, headed e.g. "Open calls in hep-th / cond-mat that don't name a topic".
+   - **Theory / computational / experimental tag** from text cues (theoretical, numerical, simulation vs experimental, laboratory, fabrication, beamline, cryostat), with confidence, as a filter. Add a few labelled cases of each to the Phase 12 eval set.
+   - Acceptance:
+     - "chaos" returns at least one posting that never contains the word "chaos" (e.g. an OTOC or MBL ad), and its chip says why.
+     - "chaos" doesn't return a control-engineering or probability posting that only matched through an expanded term.
+     - "chaos" + Postdoc shows a second "Open calls in hep-th / cond-mat …" section containing at least one topic-less call (e.g. ICTS or Perimeter from AJO).
+     - The theory/experiment filter hides an obviously experimental posting.
+     - Editing the YAML and re-running `npm run build` changes the results.
+     - The hep-th and cond-mat facet filters work.
+
+3. **Health and change detection.**
+   - Per-page link-set diffing gives new-since-last-run counts.
+   - Gone-from-source status, `health.json`, a zero-streak counter, and an issue auto-opened after 3 zero runs (auto-closed when the source recovers).
+   - `status.html` shows a table of sources: last run, items, new, errors and a streak warning.
+   - Acceptance: the status page lists every source. Pointing one source at a bad selector on a test branch opens an issue after 3 dispatched runs.
+
+4. **MathJobs, cross-source dedupe and link-outs.**
+   - The MathJobs adapter (shared with AJO), the institution alias table, merging duplicates, and the link-out row plus static links.
+   - Read the Times Higher Ed ToS and decide whether to include it.
+   - Acceptance:
+     - A postdoc listed on both INSPIRE and AJO shows once, with both source badges.
+     - The link-out buttons open each board's search with the query already filled in.
+
+5. **PDF extraction and Indian text heuristics.**
+   - `pdftotext` with Content-Type sniffing and the PDF-text cache. Category, deadline and field extraction from the PDF text, with confidence levels.
+   - "Image-only PDF" is detected and flagged, ready for OCR later.
+   - Acceptance: a Pune ad whose research area appears only in the PDF (e.g. "condensed matter") is found by that keyword, and its result says "matched in PDF".
+
+6. **All IISERs.** Kolkata, Mohali (RSS), TVM (paginated), Berhampur, Bhopal (partial) and Tirupati (link-out for now), each with a fixture test.
+   - Acceptance: the status page shows each IISER as green or as an explicit link-out, and searching "JRF physics" + PhD returns results from at least four IISERs.
+
+7. **Research institutes.**
+   - IISc, ICTS, IMSc, IOP (wp-json), SINP, RRI, Bose, IACS, IUCAA, TIFR-H, NCRA, CMI, ISI, ARIES and NCBS.
+   - NISER, JNCASR and IIA are partial. TIFR, HRI, IPR and PRL are link-outs.
+   - Acceptance: an IMSc or ICTS postdoc call is searchable, and ARIES' slowness doesn't stall the run (it's watchdog-killed and reported).
+
+8. **IITs (the static ones).** The 17 IITs from the Include column. Patna is partial. Gandhinagar and Bhilai are link-outs.
+   - Acceptance: every IIT on the status page shows green, partial or link-out, none in an unknown state, and "Assistant Professor Grade I" maps to faculty.
+
+9. **JS-rendered sites.**
+   - Playwright in the crawl job, used only for sources marked `adapter: js-rendered`: IIT Ropar, IIT Tirupati, IIT Jammu and IISER Tirupati. I'll first look for their JSON endpoints and use one wherever it exists.
+   - Acceptance: postings from those sites appear, and the crawl stays under 20 minutes.
+
+10. **Mac fallback hardening.**
+    - This phase only exists if Phase 1's probe found blocked hosts; otherwise I drop it and renumber.
+    - It covers launchd scheduling, retry when the Mac was asleep, and a stale-inbox warning on the status page.
+    - Acceptance: hosts marked `runner: mac` update after the Mac's run, and the status page shows when the inbox was last pushed.
+
+11. **OCR for scanned PDFs.** `tesseract` (eng + hin) on flagged image-only PDFs, with the results cached.
+    - Acceptance: a known scanned notice becomes searchable.
+
+12. **Labelled evaluation and the semantic-matching experiment.**
+    - `tools/eval.mjs`, the labelled set (including the theory/computational/experimental cases added in Phase 2), and a numbers report in PLAN.md. The go/no-go decision is made against the bar set under Matching.
+    - Acceptance: you can see the eval report. Embeddings ship only if they clear the bar.
+
+13. **Main-site link.** A small PR to `bhaskarspace.github.io` adding a card the way `games.md` does.
+    - Acceptance: codebpr.com links to the tool.
+
+After approval, the first steps are to write this plan to `PLAN.md` and write `CLAUDE.md`. `CLAUDE.md` will cover the layout, `node crawler/run.mjs --source iiser-pune --dry` to run one source locally, the steps for adding a source (registry entry, fixture, test, `docs/AUDIT.md` row), the robots/permission policy, and the rule that state lives on the `state` branch.
+
+## Verification (every phase)
+- `npm test` covers the adapter fixtures, date parsing, the category rules, dedupe and the index round-trip.
+- `npm run build && npx serve dist` lets you check search locally.
+- A Playwright smoke test runs the phase's acceptance queries against `dist/`.
+- After merge, run `crawl.yml` by dispatch, check the deploy at codebpr.com/academic-jobs/ and `status.html`, and confirm `main` gained no data commits.

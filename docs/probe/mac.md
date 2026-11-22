@@ -1,0 +1,79 @@
+### Probe from mac (2026-11-22T13:42:23.645Z)
+
+65/73 URLs answered 2xx/3xx.
+
+| id | URL | status | time | bytes | robots.txt | note |
+|---|---|---|---|---|---|---|
+| iit-kgp | https://www.iitkgp.ac.in/navpage/jobs | 200 | 392 ms | 49832 | ECONNRESET |  |
+| iit-kgp | https://www.iitkgp.ac.in/faculty-positions | 200 | 229 ms | 49237 | ECONNRESET |  |
+| iit-kgp | https://erp.iitkgp.ac.in/SricWeb/temporaryJobs.htm | 200 | 394 ms | 99170 | 404 |  |
+| iit-b | https://www.iitb.ac.in/career/apply | 200 | 266 ms | 157819 | ECONNRESET |  |
+| iit-b | https://www.iitb.ac.in/career/apply/postdoc | 200 | 69 ms | 130240 | ECONNRESET |  |
+| iit-m | https://www.iitm.ac.in/careers/prospective-faculty | 200 | 264 ms | 108304 | 200 |  |
+| iit-m | https://www.iitm.ac.in/careers/project-positions | 200 | 262 ms | 106379 | 200 |  |
+| iit-m | https://icsrstaff.iitm.ac.in/careers/current_openings.php | 200 | 118 ms | 16951 | 200 |  |
+| iit-k | https://www.iitk.ac.in/faculty-recruitment | 200 | 2387 ms | 114450 | 200 |  |
+| iit-k | https://www.iitk.ac.in/dofa/institute-postdoctoral-fellowship | 200 | 555 ms | 22493 | 200 |  |
+| iit-d | https://home.iitd.ac.in/jobs-iitd/index.php | 200 | 124 ms | 260672 | 200 |  |
+| iit-d | https://ird.iitd.ac.in/current-openings | 200 | 43 ms | 1982 | 200 |  |
+| iit-g | https://www.iitg.ac.in/iitg_recruitment | 200 | 452 ms | 75483 | 404 |  |
+| iit-r | https://iitr.ac.in/Careers/index.html | 200 | 508 ms | 105194 | 404 |  |
+| iit-r | https://iitr.ac.in/Careers/Project%20Jobs.html | 200 | 44 ms | 150650 | 404 |  |
+| iit-rpr | https://www.iitrpr.ac.in/recruitment | 200 | 46 ms | 958 | 200 |  |
+| iit-bbs | https://www.iitbbs.ac.in/index.php/home/jobs/ | 200 | 1327 ms | 485018 | 200 |  |
+| iit-gn | https://iitgn.ac.in/careers | 403 | 37 ms | 5539 | 200 | cf:challenge |
+| iit-h | https://iith.ac.in/careers/ | 200 | 161 ms | 175595 | 200 |  |
+| iit-j | https://iitj.ac.in/main/en/recruitments | — | 105 ms |  | UNABLE_TO_VERIFY_LEAF_SIGNATURE | UNABLE_TO_VERIFY_LEAF_SIGNATURE |
+| iit-p | https://iitp.ac.in/vacancies | 200 | 132 ms | 10591 | 200 |  |
+| iit-indore | https://www.iiti.ac.in/careers | 200 | 126 ms | 112631 | 404 |  |
+| iit-mandi | https://iitmandi.ac.in/recruitments | 200 | 145 ms | 40723 | 200 |  |
+| iit-bhu | https://iitbhu.ac.in/dean/dofa/recruitment | 200 | 95 ms | 37569 | 200 |  |
+| iit-pkd | https://iitpkd.ac.in/contract-positions | 200 | 445 ms | 85753 | 200 |  |
+| iit-pkd | https://iitpkd.ac.in/postdocs | 200 | 327 ms | 74794 | 200 |  |
+| iit-tp | https://www.iittp.ac.in/careers | 200 | 68 ms | 1831 | 200 |  |
+| iit-ism | https://iitism.ac.in/facultycareers | 200 | 264 ms | 99190 | 404 |  |
+| iit-bhilai | https://iitbhilai.ac.in/ | — | 254 ms |  | UNABLE_TO_VERIFY_LEAF_SIGNATURE | UNABLE_TO_VERIFY_LEAF_SIGNATURE |
+| iit-goa | https://iitgoa.ac.in/careers-iitgoa/ | 200 | 932 ms | 101246 | 200 |  |
+| iit-goa | https://iitgoa.ac.in/feed/ | 200 | 772 ms | 1005 | 200 |  |
+| iit-jammu | https://www.iitjammu.ac.in/recruitments | 200 | 56 ms | 8333 | 200 |  |
+| iit-dh | https://iitdh.ac.in/faculty-recruitment | 200 | 253 ms | 146423 | 200 |  |
+| iit-dh | https://iitdh.ac.in/research-associates-ra-opportunities | 200 | 135 ms | 139162 | 200 |  |
+| iiser-pune | https://www.iiserpune.ac.in/opportunities/openings | 200 | 369 ms | 397417 | 200 |  |
+| iiser-pune | https://www.iiserpune.ac.in/opportunities/academic | 200 | 197 ms | 55026 | 200 |  |
+| iiser-pune | https://www.iiserpune.ac.in/opportunities/postdoctoral-research | 200 | 197 ms | 47607 | 200 |  |
+| iiser-pune | https://www.iiserpune.ac.in/opportunities/opening?id=2318 | 200 | 139 ms | 47772 | 200 |  |
+| iiser-kol | https://www.iiserkol.ac.in/web/advertisements | 200 | 267 ms | 63753 | 404 |  |
+| iiser-mohali | https://www.iisermohali.ac.in/careers | 200 | 835 ms | 43556 | 200 |  |
+| iiser-mohali | https://web.iisermohali.ac.in/noticeportal/iiserm-project-openings?format=feed&type=rss | 200 | 183 ms | 34488 | 404 |  |
+| iiser-bhopal | https://www.iiserb.ac.in/dofa/vacancy | 200 | 343 ms | 131225 | 200 |  |
+| iiser-tvm | https://www.iisertvm.ac.in/openings | 200 | 99 ms | 71327 | 404 |  |
+| iiser-tirupati | https://www.iisertirupati.ac.in/jobs/ | 200 | 785 ms | 189719 | 200 |  |
+| iiser-bpr | https://www.iiserbpr.ac.in/opportunity/contractual | 200 | 527 ms | 313651 | 200 |  |
+| iisc | https://iisc.ac.in/careers/ | 200 | 668 ms | 66607 | ERR_HTTP2_STREAM_ERROR | → https://www.iisc.ac.in/careers/ |
+| iisc | https://iisc.ac.in/positions-open/ | — | 202 ms |  | ERR_HTTP2_STREAM_ERROR | ERR_HTTP2_STREAM_ERROR |
+| tifr | https://www.tifr.res.in/positions | 200 | 132 ms | 46228 | 200 |  |
+| icts | https://www.icts.res.in/opportunities | 200 | 138 ms | 95689 | 200 |  |
+| icts | https://www.icts.res.in/academic/postdoctoral-fellowships | 200 | 140 ms | 97291 | 200 |  |
+| hri | https://www.hri.res.in/advertisements/ | — | 149 ms |  | UNABLE_TO_VERIFY_LEAF_SIGNATURE | UNABLE_TO_VERIFY_LEAF_SIGNATURE |
+| imsc | https://www.imsc.res.in/other_positions | 200 | 337 ms | 61282 | 200 |  |
+| imsc | https://www.imsc.res.in/facultyrecruitment | 200 | 184 ms | 45496 | 200 |  |
+| iop | https://www.iopb.res.in/job-opening/ | 200 | 303 ms | 339799 | 200 |  |
+| iop | https://www.iopb.res.in/feed/?post_type=job_opening | 200 | 157 ms | 6769 | 200 |  |
+| sinp | https://www.saha.ac.in/web/job-opportunities | 500 | 588 ms | 118015 | 404 |  |
+| niser | https://www.niser.ac.in/sps/postdoc | 200 | 257 ms | 17979 | 200 |  |
+| rri | https://www.rri.res.in/careers/post-doctoral-fellowships | 200 | 80 ms | 34541 | 200 |  |
+| prl | https://www.prl.res.in/prl-eng/advertisement | 200 | 238 ms | 295663 | 403 |  |
+| bose | https://www.bose.res.in/InfoAnnouncements/JobOpenings.jsp?type=ACADEMIC | 200 | 439 ms | 63276 | 200 |  |
+| iacs | https://iacs.res.in/research-associate | 200 | 1404 ms | 538694 | 200 |  |
+| jncasr | https://www.jncasr.ac.in/announcements | 200 | 105 ms | 113691 | 200 |  |
+| iucaa | https://www.iucaa.in/en/opportunities | 200 | 493 ms | 57398 | 200 |  |
+| tifrh | https://www.tifrh.res.in/careers/ | 200 | 886 ms | 183752 | 200 |  |
+| ncbs | https://www.ncbs.res.in/careers | 200 | 710 ms | 83965 | 200 |  |
+| cmi | https://www.cmi.ac.in/positions/ | 200 | 218 ms | 10795 | 404 |  |
+| isi-kol | https://www.isical.ac.in/public/jobs | 200 | 472 ms | 44223 | 404 |  |
+| iia | https://www.iiap.res.in/iia_jobs/ | 200 | 286 ms | 30392 | 200 |  |
+| aries | https://www.aries.res.in/opportunities/project-position | — | 665 ms |  | UNABLE_TO_VERIFY_LEAF_SIGNATURE | UNABLE_TO_VERIFY_LEAF_SIGNATURE |
+| ncra | https://www.ncra.tifr.res.in/jobs/academic/pdf | 200 | 348 ms | 42084 | 200 |  |
+| ipr | https://www.ipr.res.in/careers | — | 198 ms |  | UNABLE_TO_VERIFY_LEAF_SIGNATURE | UNABLE_TO_VERIFY_LEAF_SIGNATURE |
+| control-inspire | https://inspirehep.net/api/jobs?q=status:open&size=1&fields=position | 200 | 208 ms | 739 | 200 |  |
+| control-ajo | https://academicjobsonline.org/ajo/public_job_boards?limit=1&page=1 | 200 | 1364 ms | 36543 | 200 |  |
