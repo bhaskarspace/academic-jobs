@@ -1,343 +1,348 @@
 {
   "summary": {
     "label": "runner",
-    "when": "2026-11-22T13:49:42.534Z",
+    "when": "2026-11-22T14:14:36.808Z",
     "ua": "academic-jobs/0.1 (+https://github.com/bhaskarspace/academic-jobs/issues)",
     "total": 73,
-    "ok": 60
+    "ok": 64
   },
   "robots": {
     "www.iitkgp.ac.in": {
       "status": 0,
-      "ms": 910,
+      "ms": 707,
       "error": "ECONNRESET"
+    },
+    "erp.iitkgp.ac.in": {
+      "status": 404,
+      "ms": 962,
+      "bytes": 196,
+      "server": "Apache"
     },
     "www.iitb.ac.in": {
-      "status": 0,
-      "ms": 1044,
-      "error": "ECONNRESET"
-    },
-    "home.iitd.ac.in": {
-      "status": 0,
-      "ms": 1048,
-      "error": "ETIMEDOUT"
+      "status": 200,
+      "ms": 1501,
+      "bytes": 2027,
+      "server": "nginx"
     },
     "www.iitm.ac.in": {
       "status": 200,
-      "ms": 1252,
+      "ms": 1595,
       "bytes": 1894
     },
     "www.iitk.ac.in": {
       "status": 200,
-      "ms": 1257,
+      "ms": 1902,
       "bytes": 2087,
       "server": "Apache"
     },
-    "erp.iitkgp.ac.in": {
-      "status": 404,
-      "ms": 1305,
-      "bytes": 196,
+    "home.iitd.ac.in": {
+      "status": 200,
+      "ms": 2051,
+      "bytes": 131,
       "server": "Apache"
     },
     "ird.iitd.ac.in": {
       "status": 200,
-      "ms": 1850,
+      "ms": 2269,
       "bytes": 67,
       "server": "Apache/2.4.66 (Ubuntu)"
     },
     "icsrstaff.iitm.ac.in": {
       "status": 200,
-      "ms": 2555,
+      "ms": 2582,
       "bytes": 16951
     },
     "www.iitg.ac.in": {
       "status": 404,
-      "ms": 1136,
+      "ms": 1071,
       "bytes": 196,
       "server": "IITGServer"
     },
     "www.iitrpr.ac.in": {
       "status": 200,
-      "ms": 824,
+      "ms": 947,
       "bytes": 958,
       "server": "nginx"
     },
-    "www.iitbbs.ac.in": {
-      "status": 200,
-      "ms": 1589,
-      "bytes": 117,
-      "server": "Apache"
-    },
     "iitr.ac.in": {
       "status": 404,
-      "ms": 3065,
+      "ms": 2365,
       "bytes": 162,
       "server": "nginx/1.18.0 (Ubuntu)"
     },
     "iitgn.ac.in": {
       "status": 200,
-      "ms": 679,
+      "ms": 654,
       "bytes": 2676,
       "server": "cloudflare"
     },
     "iith.ac.in": {
       "status": 200,
-      "ms": 911,
+      "ms": 1177,
       "bytes": 22,
       "server": "Apache"
     },
     "iitj.ac.in": {
       "status": 0,
-      "ms": 1244,
+      "ms": 829,
       "error": "UNABLE_TO_VERIFY_LEAF_SIGNATURE"
+    },
+    "www.iitbbs.ac.in": {
+      "status": 200,
+      "ms": 3667,
+      "bytes": 117,
+      "server": "Apache"
     },
     "iitp.ac.in": {
       "status": 200,
-      "ms": 1171,
+      "ms": 2296,
       "bytes": 1343,
       "server": "nginx/1.31.4"
     },
-    "www.iiti.ac.in": {
-      "status": 404,
-      "ms": 1071,
-      "bytes": 1130,
-      "server": "Apache/2.4.52 (Ubuntu)"
-    },
     "iitmandi.ac.in": {
       "status": 200,
-      "ms": 617,
+      "ms": 1356,
       "bytes": 205
     },
     "iitbhu.ac.in": {
       "status": 200,
-      "ms": 851,
+      "ms": 691,
       "bytes": 2005,
       "server": "Apache/2.4.58 (Ubuntu)"
     },
+    "www.iiti.ac.in": {
+      "status": 404,
+      "ms": 3154,
+      "bytes": 1130,
+      "server": "Apache/2.4.52 (Ubuntu)"
+    },
     "www.iittp.ac.in": {
       "status": 200,
-      "ms": 1033,
+      "ms": 1072,
       "bytes": 70,
       "server": "nginx/1.28.3 (Ubuntu)"
     },
     "iitpkd.ac.in": {
       "status": 200,
-      "ms": 1121,
+      "ms": 3186,
       "bytes": 1706,
+      "server": "Apache"
+    },
+    "iitism.ac.in": {
+      "status": 404,
+      "ms": 1392,
+      "bytes": 115606
+    },
+    "iitgoa.ac.in": {
+      "status": 200,
+      "ms": 1816,
+      "bytes": 113,
+      "server": "Apache"
+    },
+    "iitbhilai.ac.in": {
+      "status": 0,
+      "ms": 3193,
+      "error": "UNABLE_TO_VERIFY_LEAF_SIGNATURE"
+    },
+    "iitdh.ac.in": {
+      "status": 200,
+      "ms": 2941,
+      "bytes": 2027,
+      "server": "nginx"
+    },
+    "www.iiserpune.ac.in": {
+      "status": 200,
+      "ms": 2489,
+      "bytes": 16,
       "server": "Apache"
     },
     "www.iitjammu.ac.in": {
       "status": 200,
-      "ms": 1279,
+      "ms": 3547,
       "bytes": 8333,
-      "server": "nginx"
-    },
-    "iitbhilai.ac.in": {
-      "status": 0,
-      "ms": 1857,
-      "error": "UNABLE_TO_VERIFY_LEAF_SIGNATURE"
-    },
-    "www.iiserpune.ac.in": {
-      "status": 200,
-      "ms": 978,
-      "bytes": 16,
-      "server": "Apache"
-    },
-    "iitdh.ac.in": {
-      "status": 200,
-      "ms": 2245,
-      "bytes": 2027,
       "server": "nginx"
     },
     "www.iiserkol.ac.in": {
       "status": 404,
-      "ms": 1714,
+      "ms": 2580,
       "bytes": 208,
       "server": "Apache/2.4.6 (CentOS) OpenSSL/1.0.2k-fips mod_wsgi/3.4 Python/2.7.5 PHP/8.2.35 mod_perl/2.0.10 Perl/v5.16.3"
     },
-    "iitism.ac.in": {
-      "status": 404,
-      "ms": 4973,
-      "bytes": 115606
-    },
     "www.iisermohali.ac.in": {
       "status": 200,
-      "ms": 1665,
+      "ms": 1461,
       "bytes": 842,
       "server": "Apache/2.4.57 (CentOS Stream) OpenSSL/3.5.7"
     },
     "web.iisermohali.ac.in": {
       "status": 404,
-      "ms": 1043,
+      "ms": 1167,
       "bytes": 196,
       "server": "Apache/2.4.57 (CentOS Stream) OpenSSL/3.5.9 mod_fcgid/2.3.9"
     },
     "www.iiserb.ac.in": {
-      "status": 0,
-      "ms": 831,
-      "error": "ETIMEDOUT"
+      "status": 200,
+      "ms": 1136,
+      "bytes": 156,
+      "server": "Apache"
     },
     "www.iisertvm.ac.in": {
       "status": 404,
-      "ms": 1118,
+      "ms": 1279,
       "bytes": 42537,
       "server": "Apache/2.4.52 (Ubuntu)"
     },
     "www.iiserbpr.ac.in": {
       "status": 200,
-      "ms": 894,
+      "ms": 1288,
       "bytes": 74,
       "server": "Apache/2.4.62 (AlmaLinux) OpenSSL/3.2.2"
     },
-    "www.iisertirupati.ac.in": {
-      "status": 200,
-      "ms": 1820,
-      "bytes": 125,
-      "server": "Apache/2.4.6 (CentOS) OpenSSL/1.0.2k-fips PHP/7.3.33"
-    },
     "www.tifr.res.in": {
       "status": 200,
-      "ms": 972,
+      "ms": 1075,
       "bytes": 138,
       "server": "Unknown"
     },
+    "www.icts.res.in": {
+      "status": 200,
+      "ms": 791,
+      "bytes": 2189,
+      "server": "Apache/2.4.66 (Ubuntu)"
+    },
     "iisc.ac.in": {
       "status": 200,
-      "ms": 2033,
+      "ms": 2389,
       "bytes": 175,
       "finalUrl": "https://www.iisc.ac.in/robots.txt",
       "server": "Apache"
     },
-    "iitgoa.ac.in": {
+    "www.hri.res.in": {
       "status": 0,
-      "ms": 10324,
-      "error": "UND_ERR_CONNECT_TIMEOUT"
-    },
-    "www.icts.res.in": {
-      "status": 200,
-      "ms": 831,
-      "bytes": 2189,
-      "server": "Apache/2.4.66 (Ubuntu)"
+      "ms": 3134,
+      "error": "UNABLE_TO_VERIFY_LEAF_SIGNATURE"
     },
     "www.imsc.res.in": {
       "status": 200,
-      "ms": 906,
+      "ms": 3212,
       "bytes": 2189,
       "server": "cloudflare"
     },
-    "www.hri.res.in": {
-      "status": 0,
-      "ms": 1390,
-      "error": "UNABLE_TO_VERIFY_LEAF_SIGNATURE"
-    },
     "www.saha.ac.in": {
       "status": 404,
-      "ms": 1067,
+      "ms": 990,
       "bytes": 208,
       "server": "nginx/1.20.1"
     },
     "www.iopb.res.in": {
       "status": 200,
-      "ms": 1207,
+      "ms": 1742,
       "bytes": 116,
       "server": "nginx"
     },
-    "www.niser.ac.in": {
-      "status": 0,
-      "ms": 1865,
-      "error": "ETIMEDOUT"
+    "www.iisertirupati.ac.in": {
+      "status": 200,
+      "ms": 8083,
+      "bytes": 125,
+      "server": "Apache/2.4.6 (CentOS) OpenSSL/1.0.2k-fips PHP/7.3.33"
     },
     "www.rri.res.in": {
       "status": 200,
-      "ms": 918,
+      "ms": 896,
       "bytes": 2005,
       "server": "Apache"
     },
     "www.prl.res.in": {
       "status": 403,
-      "ms": 1304,
+      "ms": 567,
       "bytes": 199,
       "server": "cloudflare"
     },
+    "www.niser.ac.in": {
+      "status": 200,
+      "ms": 4824,
+      "bytes": 177,
+      "server": "Apache"
+    },
     "www.jncasr.ac.in": {
       "status": 200,
-      "ms": 581,
+      "ms": 914,
       "bytes": 3532,
       "server": "Apache/2.4.62 (Debian)"
     },
-    "www.bose.res.in": {
+    "iacs.res.in": {
       "status": 200,
-      "ms": 1676,
-      "bytes": 35,
+      "ms": 1182,
+      "bytes": 4285,
       "server": "Apache"
     },
     "www.iucaa.in": {
       "status": 200,
-      "ms": 939,
+      "ms": 904,
       "bytes": 836,
       "server": "Apache/2.4.53 (Debian)"
     },
-    "www.ncbs.res.in": {
-      "status": 200,
-      "ms": 695,
-      "bytes": 2216,
-      "server": "Apache"
-    },
     "www.tifrh.res.in": {
       "status": 200,
-      "ms": 1077,
+      "ms": 946,
       "bytes": 117,
       "server": "Apache/2.4.62 (Rocky Linux) OpenSSL/3.2.2"
     },
-    "www.aries.res.in": {
-      "status": 0,
-      "ms": 601,
-      "error": "UNABLE_TO_VERIFY_LEAF_SIGNATURE"
+    "www.ncbs.res.in": {
+      "status": 200,
+      "ms": 881,
+      "bytes": 2216,
+      "server": "Apache"
+    },
+    "www.bose.res.in": {
+      "status": 200,
+      "ms": 3152,
+      "bytes": 35,
+      "server": "Apache"
     },
     "www.cmi.ac.in": {
       "status": 404,
-      "ms": 2318,
+      "ms": 2985,
       "bytes": 316,
       "server": "Apache/2.4.71 (Debian)"
     },
     "www.iiap.res.in": {
       "status": 200,
-      "ms": 1328,
+      "ms": 1923,
       "bytes": 152,
       "server": "nginx"
     },
-    "www.isical.ac.in": {
-      "status": 404,
-      "ms": 1600,
-      "bytes": 1035,
-      "server": "nginx"
-    },
-    "www.ncra.tifr.res.in": {
-      "status": 200,
-      "ms": 1934,
-      "bytes": 24,
-      "server": "nginx"
-    },
-    "www.ipr.res.in": {
+    "www.aries.res.in": {
       "status": 0,
-      "ms": 1343,
+      "ms": 3810,
       "error": "UNABLE_TO_VERIFY_LEAF_SIGNATURE"
-    },
-    "academicjobsonline.org": {
-      "status": 200,
-      "ms": 101,
-      "bytes": 396,
-      "server": "Apache"
     },
     "inspirehep.net": {
       "status": 200,
-      "ms": 412,
+      "ms": 3615,
       "bytes": 356,
       "server": "nginx/1.19.1"
     },
-    "iacs.res.in": {
+    "academicjobsonline.org": {
+      "status": 200,
+      "ms": 2726,
+      "bytes": 396,
+      "server": "Apache"
+    },
+    "www.ipr.res.in": {
       "status": 0,
-      "ms": 10283,
+      "ms": 4936,
+      "error": "UNABLE_TO_VERIFY_LEAF_SIGNATURE"
+    },
+    "www.ncra.tifr.res.in": {
+      "status": 200,
+      "ms": 6899,
+      "bytes": 24,
+      "server": "nginx"
+    },
+    "www.isical.ac.in": {
+      "status": 0,
+      "ms": 10259,
       "error": "UND_ERR_CONNECT_TIMEOUT"
     }
   },
@@ -347,7 +352,7 @@
       "url": "https://www.iitkgp.ac.in/navpage/jobs",
       "host": "www.iitkgp.ac.in",
       "status": 200,
-      "ms": 1399,
+      "ms": 1495,
       "bytes": 49832,
       "server": "Apache/2.4.53 (Red Hat Enterprise Linux) OpenSSL/3.0.7 mod_fcgid/2.3.9"
     },
@@ -356,7 +361,7 @@
       "url": "https://www.iitkgp.ac.in/faculty-positions",
       "host": "www.iitkgp.ac.in",
       "status": 200,
-      "ms": 842,
+      "ms": 724,
       "bytes": 49237,
       "server": "Apache/2.4.53 (Red Hat Enterprise Linux) OpenSSL/3.0.7 mod_fcgid/2.3.9"
     },
@@ -365,7 +370,7 @@
       "url": "https://erp.iitkgp.ac.in/SricWeb/temporaryJobs.htm",
       "host": "erp.iitkgp.ac.in",
       "status": 200,
-      "ms": 1747,
+      "ms": 1575,
       "bytes": 99170,
       "server": "Apache"
     },
@@ -374,7 +379,7 @@
       "url": "https://www.iitb.ac.in/career/apply",
       "host": "www.iitb.ac.in",
       "status": 200,
-      "ms": 1369,
+      "ms": 505,
       "bytes": 157819,
       "server": "nginx"
     },
@@ -383,7 +388,7 @@
       "url": "https://www.iitb.ac.in/career/apply/postdoc",
       "host": "www.iitb.ac.in",
       "status": 200,
-      "ms": 290,
+      "ms": 268,
       "bytes": 130240,
       "server": "nginx"
     },
@@ -392,23 +397,23 @@
       "url": "https://www.iitm.ac.in/careers/prospective-faculty",
       "host": "www.iitm.ac.in",
       "status": 200,
-      "ms": 944,
-      "bytes": 108304
+      "ms": 875,
+      "bytes": 108305
     },
     {
       "id": "iit-m",
       "url": "https://www.iitm.ac.in/careers/project-positions",
       "host": "www.iitm.ac.in",
       "status": 200,
-      "ms": 942,
-      "bytes": 106377
+      "ms": 875,
+      "bytes": 106378
     },
     {
       "id": "iit-m",
       "url": "https://icsrstaff.iitm.ac.in/careers/current_openings.php",
       "host": "icsrstaff.iitm.ac.in",
       "status": 200,
-      "ms": 529,
+      "ms": 247,
       "bytes": 16951
     },
     {
@@ -416,7 +421,7 @@
       "url": "https://www.iitk.ac.in/faculty-recruitment",
       "host": "www.iitk.ac.in",
       "status": 200,
-      "ms": 3208,
+      "ms": 3243,
       "bytes": 114450,
       "server": "Apache"
     },
@@ -425,24 +430,25 @@
       "url": "https://www.iitk.ac.in/dofa/institute-postdoctoral-fellowship",
       "host": "www.iitk.ac.in",
       "status": 200,
-      "ms": 960,
-      "bytes": 22497,
+      "ms": 950,
+      "bytes": 22493,
       "server": "Apache"
     },
     {
       "id": "iit-d",
       "url": "https://home.iitd.ac.in/jobs-iitd/index.php",
       "host": "home.iitd.ac.in",
-      "status": 0,
-      "ms": 252,
-      "error": "ETIMEDOUT"
+      "status": 200,
+      "ms": 1046,
+      "bytes": 260672,
+      "server": "Apache"
     },
     {
       "id": "iit-d",
       "url": "https://ird.iitd.ac.in/current-openings",
       "host": "ird.iitd.ac.in",
       "status": 200,
-      "ms": 265,
+      "ms": 271,
       "bytes": 1982,
       "server": "Apache/2.4.66 (Ubuntu)"
     },
@@ -451,8 +457,8 @@
       "url": "https://www.iitg.ac.in/iitg_recruitment",
       "host": "www.iitg.ac.in",
       "status": 200,
-      "ms": 986,
-      "bytes": 75483,
+      "ms": 927,
+      "bytes": 75480,
       "server": "IITGServer"
     },
     {
@@ -460,7 +466,7 @@
       "url": "https://iitr.ac.in/Careers/index.html",
       "host": "iitr.ac.in",
       "status": 200,
-      "ms": 262,
+      "ms": 268,
       "bytes": 105194,
       "server": "nginx/1.18.0 (Ubuntu)"
     },
@@ -469,7 +475,7 @@
       "url": "https://iitr.ac.in/Careers/Project%20Jobs.html",
       "host": "iitr.ac.in",
       "status": 200,
-      "ms": 263,
+      "ms": 269,
       "bytes": 150650,
       "server": "nginx/1.18.0 (Ubuntu)"
     },
@@ -478,7 +484,7 @@
       "url": "https://www.iitrpr.ac.in/recruitment",
       "host": "www.iitrpr.ac.in",
       "status": 200,
-      "ms": 263,
+      "ms": 218,
       "bytes": 958,
       "server": "nginx"
     },
@@ -487,7 +493,7 @@
       "url": "https://www.iitbbs.ac.in/index.php/home/jobs/",
       "host": "www.iitbbs.ac.in",
       "status": 200,
-      "ms": 1717,
+      "ms": 1735,
       "bytes": 485018,
       "server": "Apache"
     },
@@ -496,8 +502,8 @@
       "url": "https://iitgn.ac.in/careers",
       "host": "iitgn.ac.in",
       "status": 403,
-      "ms": 17,
-      "bytes": 5561,
+      "ms": 19,
+      "bytes": 5582,
       "server": "cloudflare",
       "cf": "challenge"
     },
@@ -506,7 +512,7 @@
       "url": "https://iith.ac.in/careers/",
       "host": "iith.ac.in",
       "status": 200,
-      "ms": 495,
+      "ms": 618,
       "bytes": 175595,
       "server": "Apache"
     },
@@ -515,7 +521,7 @@
       "url": "https://iitj.ac.in/main/en/recruitments",
       "host": "iitj.ac.in",
       "status": 0,
-      "ms": 826,
+      "ms": 3319,
       "error": "UNABLE_TO_VERIFY_LEAF_SIGNATURE"
     },
     {
@@ -523,7 +529,7 @@
       "url": "https://iitp.ac.in/vacancies",
       "host": "iitp.ac.in",
       "status": 200,
-      "ms": 292,
+      "ms": 255,
       "bytes": 10591,
       "server": "nginx/1.31.4"
     },
@@ -532,7 +538,7 @@
       "url": "https://www.iiti.ac.in/careers",
       "host": "www.iiti.ac.in",
       "status": 200,
-      "ms": 534,
+      "ms": 478,
       "bytes": 112631,
       "server": "Apache/2.4.52 (Ubuntu)"
     },
@@ -541,7 +547,7 @@
       "url": "https://iitmandi.ac.in/recruitments",
       "host": "iitmandi.ac.in",
       "status": 200,
-      "ms": 625,
+      "ms": 762,
       "bytes": 40723
     },
     {
@@ -549,7 +555,7 @@
       "url": "https://iitbhu.ac.in/dean/dofa/recruitment",
       "host": "iitbhu.ac.in",
       "status": 200,
-      "ms": 284,
+      "ms": 449,
       "bytes": 37569,
       "server": "Apache/2.4.58 (Ubuntu)"
     },
@@ -558,7 +564,7 @@
       "url": "https://iitpkd.ac.in/contract-positions",
       "host": "iitpkd.ac.in",
       "status": 200,
-      "ms": 949,
+      "ms": 1563,
       "bytes": 85753,
       "server": "Apache"
     },
@@ -567,7 +573,7 @@
       "url": "https://iitpkd.ac.in/postdocs",
       "host": "iitpkd.ac.in",
       "status": 200,
-      "ms": 1002,
+      "ms": 980,
       "bytes": 74794,
       "server": "Apache"
     },
@@ -576,7 +582,7 @@
       "url": "https://www.iittp.ac.in/careers",
       "host": "www.iittp.ac.in",
       "status": 200,
-      "ms": 258,
+      "ms": 263,
       "bytes": 1831,
       "server": "nginx/1.28.3 (Ubuntu)"
     },
@@ -585,7 +591,7 @@
       "url": "https://iitism.ac.in/facultycareers",
       "host": "iitism.ac.in",
       "status": 200,
-      "ms": 1354,
+      "ms": 1075,
       "bytes": 99190
     },
     {
@@ -593,7 +599,7 @@
       "url": "https://iitbhilai.ac.in/",
       "host": "iitbhilai.ac.in",
       "status": 0,
-      "ms": 922,
+      "ms": 998,
       "error": "UNABLE_TO_VERIFY_LEAF_SIGNATURE"
     },
     {
@@ -601,7 +607,7 @@
       "url": "https://iitgoa.ac.in/careers-iitgoa/",
       "host": "iitgoa.ac.in",
       "status": 200,
-      "ms": 2882,
+      "ms": 2095,
       "bytes": 101246,
       "server": "Apache"
     },
@@ -610,7 +616,7 @@
       "url": "https://iitgoa.ac.in/feed/",
       "host": "iitgoa.ac.in",
       "status": 200,
-      "ms": 1005,
+      "ms": 1004,
       "bytes": 1005,
       "server": "Apache"
     },
@@ -619,7 +625,7 @@
       "url": "https://www.iitjammu.ac.in/recruitments",
       "host": "www.iitjammu.ac.in",
       "status": 200,
-      "ms": 291,
+      "ms": 234,
       "bytes": 8333,
       "server": "nginx"
     },
@@ -628,7 +634,7 @@
       "url": "https://iitdh.ac.in/faculty-recruitment",
       "host": "iitdh.ac.in",
       "status": 200,
-      "ms": 587,
+      "ms": 1232,
       "bytes": 146423,
       "server": "nginx"
     },
@@ -637,7 +643,7 @@
       "url": "https://iitdh.ac.in/research-associates-ra-opportunities",
       "host": "iitdh.ac.in",
       "status": 200,
-      "ms": 304,
+      "ms": 310,
       "bytes": 139162,
       "server": "nginx"
     },
@@ -646,7 +652,7 @@
       "url": "https://www.iiserpune.ac.in/opportunities/openings",
       "host": "www.iiserpune.ac.in",
       "status": 200,
-      "ms": 1177,
+      "ms": 676,
       "bytes": 397417,
       "server": "Apache"
     },
@@ -655,7 +661,7 @@
       "url": "https://www.iiserpune.ac.in/opportunities/academic",
       "host": "www.iiserpune.ac.in",
       "status": 200,
-      "ms": 367,
+      "ms": 344,
       "bytes": 55026,
       "server": "Apache"
     },
@@ -664,7 +670,7 @@
       "url": "https://www.iiserpune.ac.in/opportunities/postdoctoral-research",
       "host": "www.iiserpune.ac.in",
       "status": 200,
-      "ms": 364,
+      "ms": 446,
       "bytes": 47607,
       "server": "Apache"
     },
@@ -673,7 +679,7 @@
       "url": "https://www.iiserpune.ac.in/opportunities/opening?id=2318",
       "host": "www.iiserpune.ac.in",
       "status": 200,
-      "ms": 321,
+      "ms": 367,
       "bytes": 47772,
       "server": "Apache"
     },
@@ -682,7 +688,7 @@
       "url": "https://www.iiserkol.ac.in/web/advertisements",
       "host": "www.iiserkol.ac.in",
       "status": 200,
-      "ms": 740,
+      "ms": 849,
       "bytes": 63753,
       "server": "Apache/2.4.6 (CentOS) OpenSSL/1.0.2k-fips mod_wsgi/3.4 Python/2.7.5 PHP/8.2.35 mod_perl/2.0.10 Perl/v5.16.3"
     },
@@ -691,7 +697,7 @@
       "url": "https://www.iisermohali.ac.in/careers",
       "host": "www.iisermohali.ac.in",
       "status": 200,
-      "ms": 5404,
+      "ms": 3450,
       "bytes": 43556,
       "server": "Apache/2.4.57 (CentOS Stream) OpenSSL/3.5.7"
     },
@@ -700,7 +706,7 @@
       "url": "https://web.iisermohali.ac.in/noticeportal/iiserm-project-openings?format=feed&type=rss",
       "host": "web.iisermohali.ac.in",
       "status": 200,
-      "ms": 563,
+      "ms": 497,
       "bytes": 34488,
       "server": "Apache/2.4.57 (CentOS Stream) OpenSSL/3.5.9 mod_fcgid/2.3.9"
     },
@@ -708,16 +714,17 @@
       "id": "iiser-bhopal",
       "url": "https://www.iiserb.ac.in/dofa/vacancy",
       "host": "www.iiserb.ac.in",
-      "status": 0,
-      "ms": 253,
-      "error": "ETIMEDOUT"
+      "status": 200,
+      "ms": 875,
+      "bytes": 131225,
+      "server": "Apache"
     },
     {
       "id": "iiser-tvm",
       "url": "https://www.iisertvm.ac.in/openings",
       "host": "www.iisertvm.ac.in",
       "status": 200,
-      "ms": 267,
+      "ms": 238,
       "bytes": 71327,
       "server": "Apache/2.4.52 (Ubuntu)"
     },
@@ -726,7 +733,7 @@
       "url": "https://www.iisertirupati.ac.in/jobs/",
       "host": "www.iisertirupati.ac.in",
       "status": 200,
-      "ms": 2100,
+      "ms": 1697,
       "bytes": 189719,
       "server": "Apache/2.4.6 (CentOS) OpenSSL/1.0.2k-fips PHP/7.3.33"
     },
@@ -735,7 +742,7 @@
       "url": "https://www.iiserbpr.ac.in/opportunity/contractual",
       "host": "www.iiserbpr.ac.in",
       "status": 200,
-      "ms": 1755,
+      "ms": 1729,
       "bytes": 313651,
       "server": "Apache/2.4.62 (AlmaLinux) OpenSSL/3.2.2"
     },
@@ -744,8 +751,8 @@
       "url": "https://iisc.ac.in/careers/",
       "host": "iisc.ac.in",
       "status": 200,
-      "ms": 1284,
-      "bytes": 67174,
+      "ms": 1153,
+      "bytes": 67395,
       "finalUrl": "https://www.iisc.ac.in/careers/",
       "server": "Apache"
     },
@@ -754,8 +761,8 @@
       "url": "https://iisc.ac.in/positions-open/",
       "host": "iisc.ac.in",
       "status": 200,
-      "ms": 1526,
-      "bytes": 103284,
+      "ms": 2010,
+      "bytes": 103039,
       "finalUrl": "https://www.iisc.ac.in/positions-open/",
       "server": "Apache"
     },
@@ -764,7 +771,7 @@
       "url": "https://www.tifr.res.in/positions",
       "host": "www.tifr.res.in",
       "status": 200,
-      "ms": 327,
+      "ms": 267,
       "bytes": 46228,
       "server": "Unknown"
     },
@@ -773,7 +780,7 @@
       "url": "https://www.icts.res.in/opportunities",
       "host": "www.icts.res.in",
       "status": 200,
-      "ms": 499,
+      "ms": 446,
       "bytes": 95689,
       "server": "Apache/2.4.66 (Ubuntu)"
     },
@@ -782,7 +789,7 @@
       "url": "https://www.icts.res.in/academic/postdoctoral-fellowships",
       "host": "www.icts.res.in",
       "status": 200,
-      "ms": 501,
+      "ms": 442,
       "bytes": 97291,
       "server": "Apache/2.4.66 (Ubuntu)"
     },
@@ -791,15 +798,15 @@
       "url": "https://www.hri.res.in/advertisements/",
       "host": "www.hri.res.in",
       "status": 0,
-      "ms": 10273,
-      "error": "UND_ERR_CONNECT_TIMEOUT"
+      "ms": 1115,
+      "error": "UNABLE_TO_VERIFY_LEAF_SIGNATURE"
     },
     {
       "id": "imsc",
       "url": "https://www.imsc.res.in/other_positions",
       "host": "www.imsc.res.in",
       "status": 403,
-      "ms": 9,
+      "ms": 7,
       "bytes": 5546,
       "server": "cloudflare",
       "cf": "challenge"
@@ -808,18 +815,17 @@
       "id": "imsc",
       "url": "https://www.imsc.res.in/facultyrecruitment",
       "host": "www.imsc.res.in",
-      "status": 403,
-      "ms": 460,
-      "bytes": 5555,
-      "server": "cloudflare",
-      "cf": "challenge"
+      "status": 200,
+      "ms": 405,
+      "bytes": 45496,
+      "server": "cloudflare"
     },
     {
       "id": "iop",
       "url": "https://www.iopb.res.in/job-opening/",
       "host": "www.iopb.res.in",
       "status": 200,
-      "ms": 634,
+      "ms": 649,
       "bytes": 339799,
       "server": "nginx"
     },
@@ -828,7 +834,7 @@
       "url": "https://www.iopb.res.in/feed/?post_type=job_opening",
       "host": "www.iopb.res.in",
       "status": 200,
-      "ms": 316,
+      "ms": 334,
       "bytes": 6769,
       "server": "nginx"
     },
@@ -837,7 +843,7 @@
       "url": "https://www.saha.ac.in/web/job-opportunities",
       "host": "www.saha.ac.in",
       "status": 500,
-      "ms": 997,
+      "ms": 951,
       "bytes": 118015,
       "server": "nginx/1.20.1"
     },
@@ -845,16 +851,17 @@
       "id": "niser",
       "url": "https://www.niser.ac.in/sps/postdoc",
       "host": "www.niser.ac.in",
-      "status": 0,
-      "ms": 455,
-      "error": "ETIMEDOUT"
+      "status": 200,
+      "ms": 454,
+      "bytes": 17979,
+      "server": "Apache"
     },
     {
       "id": "rri",
       "url": "https://www.rri.res.in/careers/post-doctoral-fellowships",
       "host": "www.rri.res.in",
       "status": 200,
-      "ms": 238,
+      "ms": 241,
       "bytes": 34541,
       "server": "Apache"
     },
@@ -863,7 +870,7 @@
       "url": "https://www.prl.res.in/prl-eng/advertisement",
       "host": "www.prl.res.in",
       "status": 200,
-      "ms": 2281,
+      "ms": 574,
       "bytes": 295663,
       "server": "cloudflare"
     },
@@ -872,7 +879,7 @@
       "url": "https://www.bose.res.in/InfoAnnouncements/JobOpenings.jsp?type=ACADEMIC",
       "host": "www.bose.res.in",
       "status": 200,
-      "ms": 1153,
+      "ms": 3779,
       "bytes": 63276,
       "server": "Apache"
     },
@@ -880,16 +887,17 @@
       "id": "iacs",
       "url": "https://iacs.res.in/research-associate",
       "host": "iacs.res.in",
-      "status": 0,
-      "ms": 10491,
-      "error": "UND_ERR_CONNECT_TIMEOUT"
+      "status": 200,
+      "ms": 2879,
+      "bytes": 538694,
+      "server": "Apache"
     },
     {
       "id": "jncasr",
       "url": "https://www.jncasr.ac.in/announcements",
       "host": "www.jncasr.ac.in",
       "status": 200,
-      "ms": 383,
+      "ms": 412,
       "bytes": 113691,
       "server": "Apache/2.4.62 (Debian)"
     },
@@ -898,7 +906,7 @@
       "url": "https://www.iucaa.in/en/opportunities",
       "host": "www.iucaa.in",
       "status": 200,
-      "ms": 772,
+      "ms": 784,
       "bytes": 57398,
       "server": "Apache/2.4.53 (Debian)"
     },
@@ -907,7 +915,7 @@
       "url": "https://www.tifrh.res.in/careers/",
       "host": "www.tifrh.res.in",
       "status": 200,
-      "ms": 1693,
+      "ms": 1470,
       "bytes": 183752,
       "server": "Apache/2.4.62 (Rocky Linux) OpenSSL/3.2.2"
     },
@@ -916,7 +924,7 @@
       "url": "https://www.ncbs.res.in/careers",
       "host": "www.ncbs.res.in",
       "status": 200,
-      "ms": 1006,
+      "ms": 959,
       "bytes": 83965,
       "server": "Apache"
     },
@@ -925,7 +933,7 @@
       "url": "https://www.cmi.ac.in/positions/",
       "host": "www.cmi.ac.in",
       "status": 200,
-      "ms": 377,
+      "ms": 387,
       "bytes": 10795,
       "server": "Apache/2.4.71 (Debian)"
     },
@@ -933,17 +941,16 @@
       "id": "isi-kol",
       "url": "https://www.isical.ac.in/public/jobs",
       "host": "www.isical.ac.in",
-      "status": 200,
-      "ms": 773,
-      "bytes": 44223,
-      "server": "nginx"
+      "status": 0,
+      "ms": 10486,
+      "error": "UND_ERR_CONNECT_TIMEOUT"
     },
     {
       "id": "iia",
       "url": "https://www.iiap.res.in/iia_jobs/",
       "host": "www.iiap.res.in",
       "status": 200,
-      "ms": 404,
+      "ms": 479,
       "bytes": 30392,
       "server": "nginx"
     },
@@ -952,7 +959,7 @@
       "url": "https://www.aries.res.in/opportunities/project-position",
       "host": "www.aries.res.in",
       "status": 0,
-      "ms": 612,
+      "ms": 610,
       "error": "UNABLE_TO_VERIFY_LEAF_SIGNATURE"
     },
     {
@@ -960,7 +967,7 @@
       "url": "https://www.ncra.tifr.res.in/jobs/academic/pdf",
       "host": "www.ncra.tifr.res.in",
       "status": 200,
-      "ms": 283,
+      "ms": 319,
       "bytes": 42084,
       "server": "nginx"
     },
@@ -969,7 +976,7 @@
       "url": "https://www.ipr.res.in/careers",
       "host": "www.ipr.res.in",
       "status": 0,
-      "ms": 732,
+      "ms": 3146,
       "error": "UNABLE_TO_VERIFY_LEAF_SIGNATURE"
     },
     {
@@ -977,7 +984,7 @@
       "url": "https://inspirehep.net/api/jobs?q=status:open&size=1&fields=position",
       "host": "inspirehep.net",
       "status": 200,
-      "ms": 166,
+      "ms": 115,
       "bytes": 739,
       "server": "gunicorn/19.10.0"
     },
@@ -986,7 +993,7 @@
       "url": "https://academicjobsonline.org/ajo/public_job_boards?limit=1&page=1",
       "host": "academicjobsonline.org",
       "status": 200,
-      "ms": 102,
+      "ms": 223,
       "bytes": 36543,
       "server": "Apache"
     }
