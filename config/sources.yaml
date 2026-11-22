@@ -1,0 +1,68 @@
+# Source registry: one entry per source or page. See CLAUDE.md "Adding a source".
+# Every entry must have a row in docs/AUDIT.md with its robots/ToS verdict.
+#
+# Common keys:
+#   id, name, adapter, url, institution, country (ISO-3166 alpha-2)
+#   runner:      actions | mac        (default actions)
+#   timeoutMin:  watchdog for the whole source (default 10)
+#   crawlDelay:  seconds between requests to this host (robots.txt crawl-delay wins if larger)
+#   permission:  only if a webmaster has given written consent to crawl paths robots.txt disallows:
+#                { date: YYYY-MM-DD, from: "...", how: "email ..." }
+#   tls:         never "insecure" for a missing intermediate; put the PEM in config/ca/ instead.
+
+sources:
+  - id: inspire
+    name: INSPIRE-HEP
+    adapter: inspire
+    url: https://inspirehep.net/api/jobs?q=status:open&sort=mostrecent&size=100
+    # API limit is 15 requests / 5 s; one request a second is well inside it.
+    crawlDelay: 1
+
+  - id: ajo
+    name: AcademicJobsOnline
+    adapter: ajo
+    url: https://academicjobsonline.org/ajo/public_job_boards
+    pageSize: 500
+    # robots.txt: Crawl-delay 5 (applied automatically)
+
+  - id: iiser-pune-openings
+    name: IISER Pune
+    adapter: html-list
+    institution: IISER Pune
+    country: IN
+    url: https://www.iiserpune.ac.in/opportunities/openings
+    timeoutMin: 20            # first run fetches ~200 detail pages at one per 2 s
+    list:
+      item: ul.openings-list > li
+      title: div.title h5 a
+      link: div.title h5 a
+      ref: div.reference-id
+      dates:
+        sel: div.date
+        label: strong
+        map: { last date: deadline, published: posted }
+    detail:
+      text: main .rich-text
+      rows: table.job-details-table tr      # <th>label</th><td>value</td>
+      rowMap: { last date: deadline, advertisement number: ref }
+      pdf: a.download-link
+
+  - id: iiser-pune-faculty
+    name: IISER Pune
+    adapter: html-page
+    institution: IISER Pune
+    country: IN
+    url: https://www.iiserpune.ac.in/opportunities/academic
+    title: IISER Pune faculty positions (rolling advertisements)
+    categories: [faculty]
+    text: main .rich-text
+
+  - id: iiser-pune-postdoc
+    name: IISER Pune
+    adapter: html-page
+    institution: IISER Pune
+    country: IN
+    url: https://www.iiserpune.ac.in/opportunities/postdoctoral-research
+    title: IISER Pune Postdoctoral Research Associate (PDRA) and ANRF-NPDF positions
+    categories: [postdoc, fellowship]
+    text: main .rich-text

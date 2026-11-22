@@ -1,0 +1,23 @@
+# Concepts and variants for matching. Bhaskar curates this file: keep comments and ordering.
+#
+# variants: groups of surface words that should match each other although Porter2 stems them
+# apart (holography -> holographi, holographic -> holograph). The first word's stem is canonical.
+# Applied identically when indexing and when querying.
+variants:
+  - [postdoc, postdoctoral, post-doctoral, postdocs]
+  - [professor, professorship]
+  - [holography, holographic, holographically]
+  - [chaos, chaotic]
+  - [theory, theoretical, theorist, theorists]
+  - [gravity, gravitational]
+  - [cosmology, cosmological]
+  - [topology, topological]
+  - [geometry, geometric, geometrical]
+  - [symmetry, symmetric]
+  - [statistics, statistical]
+  - [mathematics, mathematical]
+  - [ergodic, ergodicity]
+  - [integrable, integrability]
+
+# concepts: (Phase 2) concept -> member terms and default fields.
+concepts: {}

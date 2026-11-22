@@ -1,0 +1,42 @@
+# Category rules. A posting's `categories` is a SET of {category, confidence}; every rule that
+# fires adds an entry, and an entry keeps the highest confidence any rule gave it.
+# Categories: phd, postdoc, faculty, fellowship, other.
+#
+# 1. Structured source values -> high confidence.
+structured:
+  inspire:            # INSPIRE `ranks` (a list; POSTDOC + JUNIOR is common)
+    PHD: phd
+    POSTDOC: postdoc
+    JUNIOR: faculty
+    SENIOR: faculty
+    STAFF: faculty
+    VISITOR: other
+    MASTER: other
+    UNDERGRADUATE: other
+  ajo:                # AJO / MathJobs `type`
+    Postdoctoral: postdoc
+    Postdoctoral or Fellowship: [postdoc, fellowship]
+    Fellowship or award: fellowship
+    Tenured/Tenure-track faculty: faculty
+    Tenured & Senior faculty: faculty
+    Non tenure-track faculty: faculty
+    Teaching stream faculty: faculty
+    Non-regular rank faculty: faculty
+    Open Rank: faculty
+    Student programs: phd           # often summer schools too; the title rules add detail
+    Academic admissions: phd
+    Internships: other
+    Administration: other
+    Government or industry: other
+    Other: other
+
+# 2. Title rules -> medium confidence. 3. The same rules on the body text -> low confidence,
+#    used only when nothing above fired. Patterns are case-insensitive JS regexes.
+rules:
+  - { pattern: '\bJRF\b|\bSRF\b(?!\s+cavit)|junior research fellow|senior research fellow', category: phd }
+  # (?<!post[- ]?) keeps "Postdoctoral position" out of the PhD rule.
+  - { pattern: '\bph\.?\s?d\.?\s+(student|position|candidate|program|programme|fellowship|scholarship|admission|studentship)|\bphd\b(?!\s+(holders?|required|degree))|(?<!post[- ]?)doctoral (student|candidate|position|programme|program|researcher)|integrated ph|graduate (student|program)|studentship', category: phd }
+  - { pattern: 'post[- ]?doc|\bP\.?D\.?F\b|\bN-?PDF\b|\bPDRA\b|research associate|\bRA\b', category: postdoc }
+  - { pattern: '(assistant|associate|full)\s+professor|\bprofessor\b|faculty|lecturer|tenure', category: faculty }
+  - { pattern: 'fellowship|ramanujan|inspire faculty|marie (sk[lł]odowska-)?curie|\bMSCA\b|humboldt', category: fellowship }
+  - { pattern: 'project (assistant|associate|scientist|engineer|manager)|technical|administrative|executive|officer|engineer|apprentice|consultant|clerk|driver|nurse|attendant', category: other }

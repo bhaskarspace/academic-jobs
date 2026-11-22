@@ -1,0 +1,28 @@
+{
+  "name": "academic-jobs",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "crawl": "node crawler/run.mjs --all",
+    "index": "node search/build-index.mjs",
+    "build": "node tools/build.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "smoke": "node tools/smoke.mjs",
+    "probe": "node tools/probe.mjs"
+  },
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "robots-parser": "^3.1.1",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "playwright": "^1.64.1"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
+}

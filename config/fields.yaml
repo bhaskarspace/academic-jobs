@@ -1,0 +1,21 @@
+# Field tags (arXiv-style, plus broad buckets) from source subject/department strings.
+# Each rule: a case-insensitive regex tested against the subject/department text -> tags.
+# INSPIRE arxiv_categories are taken as-is (lower-cased).
+rules:
+  - { pattern: 'high[- ]energy theory|string theory|hep-th', tags: [hep-th] }
+  - { pattern: 'high[- ]energy physics|particle physics', tags: [hep-ph, hep-ex] }
+  - { pattern: 'condensed matter|\bQCMT\b|cond-mat|materials physics', tags: [cond-mat] }
+  - { pattern: 'mathematical physics|math-ph', tags: [math-ph] }
+  - { pattern: 'gravitational|general relativity|gr-qc', tags: [gr-qc] }
+  - { pattern: 'cosmolog|astrophysic|astronom|planetary', tags: [astro-ph] }
+  - { pattern: 'quantum (information|computing|science)', tags: [quant-ph] }
+  - { pattern: 'nuclear', tags: [nucl] }
+  - { pattern: 'theoretical physics', tags: [physics, hep-th, cond-mat] }
+  - { pattern: '\bphysics\b', tags: [physics] }
+  - { pattern: 'applied math|\bmathematics\b|\bmath\b|statistics', tags: [math] }
+  - { pattern: 'computer science|artificial intelligence|machine learning|\bAI\b|data science|computational science', tags: [cs] }
+  - { pattern: 'chemistry|chemical', tags: [chem] }
+  - { pattern: 'biolog|neuroscience|biochem|microbio|biomedical|health|cardio|psychiatr', tags: [bio] }
+  - { pattern: 'engineering|robotics', tags: [eng] }
+  - { pattern: 'economics|finance|management|marketing|operations research', tags: [econ] }
+  - { pattern: 'philosophy|english|law|political|sociology|anthropolog|psycholog|education|media|communications|social sciences|public policy', tags: [humanities] }

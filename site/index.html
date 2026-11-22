@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Academic Positions Search</title>
+  <meta name="description" content="Search open PhD, postdoc, faculty and fellowship positions across INSPIRE-HEP, AcademicJobsOnline and Indian institute recruitment pages.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Academic positions</h1>
+    <p class="lede">Open PhD, postdoc, faculty and fellowship calls from job boards and Indian institute pages, searched by research topic. Each result links to the original advert.</p>
+  </header>
+
+  <main>
+    <form class="controls" id="controls" role="search" onsubmit="return false">
+      <label class="visually-hidden" for="q">Research topic</label>
+      <input id="q" name="q" type="search" autocomplete="off" spellcheck="false"
+             placeholder="Research topic, e.g. holography, many-body, AdS/CFT">
+      <div class="cats" id="cats" role="radiogroup" aria-label="Category"></div>
+      <div class="opts">
+        <label>Sort
+          <select id="sort">
+            <option value="relevance">Relevance</option>
+            <option value="deadline">Deadline</option>
+            <option value="newest">Newest</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="expired"> Show expired</label>
+      </div>
+    </form>
+
+    <p class="summary" id="summary" aria-live="polite">Loading postings…</p>
+    <ol class="results" id="results"></ol>
+    <button type="button" class="more" id="more" hidden>Show more</button>
+  </main>
+
+  <footer class="foot">
+    <p id="updated"></p>
+    <p>Sources: INSPIRE-HEP, AcademicJobsOnline, IISER Pune. More boards and institutes are being added.
+      Only titles, dates and a short snippet are shown here; always read and apply through the original advert.</p>
+    <p><a href="https://github.com/bhaskarspace/academic-jobs">Source code</a> ·
+      <a href="https://github.com/bhaskarspace/academic-jobs/issues">Report a problem</a> ·
+      <a href="/">codebpr.com</a></p>
+  </footer>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
