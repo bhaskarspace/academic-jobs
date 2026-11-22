@@ -85,5 +85,9 @@ https://codebpr.com/academic-jobs/, and all searching happens in the browser.
   `crawler/lib/ca.mjs` loads it for both the crawler and the probe. Never set `tls: insecure`
   for this.
 - Email addresses and URLs in advert text are never indexed (the tokenizer drops them).
+- Health: `crawler/lib/health.mjs` (link diffs, removed-from-source, warnings), `tools/health-issues.mjs`
+  (issues labelled `source-health`), `site/status.html`. A zero-item run keeps the previous items.
+  To test a breakage, dispatch `crawl.yml` on a branch: it uses `state-test/<branch>` and never deploys.
+  Delete the `state-test/*` branch and close its `[test: …]` issues afterwards.
 - Cron times are UTC, set on an odd minute (00:47). `crawl.yml` runs in concurrency group `crawl` and uploads the state as an artifact on every run. Each crawl run re-enables its own workflow through the API, which works
   around the 60-day inactivity rule.

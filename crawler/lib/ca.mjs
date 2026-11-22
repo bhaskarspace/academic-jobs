@@ -2,6 +2,7 @@
 // Every config/ca/*.pem is added to Node's default trust store, never in place of it. These are
 // public intermediates (and cross-signs) only; see config/ca/README.md. Never use `tls: insecure`.
 import tls from 'node:tls';
+import { X509Certificate } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 
 const dir = new URL('../../config/ca/', import.meta.url);
@@ -20,4 +21,18 @@ export function loadExtraCAs() {
     process.emitWarning(`tls.setDefaultCACertificates is missing in Node ${process.version}: config/ca/ not applied`);
   }
   return loaded;
+}
+
+/** Expiry of every certificate in config/ca/, for the health report. */
+export function caExpiries(now = new Date()) {
+  const out = [];
+  for (const file of readdirSync(dir).filter((f) => f.endsWith('.pem')).sort()) {
+    const pems = readFileSync(new URL(file, dir), 'utf8').match(/-----BEGIN CERTIFICATE-----[\s\S]+?-----END CERTIFICATE-----/g) ?? [];
+    for (const pem of pems) {
+      const c = new X509Certificate(pem);
+      const notAfter = new Date(c.validTo).toISOString();
+      out.push({ file, subject: c.subject.split('\n').find((l) => l.startsWith('CN='))?.slice(3) ?? c.subject, notAfter, daysLeft: Math.floor((Date.parse(notAfter) - now) / 86_400_000) });
+    }
+  }
+  return out;
 }

@@ -113,6 +113,7 @@ function marked(text, terms) {
 }
 
 function deadlineLine(d) {
+  if (d.g) return el('span', { class: 'dl past', title: 'No source lists this advert any more; it was probably filled or withdrawn' }, `Removed from source ${fmtDate(d.g)}`);
   if (d.roll) return el('span', { class: 'dl rolling' }, 'Rolling call, no fixed deadline');
   if (!d.d) {
     // No deadline is a flag, never a reason to drop the posting. Old ones are marked as possibly closed.
@@ -155,7 +156,9 @@ function card({ doc: d, matched }) {
   }
   const why = bySurface.size || byConcept.size
     ? el('p', { class: 'why' },
-      bySurface.size ? ['Matched: ', [...bySurface].map(([surface, mask], i) => [i ? ', ' : '', el('b', {}, surface), ` (in ${where(mask)})`]), ' '] : null,
+      'Matched: ',
+      [...bySurface].map(([surface, mask], i) => [i ? ', ' : '', el('b', {}, surface), ` (in ${where(mask)})`]),
+      bySurface.size && byConcept.size ? ' ' : null,
       [...byConcept].map(([id, g]) => {
         const label = engine.concepts[id]?.label ?? id;
         const words = [...g];

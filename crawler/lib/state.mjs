@@ -1,7 +1,8 @@
 // Persistent crawl state. Lives on the `state` branch (checked out into .state/ by crawl.yml).
 //   ids.json       { aliases: {alias: id}, postings: {id: {firstSeen, lastSeen, merged?}} }
 //   http.json      { url: {etag, lastModified, contentType} }
-//   sources.json   { sourceId: {lastRun, lastOk, items, zeroStreak, error} }
+//   sources.json   { sourceId: {lastRun, lastOk, items, zeroStreak, error, links: [sourceId...]} }
+//   robots.json    { origin: {fetched, status, body} }  last good robots.txt per host (RFC 9309 cache)
 //   meta.json      { version, updated }
 // Posting IDs are assigned ONCE, at first sight, and never recomputed: later URLs from other
 // sources become aliases of the existing ID (so firstSeen survives INSPIRE picking up an AJO ad).
@@ -9,13 +10,13 @@ import { mkdir, readFile, writeFile, access } from 'node:fs/promises';
 import path from 'node:path';
 import { sha1 } from './http.mjs';
 
-const FILES = ['ids', 'http', 'sources', 'meta'];
+const FILES = ['ids', 'http', 'sources', 'robots', 'meta'];
 
 export async function loadState(dir, { bootstrap = false } = {}) {
   const exists = await access(path.join(dir, 'meta.json')).then(() => true, () => false);
   if (!exists) {
     if (!bootstrap) throw new Error(`No state in ${dir}. Refusing to start from empty state; pass --bootstrap only for the very first run.`);
-    return { ids: { aliases: {}, postings: {} }, http: {}, sources: {}, meta: { version: 1, created: new Date().toISOString() } };
+    return { ids: { aliases: {}, postings: {} }, http: {}, sources: {}, robots: {}, meta: { version: 1, created: new Date().toISOString() } };
   }
   const s = {};
   for (const f of FILES) s[f] = JSON.parse(await readFile(path.join(dir, `${f}.json`), 'utf8').catch(() => '{}'));
@@ -60,4 +61,10 @@ export function resolveId(ids, aliases, now) {
   for (const a of aliases) ids.aliases[a] = id;
   ids.postings[id].lastSeen = now;
   return id;
+}
+
+/** The existing ID for these aliases, or null (gone items never create new IDs). */
+export function resolveExisting(ids, aliases) {
+  const id = aliases.map((a) => ids.aliases[a]).find(Boolean);
+  return id ? follow(ids, id) : null;
 }

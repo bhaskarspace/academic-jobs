@@ -112,6 +112,12 @@ const overflow = await page.evaluate(() => document.documentElement.scrollWidth 
 check('no horizontal scroll at phone width', !overflow);
 if (shots) await page.screenshot({ path: path.join(shots, 'phone-adscft.png') });
 
+await page.goto(`${base}status.html`);
+await page.waitForFunction(() => !/Loading/.test(document.getElementById('lede').textContent));
+const st = await page.evaluate(() => ({ lede: document.getElementById('lede').textContent, rows: [...document.querySelectorAll('#sources tbody tr')].map((r) => r.querySelector('.id').textContent) }));
+const health = await (await fetch(`${base}data/health.json`)).json().catch(() => null);
+check('status page lists every source', st.rows.length > 0 && (!health || Object.keys(health.sources).every((id) => st.rows.includes(id))) && !/null|undefined/.test(st.lede), `${st.rows.length} sources: ${st.lede}`);
+
 check('no console errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 await browser.close();
 server?.close();

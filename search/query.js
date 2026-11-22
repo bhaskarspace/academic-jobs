@@ -121,7 +121,8 @@ export function parseQuery(engine, q) {
   return { clauses: clauses.filter((c) => c.alts.length) };
 }
 
-export const isExpired = (d, today) => Boolean(d.d && d.d < today);
+// Removed from every source counts as expired: hidden unless expired postings are shown.
+export const isExpired = (d, today) => Boolean(d.g || (d.d && d.d < today));
 
 /** Does a document match a field facet? `physics` is the group of every physics field. */
 export function fieldFacet(d, key) {

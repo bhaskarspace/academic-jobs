@@ -12,9 +12,11 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { loadConfig } from './lib/config.mjs';
 import { Http, sha1, errorCode } from './lib/http.mjs';
-import { loadState, saveState, resolveId } from './lib/state.mjs';
+import { loadState, saveState, resolveId, resolveExisting } from './lib/state.mjs';
 import { makeCategorizer, makeFieldTagger } from './lib/categorize.mjs';
 import { normalize, mergePostings } from './lib/normalize.mjs';
+import { diffLinks, updateGone, skipReason, warningsFor } from './lib/health.mjs';
+import { caExpiries } from './lib/ca.mjs';
 
 const ADAPTERS = {
   inspire: () => import('./adapters/inspire.mjs'),
@@ -59,32 +61,50 @@ async function main() {
   try { state = await loadState(stateDir, { bootstrap: flag('bootstrap') }); }
   catch (e) { if (!dry) throw e; state = await loadState(stateDir, { bootstrap: true }); }
 
-  const http = new Http({ cacheDir: flag('no-cache') ? undefined : cacheDir, meta: state.http, log: (m) => console.error(m) });
+  state.robots ??= {};
+  const http = new Http({ cacheDir: flag('no-cache') ? undefined : cacheDir, meta: state.http, robotsCache: state.robots, log: (m) => console.error(m) });
   for (const s of all) if (s.crawlDelay) http.setHostDelay(new URL(s.url).host, s.crawlDelay);
   const cache = kv(cacheDir);
   const now = new Date().toISOString();
 
   const health = {};
   const itemsBySource = {};
+  const goneBySource = {};
   await Promise.all(all.map(async (s) => {
     const cachedKey = `items:${s.id}`;
+    const goneKey = `gone:${s.id}`;
+    goneBySource[s.id] = (await cache.get(goneKey)) ?? {};
+    const prevItems = (await cache.get(cachedKey)) ?? [];
     if (!selected.includes(s)) {
-      itemsBySource[s.id] = (await cache.get(cachedKey)) ?? [];
+      itemsBySource[s.id] = prevItems;
       return;
     }
     const t0 = Date.now();
     const log = (m) => console.error(`[${s.id}] ${m}`);
+    const prevState = state.sources[s.id] ?? {};
     try {
       const mod = await ADAPTERS[s.adapter]();
       const items = await withTimeout(mod.crawl(s, { http, log, cache }), (s.timeoutMin ?? 10) * 60_000, s.id);
+      const curIds = items.map((it) => it.sourceId);
+      if (!items.length && (prevState.items || prevItems.length)) {
+        // Zero items where there were some: probably broken markup or a block page, not an empty
+        // board. Keep the previous items and don't mark anything gone.
+        itemsBySource[s.id] = prevItems;
+        health[s.id] = { ok: true, items: 0, staleItems: prevItems.length, new: 0, gone: 0, suspect: 'zero items (previous items kept)', ms: Date.now() - t0 };
+        log(`returned no items; keeping ${prevItems.length} from the last good run`);
+        return;
+      }
+      const { added, gone } = prevState.links ? diffLinks(prevState.links, curIds) : { added: [], gone: [] };
+      goneBySource[s.id] = updateGone(goneBySource[s.id], { prevItems, goneIds: gone, curIds, now });
       itemsBySource[s.id] = items;
       await cache.set(cachedKey, items);
-      health[s.id] = { ok: true, items: items.length, ms: Date.now() - t0 };
+      await cache.set(goneKey, goneBySource[s.id]);
+      health[s.id] = { ok: true, items: items.length, new: added.length, gone: gone.length, firstRun: !prevState.links || undefined, ms: Date.now() - t0, links: curIds };
     } catch (e) {
-      const prev = (await cache.get(cachedKey)) ?? [];
-      itemsBySource[s.id] = prev;
-      health[s.id] = { ok: false, items: 0, staleItems: prev.length, error: errorCode(e), message: String(e.message).slice(0, 300), ms: Date.now() - t0 };
-      log(`FAILED ${errorCode(e)}: ${e.message}${prev.length ? ` (using ${prev.length} cached items)` : ''}`);
+      itemsBySource[s.id] = prevItems;
+      const code = errorCode(e);
+      health[s.id] = { ok: false, items: 0, staleItems: prevItems.length, error: code, skipped: skipReason(code) ?? undefined, message: String(e.message).slice(0, 300), ms: Date.now() - t0 };
+      log(`FAILED ${code}: ${e.message}${prevItems.length ? ` (using ${prevItems.length} cached items)` : ''}`);
     }
   }));
 
@@ -99,11 +119,15 @@ async function main() {
   }
   const groups = new Map();
   for (const s of all) {
-    for (const raw of itemsBySource[s.id] ?? []) {
+    const live = (itemsBySource[s.id] ?? []).map((raw) => [raw, null]);
+    const live_ids = new Set(live.map(([raw]) => raw.sourceId));
+    const gone = Object.values(goneBySource[s.id] ?? {}).filter((g) => !live_ids.has(g.item.sourceId)).map((g) => [g.item, g.goneSince]);
+    for (const [raw, goneSince] of [...live, ...gone]) {
       const weak = (raw.weakAliases ?? []).filter((a) => weakCount.get(`${s.id}\t${a}`) === 1);
       const aliases = [...new Set([raw.sourceId, ...(raw.aliases ?? []), ...weak].filter(Boolean))];
-      const id = resolveId(state.ids, aliases, now);
-      const p = normalize(raw, { categorize, fieldsOf, sourceName: s.name });
+      const id = goneSince ? resolveExisting(state.ids, aliases) : resolveId(state.ids, aliases, now);
+      if (!id) continue;
+      const p = normalize(raw, { categorize, fieldsOf, sourceName: s.name, gone: goneSince });
       if (!groups.has(id)) groups.set(id, []);
       groups.get(id).push(p);
     }
@@ -118,19 +142,35 @@ async function main() {
     const prev = state.sources[id] ?? {};
     state.sources[id] = {
       lastRun: now,
-      lastOk: h.ok ? now : prev.lastOk ?? null,
+      lastOk: h.ok && !h.suspect ? now : prev.lastOk ?? null,
       items: h.items,
       zeroStreak: h.items === 0 ? (prev.zeroStreak ?? 0) + 1 : 0,
       error: h.error ?? null,
+      links: h.links ?? prev.links,
     };
+    delete h.links;
+    h.zeroStreak = state.sources[id].zeroStreak;
+    h.lastOk = state.sources[id].lastOk;
   }
+  // Every source in the report, including ones not crawled this run.
+  const report = {};
+  for (const s of all) {
+    const st = state.sources[s.id] ?? {};
+    report[s.id] = { name: s.name, url: s.url, crawled: Boolean(health[s.id]), ...(health[s.id] ?? { items: st.items ?? 0 }), zeroStreak: st.zeroStreak ?? 0, lastRun: st.lastRun ?? null, lastOk: st.lastOk ?? null };
+  }
+  const certs = caExpiries(new Date(now));
+  const robots = await http.robotsReport();
+  const out = { built: now, run: process.env.GITHUB_RUN_ID ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}` : null,
+    postings: postings.length, gone: postings.filter((p) => p.gone).length, http: http.stats, sources: report, robots, certs };
+  out.warnings = warningsFor(out);
 
   await mkdir(outDir, { recursive: true });
   await writeFile(path.join(outDir, 'postings.json'), JSON.stringify({ built: now, postings }));
-  await writeFile(path.join(outDir, 'health.json'), JSON.stringify({ built: now, http: http.stats, sources: health, state: state.sources }, null, 1));
+  await writeFile(path.join(outDir, 'health.json'), JSON.stringify(out, null, 1));
   if (!dry) await saveState(stateDir, state);
 
-  for (const [id, h] of Object.entries(health)) console.error(`${h.ok ? 'ok  ' : 'FAIL'} ${id.padEnd(22)} ${String(h.items).padStart(5)} items  ${(h.ms / 1000).toFixed(1)} s${h.error ? `  ${h.error}` : ''}`);
+  for (const w of out.warnings) console.error(`::warning::${w}`);
+  for (const [id, h] of Object.entries(health)) console.error(`${h.ok ? 'ok  ' : 'FAIL'} ${id.padEnd(22)} ${String(h.items).padStart(5)} items  +${h.new ?? 0} -${h.gone ?? 0}  ${(h.ms / 1000).toFixed(1)} s${h.error ? `  ${h.error}` : ''}${h.suspect ? `  ${h.suspect}` : ''}`);
   console.error(`${postings.length} postings after merging; http ${JSON.stringify(http.stats)}${dry ? ' (dry run: state not saved)' : ''}`);
   if (Object.values(health).every((h) => !h.ok)) process.exitCode = 1;
 }

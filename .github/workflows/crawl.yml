@@ -4,6 +4,9 @@ name: crawl
 #   - persistent state is a single force-pushed orphan commit on the `state` branch,
 #     plus a 90-day workflow artifact per run so one bad run can't destroy the only copy;
 #   - the HTTP/detail cache lives in the Actions cache (safe to lose).
+# Dispatched on any branch other than main (to test a change, e.g. a broken selector), the run
+# uses its own state branch `state-test/<branch>` (seeded from `state`), opens health issues
+# tagged with the branch, and neither deploys nor touches `state`.
 on:
   schedule:
     - cron: '47 0 * * *'   # 06:17 IST. Odd minute: runs at :00/:30 get delayed most.
@@ -27,6 +30,10 @@ permissions:
   pages: write
   id-token: write
   actions: write          # re-enable this workflow (60-day inactivity rule)
+  issues: write           # open/close health issues
+
+env:
+  STATE_BRANCH: ${{ github.ref_name == 'main' && 'state' || format('state-test/{0}', github.ref_name) }}
 
 jobs:
   crawl:
@@ -40,9 +47,13 @@ jobs:
           BOOTSTRAP: ${{ inputs.bootstrap }}
         run: |
           mkdir -p .state
-          if git ls-remote --exit-code --heads origin state >/dev/null; then
-            if [ "$BOOTSTRAP" = "true" ]; then echo "::error::state branch exists; refusing to bootstrap over it"; exit 1; fi
-            git fetch --depth=1 origin state
+          SRC="$STATE_BRANCH"
+          if [ "$STATE_BRANCH" != "state" ] && ! git ls-remote --exit-code --heads origin "$STATE_BRANCH" >/dev/null; then
+            echo "Test branch: seeding $STATE_BRANCH from state."; SRC=state
+          fi
+          if git ls-remote --exit-code --heads origin "$SRC" >/dev/null; then
+            if [ "$BOOTSTRAP" = "true" ]; then echo "::error::$SRC exists; refusing to bootstrap over it"; exit 1; fi
+            git fetch --depth=1 origin "$SRC"
             git archive FETCH_HEAD | tar -x -C .state
             ls -la .state
           elif [ "$BOOTSTRAP" = "true" ]; then
@@ -95,7 +106,17 @@ jobs:
       - name: No email addresses in the public index
         run: node tools/check-emails.mjs --index dist/data/index.json --postings .out/postings.json
 
+      - name: Health issues (open after 3 zero runs, close on recovery)
+        continue-on-error: true   # an API hiccup must not stop the deploy or the state push
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create source-health --color d93f0b --description "Opened and closed by the crawl's health report" 2>/dev/null || true
+          node tools/health-issues.mjs
+
       - uses: actions/upload-pages-artifact@v3
+        if: github.ref_name == 'main'
         with:
           path: dist
 
@@ -108,19 +129,21 @@ jobs:
           cd .state
           rm -rf .git
           git init -q
-          git checkout -q --orphan state
+          git checkout -q --orphan "$STATE_BRANCH"
           git add -A
           git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
             commit -q -m "state after run $RUN ($(date -u +%Y-%m-%dT%H:%MZ))"
-          git push -q -f "https://x-access-token:${TOKEN}@github.com/${REPO}.git" state
+          git push -q -f "https://x-access-token:${TOKEN}@github.com/${REPO}.git" "HEAD:refs/heads/$STATE_BRANCH"
 
       - name: Keep the schedule alive
+        if: github.ref_name == 'main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/crawl.yml/enable"
 
   deploy:
     needs: crawl
+    if: github.ref_name == 'main'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

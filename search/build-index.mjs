@@ -79,7 +79,7 @@ export function buildIndex(postings, { variants = {}, concepts = {}, approach = 
     }
     const bodyConcepts = new Set([...hitConcepts.meta, ...hitConcepts.body]);
     const general = hitConcepts.title.size === 0 && (bodyConcepts.size === 0 || bodyConcepts.size >= UMBRELLA_CONCEPTS);
-    docs.push({ p, len, general, approach: approachOf({ title: p.title ?? '', body: p.body ?? '' }) });
+    docs.push({ p, len, general, approach: approachOf({ title: p.title ?? '', body: p.body ?? '', unit: p.institution ?? '' }) });
   }
 
   // Surface forms: only for terms written in more than one way; the most common first.
@@ -216,6 +216,7 @@ function displayRecord({ p, len, general, approach }) {
   };
   if (approach.length) r.ap = approach.map((a) => `${APPROACH_SHORT[a.approach]}:${SHORT_CONF[a.confidence]}`);
   if (general) r.gen = 1;
+  if (p.gone) r.g = p.gone.slice(0, 10);
   if (p.rolling) r.roll = 1;
   if (p.pdfUrls?.length) r.pdf = p.pdfUrls[0];
   return r;

@@ -2,6 +2,10 @@
 # A cue in the title gives high confidence. In the ad text, two or more distinct cues give
 # medium confidence and a single cue gives low confidence. A posting can carry several tags,
 # and one with no cue carries none (the filter keeps untagged postings).
+# Explicit theory cues win (search/approach.mjs): a group/unit/department name with
+# Theory/Theoretical, or "theoretical ... physics" in the title or first ~300 characters, gives
+# theory high confidence; such a posting is tagged experimental only by a title cue or a phrase
+# from `explicit.experimental`.
 theory:
   - '\btheor(y|ies|etical|etically|ist|ists)\b'
   - '\banalytic(al)? (methods|approach|work|calculations)\b'
@@ -23,3 +27,9 @@ experimental:
   - '\bcryostats?\b|\bdilution refrigerators?\b|\bcryogenic\b'
   - '\b(STM|ARPES|MBE|thin[- ]film growth|spectroscopy|microscopy|detector development|hands-on)\b'
   - '\b(apparatus|test ?beam|data[- ]taking|instrumentation)\b'
+explicit:
+  experimental:
+    - '\bexperimental(ist)? (position|postdoc|researcher|physicist|work|research|program|project|techniques|skills|setup|apparatus|measurements?|group)\b'
+    - '\bexperience (in|with) (experimental|laboratory|lab|instrumentation|fabrication|cryogenic)'
+    - '\bhands-on\b'
+    - '\b(build|construct|operate|commission)(ing)? (the |an |a |new )?(experiments?|apparatus|detectors?|setups?|instruments?)\b'
