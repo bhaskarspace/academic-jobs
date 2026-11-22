@@ -82,3 +82,7 @@ test('stopwords, bare numbers and Devanagari are dropped', () => {
   assert.deepEqual(terms('the of and 2026'), []);
   assert.deepEqual(terms('भौतिक विज्ञान Physics'), ['physic']);
 });
+
+test('email addresses and URLs are not indexed', () => {
+  assert.deepEqual(terms('Write to jane.doe@example.edu or see https://example.edu/jobs now'), ['write', 'see', 'now']);
+});

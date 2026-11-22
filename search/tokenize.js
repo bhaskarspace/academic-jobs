@@ -112,6 +112,8 @@ export function tokenize(text, { variants } = {}) {
     const trail = TRAIL.exec(raw);
     if (trail) raw = raw.slice(0, -trail[0].length);
     if (!raw) continue;
+    // Email addresses and URLs are never indexed (no personal data in the public index).
+    if (raw.includes('@') || /^(https?:|www\.)/i.test(raw)) continue;
     const c = fold(raw);
     if (!GROUP.test(c) && !DIMS.test(c)) {
       // Strip unbalanced/outer parentheses: "(holography)" -> "holography".
