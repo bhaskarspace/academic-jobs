@@ -3,7 +3,9 @@
 //   N=4 SYM  -> n=4, sym                SU(N), U(1), SL(2,R)   -> su(n), u(1), sl(2,r)
 //   TTbar / T\bar{T} / TT̄  -> ttbar    2+1D, (2+1)-dimensional, 2+1 dimensions -> 2+1d
 //   many-body -> mani, bodi, manybodi   Greek letters -> spelled names (β -> beta)
-// Each token carries the [start, end) span in the original string so the UI can highlight it.
+// Each token carries the [start, end) span in the original string so the UI can highlight it,
+// and `form`: the folded surface word with a plural ending removed (surfaceKey), which lets the
+// ranking prefer an exact form ("topological") over a stem-only match ("topology").
 // `variants` (from concepts/physics.yaml) folds morphological variants Porter2 keeps apart,
 // e.g. holography/holographic, onto one stem; pass the same table on both sides.
 
@@ -48,6 +50,14 @@ function fold(s) {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
+// The surface form used for exact-match ranking: the folded word without a plural/possessive
+// ending, so "topologies" and "topology" count as the same form but "topological" does not.
+export function surfaceKey(w) {
+  if (w.length > 4 && w.endsWith('ies')) return w.slice(0, -3) + 'y';
+  if (w.length > 3 && w.endsWith('s') && !/(ss|us|is)$/.test(w)) return w.slice(0, -1);
+  return w;
+}
+
 function stemWord(w, variants) {
   if (PROTECTED.has(w)) return w;
   const s = stem(w);
@@ -58,16 +68,20 @@ function stemWord(w, variants) {
 function chunkTokens(raw, start, out, variants) {
   const c = fold(raw);
   const end = start + raw.length;
-  const push = (term, s = start, e = end, joined = false) => out.push(joined ? { term, start: s, end: e, joined } : { term, start: s, end: e });
+  const push = (term, form, s = start, e = end, joined = false) => {
+    const t = { term, form: surfaceKey(form), start: s, end: e };
+    if (joined) t.joined = true;
+    out.push(t);
+  };
 
-  if (TTBAR.test(c)) return push('ttbar');
+  if (TTBAR.test(c)) return push('ttbar', 'ttbar');
   let m;
-  if ((m = DIMS.exec(c))) return push(`${m[1]}+${m[2]}d`);
-  if (GROUP.test(c)) return push(c);
-  if ((m = NEQ.exec(c))) return push(`${m[1]}=${m[2]}`);
+  if ((m = DIMS.exec(c))) return push(`${m[1]}+${m[2]}d`, `${m[1]}+${m[2]}d`);
+  if (GROUP.test(c)) return push(c, c);
+  if ((m = NEQ.exec(c))) return push(`${m[1]}=${m[2]}`, `${m[1]}=${m[2]}`);
   if ((m = SUBSCRIPTED.exec(c)) && !/^\d+$/.test(m[1])) {
-    push(stemWord(m[1], variants));
-    return push(m[1] + m[2]);
+    push(stemWord(m[1], variants), m[1]);
+    return push(m[1] + m[2], m[1] + m[2]);
   }
 
   // Compounds: split on / - – and emit the parts plus the joined form.
@@ -79,7 +93,7 @@ function chunkTokens(raw, start, out, variants) {
     const w = parts[0].w;
     if (/^\d+$/.test(w)) return;           // bare numbers are not indexed
     if (STOPWORDS.has(w) || w.length < 2) return;
-    return push(stemWord(w, variants));
+    return push(stemWord(w, variants), w);
   }
   // The fold can change length (Greek -> names), so part offsets are mapped proportionally;
   // they only drive highlighting, and the joined token always covers the whole chunk.
@@ -87,11 +101,11 @@ function chunkTokens(raw, start, out, variants) {
   for (const { w, i } of parts) {
     if (/^\d+$/.test(w) || STOPWORDS.has(w) || w.length < 2) continue;
     const s = start + Math.round(i * scale);
-    push(stemWord(w, variants), s, Math.min(end, s + Math.round(w.length * scale)));
+    push(stemWord(w, variants), w, s, Math.min(end, s + Math.round(w.length * scale)));
   }
   const joined = parts.map((p) => p.w).join('');
   // `joined` marks the compound form; a query treats it as a bonus, not a requirement.
-  if (/[a-z]/.test(joined) && joined.length <= 40) push(stemWord(joined, variants), start, end, true);
+  if (/[a-z]/.test(joined) && joined.length <= 40) push(stemWord(joined, variants), joined, start, end, true);
 }
 
 // Outer punctuation that never belongs to a token. Parentheses are kept when they are part of
@@ -112,6 +126,8 @@ export function tokenize(text, { variants } = {}) {
     const trail = TRAIL.exec(raw);
     if (trail) raw = raw.slice(0, -trail[0].length);
     if (!raw) continue;
+    // Email addresses and URLs are never indexed (no personal data in the public index).
+    if (raw.includes('@') || /^(https?:|www\.)/i.test(raw)) continue;
     const c = fold(raw);
     if (!GROUP.test(c) && !DIMS.test(c)) {
       // Strip unbalanced/outer parentheses: "(holography)" -> "holography".

@@ -3,6 +3,8 @@
 # variants: groups of surface words that should match each other although Porter2 stems them
 # apart (holography -> holographi, holographic -> holograph). The first word's stem is canonical.
 # Applied identically when indexing and when querying.
+# Every build writes candidate pairs to data/variant-candidates.yaml (also in .out/ locally):
+# move a pair here to approve it, or to `notVariants:` below to stop it being suggested.
 variants:
   - [postdoc, postdoctoral, post-doctoral, postdocs]
   - [professor, professorship]
@@ -18,6 +20,229 @@ variants:
   - [mathematics, mathematical]
   - [ergodic, ergodicity]
   - [integrable, integrability]
+  - [matrix, matrices]
+  - [superconductivity, superconductor, superconducting]
 
-# concepts: (Phase 2) concept -> member terms and default fields.
-concepts: {}
+# Pairs the variant review rejected: never suggested again.
+notVariants: []
+
+# concepts: what a topic search expands to.
+#   query:  words that invoke the concept. Each also counts as a direct match, anywhere.
+#   fields: arXiv-style fields where an expanded hit counts (field gating). A posting matched only
+#           through `terms` must have one of these fields, so "inflation" (cosmology) skips
+#           economics postings and "Lyapunov" (chaos) skips control-engineering ones.
+#           `physics` is the broad tag for physics departments without a finer subject.
+#           Postings in these fields (other than `physics`) that name no topic are listed under
+#           the results as general calls.
+#   terms:  member words and phrases. Phrases match consecutive words; hyphens are optional
+#           ("many-body localization" also matches "many body localization").
+#   weak:   members too broad to count on their own ("thermalization" also turns up in plasma and
+#           accelerator ads). They count next to the query word, another member, or a second weak one.
+# A literal hit of the typed word ranks above a hit through a member term.
+concepts:
+  chaos:
+    label: quantum chaos
+    query: [chaos, quantum chaos, chaotic]
+    fields: [hep-th, cond-mat, quant-ph, math-ph, nlin, gr-qc, physics]
+    terms: [scrambling, OTOC, OTOCs, out-of-time-order, out-of-time-ordered, Lyapunov exponent,
+      butterfly velocity, random matrix theory, spectral form factor, SYK, Sachdev-Ye-Kitaev,
+      eigenstate thermalization, quantum ergodicity, many-body localization, many-body localized, MBL,
+      operator growth, operator spreading, Krylov complexity]
+    weak: [Lyapunov, random matrix, RMT, level statistics, thermalization, ergodicity, nonlinear dynamics]
+
+  holography:
+    label: holography
+    query: [holography, holographic, gauge/gravity duality, gauge-gravity duality]
+    fields: [hep-th, gr-qc, cond-mat, quant-ph, math-ph, physics]
+    terms: [AdS/CFT, anti-de Sitter, gauge/gravity, celestial holography, flat space holography,
+      bulk reconstruction, entanglement wedge, Ryu-Takayanagi, holographic entanglement,
+      holographic complexity, JT gravity, Jackiw-Teitelboim, AdS2, AdS3, AdS4, AdS5, dS/CFT]
+
+  black-holes:
+    label: black holes
+    query: [black holes, black hole]
+    fields: [hep-th, gr-qc, astro-ph, math-ph, physics]
+    terms: [information paradox, Hawking radiation, event horizon, black hole microstates,
+      Page curve, entanglement islands, wormhole, wormholes, fuzzball, fuzzballs]
+    weak: [microstates, Kerr, Schwarzschild]
+
+  entanglement:
+    label: entanglement
+    query: [entanglement, quantum entanglement]
+    fields: [hep-th, cond-mat, quant-ph, math-ph, gr-qc, physics]
+    terms: [entanglement entropy, Renyi entropy, mutual information, Ryu-Takayanagi, entanglement spectrum,
+      area law, tensor network, tensor networks, MPS, PEPS, quantum complexity, entanglement islands]
+
+  topological-phases:
+    label: topological phases
+    query: [topological, topological phases, topological phase, topological matter, topological order]
+    fields: [cond-mat, quant-ph, hep-th, math-ph, physics]
+    terms: [topological insulator, topological insulators, topological superconductor, topological superconductivity,
+      topological quantum computation, anyon, anyons, anyonic, Majorana, quantum Hall, fractional quantum Hall,
+      Chern insulator, Chern number, Berry phase, Berry curvature, symmetry-protected, SPT, Weyl semimetal,
+      Dirac semimetal, TQFT, topological quantum field theory, fracton, fractons, edge states, Kitaev model]
+
+  strongly-correlated:
+    label: strongly correlated systems
+    query: [strongly correlated, strong correlations, correlated electrons, strongly correlated systems]
+    fields: [cond-mat, quant-ph, physics]
+    terms: [Hubbard model, Mott insulator, Mott transition, heavy fermion, heavy fermions, Kondo, quantum magnetism,
+      frustrated magnetism, spin liquid, spin liquids, quantum spin liquid, high-Tc, cuprate, cuprates,
+      strange metal, strange metals, non-Fermi liquid, quantum criticality, quantum critical, DMFT,
+      dynamical mean-field theory, moire, twisted bilayer graphene, Luttinger liquid]
+
+  superconductivity:
+    label: superconductivity
+    query: [superconductivity, superconductor, superconducting]
+    fields: [cond-mat, quant-ph, physics]
+    terms: [BCS, Cooper pairs, Cooper pairing, high-Tc, cuprate, cuprates, unconventional superconductivity,
+      Josephson, Josephson junction, pair density wave, nematicity, Eliashberg]
+
+  quantum-information:
+    label: quantum information
+    query: [quantum information, quantum computing, quantum computation, quantum information science, quantum computer]
+    fields: [quant-ph, cond-mat, hep-th, math-ph, cs, physics]
+    terms: [qubit, qubits, quantum error correction, QEC, quantum algorithm, quantum algorithms, quantum circuit,
+      quantum circuits, quantum simulation, quantum simulator, NISQ, quantum channel, quantum channels,
+      quantum communication, quantum cryptography, quantum key distribution, quantum metrology,
+      quantum sensing, fault-tolerant, fault tolerance, surface code, quantum software, quantum Shannon theory]
+
+  string-theory:
+    label: string theory
+    query: [string theory, superstring, superstrings, string theorist]
+    fields: [hep-th, math-ph, gr-qc, physics]
+    terms: [D-brane, D-branes, branes, M-theory, F-theory, compactification, compactifications, Calabi-Yau,
+      string compactification, swampland, string phenomenology, supergravity, SUGRA, worldsheet,
+      topological string, topological strings, string field theory, mirror symmetry]
+
+  cft:
+    label: conformal field theory
+    query: [CFT, CFTs, conformal field theory, conformal field theories]
+    fields: [hep-th, cond-mat, math-ph, physics]
+    terms: [conformal bootstrap, Virasoro, vertex operator algebra, vertex operator algebras,
+      boundary CFT, conformal symmetry, AdS/CFT, operator product expansion]
+    weak: [bootstrap, critical phenomena]
+
+  integrability:
+    label: integrability
+    query: [integrability, integrable, integrable systems]
+    fields: [hep-th, math-ph, cond-mat, nlin, physics]
+    terms: [Bethe ansatz, Yang-Baxter, spin chain, spin chains, quantum groups, soliton, solitons, Yangian,
+      exactly solvable, integrable models]
+
+  nonequilibrium:
+    label: nonequilibrium dynamics
+    query: [nonequilibrium, non-equilibrium, out of equilibrium, out-of-equilibrium, nonequilibrium dynamics,
+      quantum dynamics]
+    fields: [cond-mat, quant-ph, hep-th, math-ph, nlin, physics]
+    terms: [quantum quench, prethermalization, Floquet, open quantum systems, Lindblad, time crystal, time crystals,
+      many-body localization, MBL, active matter]
+    weak: [quench, quenches, thermalization, driven systems, dissipative, hydrodynamics]
+
+  stat-mech:
+    label: statistical mechanics
+    query: [statistical mechanics, statistical physics, stat mech, stat-mech]
+    fields: [cond-mat, math-ph, nlin, quant-ph, physics]
+    terms: [phase transitions, phase transition, critical phenomena, Ising, renormalization group, spin glass,
+      spin glasses, disordered systems, stochastic processes, soft matter, complex systems, large deviations,
+      active matter]
+
+  quantum-gravity:
+    label: quantum gravity
+    query: [quantum gravity]
+    fields: [hep-th, gr-qc, math-ph, physics]
+    terms: [loop quantum gravity, LQG, holography, asymptotic safety, causal sets, spin foams, spin foam,
+      de Sitter, swampland, quantum cosmology, emergent spacetime, information paradox, black hole information]
+
+  cosmology:
+    label: cosmology
+    query: [cosmology, cosmological]
+    fields: [astro-ph, gr-qc, hep-th, hep-ph, physics]
+    terms: [cosmic inflation, CMB, cosmic microwave background, dark energy, dark matter, large-scale structure,
+      early universe, baryogenesis, reheating, cosmic strings]
+    weak: [inflation, primordial]
+
+  gravitational-waves:
+    label: gravitational waves
+    query: [gravitational waves, gravitational wave, gravitational-wave]
+    fields: [gr-qc, astro-ph, hep-th, physics]
+    terms: [LIGO, Virgo, KAGRA, LISA, compact binaries, binary black holes, waveform, waveforms,
+      numerical relativity, post-Newtonian, pulsar timing]
+
+  general-relativity:
+    label: general relativity
+    query: [general relativity, gravitation]
+    fields: [gr-qc, hep-th, astro-ph, math-ph, physics]
+    terms: [numerical relativity, black holes, spacetime, Einstein equations, modified gravity,
+      mathematical relativity, Kerr]
+
+  qft:
+    label: quantum field theory
+    query: [QFT, quantum field theory, quantum field theories]
+    fields: [hep-th, hep-ph, cond-mat, math-ph, physics]
+    terms: [gauge theory, gauge theories, Yang-Mills, scattering amplitudes, renormalization, effective field theory,
+      EFT, supersymmetry, SUSY, anomalies, generalized symmetries, higher-form symmetries, non-invertible symmetries]
+
+  amplitudes:
+    label: scattering amplitudes
+    query: [scattering amplitudes, amplitudes]
+    fields: [hep-th, hep-ph, math-ph, physics]
+    terms: [amplituhedron, on-shell, positive geometry, S-matrix, S-matrix bootstrap, Feynman integrals,
+      loop integrals, double copy, celestial amplitudes]
+
+  lattice:
+    label: lattice gauge theory
+    query: [lattice QCD, lattice gauge theory, lattice field theory]
+    fields: [hep-lat, hep-ph, hep-th, nucl-th, physics]
+    terms: [lattice QCD, hadron spectroscopy]
+    weak: [Monte Carlo]
+
+  phenomenology:
+    label: particle phenomenology
+    query: [phenomenology, particle phenomenology, BSM, beyond the standard model]
+    fields: [hep-ph, hep-ex, hep-th, astro-ph, physics]
+    terms: [Higgs, collider, colliders, LHC, neutrino, neutrinos, dark matter, flavour physics, flavor physics,
+      Standard Model, axion, axions, electroweak, QCD]
+
+  dark-matter:
+    label: dark matter
+    query: [dark matter]
+    fields: [astro-ph, hep-ph, hep-ex, gr-qc, physics]
+    terms: [WIMP, WIMPs, axion, axions, axion-like, direct detection, indirect detection, sterile neutrino,
+      sterile neutrinos, dark sector]
+
+  quantum-matter:
+    label: quantum matter
+    query: [condensed matter, condensed matter theory, quantum matter, quantum materials]
+    fields: [cond-mat, quant-ph, physics]
+    terms: [strongly correlated, topological phases, superconductivity, quantum magnetism, quantum many-body,
+      ultracold atoms, moire, graphene, 2D materials, spintronics, DMRG, tensor networks]
+
+  many-body:
+    label: quantum many-body physics
+    query: [many-body, many body, quantum many-body]
+    fields: [cond-mat, quant-ph, hep-th, nucl-th, math-ph, physics]
+    terms: [DMRG, tensor network, tensor networks, quantum Monte Carlo, exact diagonalization, Hubbard model,
+      spin chain, spin chains, ultracold atoms, many-body localization, MBL, correlated electrons]
+
+  cold-atoms:
+    label: ultracold atoms
+    query: [cold atoms, ultracold atoms, ultracold, AMO, atomic physics]
+    fields: [quant-ph, cond-mat, physics]
+    terms: [optical lattice, optical lattices, Bose-Einstein condensate, Bose-Einstein condensates, BEC,
+      Rydberg, trapped ions, trapped ion, optical tweezers, quantum gases, Feshbach]
+
+  machine-learning:
+    label: machine learning
+    query: [machine learning, ML, deep learning]
+    fields: [cs, stat, physics, hep-th, hep-ph, cond-mat, quant-ph, astro-ph]
+    terms: [neural network, neural networks, artificial intelligence, physics-informed, generative models,
+      reinforcement learning, transformers, large language models]
+
+  mathematical-physics:
+    label: mathematical physics
+    query: [mathematical physics, math-ph]
+    fields: [math-ph, hep-th, physics]
+    terms: [operator algebras, von Neumann algebras, representation theory, vertex operator algebras, quantum groups,
+      spectral theory, Schrodinger operators, noncommutative geometry, TQFT, topological quantum field theory,
+      mirror symmetry, geometric quantization, moduli spaces]

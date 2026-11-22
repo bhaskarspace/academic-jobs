@@ -1,4 +1,4 @@
-<!-- Status: plan approved 2026-11-22 with amendments to Phases 1 and 2 (folded in below). No phase has shipped yet. Update this line as phases land. -->
+<!-- Status: plan approved 2026-11-22 with amendments to Phases 1 and 2 (folded in below). Phase 1 shipped 2026-11-22 (PRs #1, #2). Phase 2 in review. Update this line as phases land. -->
 
 # Academic job search on codebpr.com/academic-jobs/: plan
 
@@ -223,6 +223,9 @@ Adding a source means one entry in `sources.yaml`, plus a fixture and a test. A 
    - **General calls section.** Many strong theory postdocs (ICTS, IMSc, Perimeter, KIAS) and every institute PhD admission call name no topic, so a topic query never matches them. A posting with no concept hits whose fields match the query concept's default fields is listed in a second section under the topic matches, headed e.g. "Open calls in hep-th / cond-mat that don't name a topic".
    - **Variant candidates for review.** At build time, write candidate variant pairs (index terms that share a prefix of 6+ characters but stem differently, e.g. postdoc/postdoctoral) to a review file, so variants are approved in batches instead of being found one search at a time.
    - **Probe obeys robots.txt.** `tools/probe.mjs` checks robots.txt the way the crawler does and skips disallowed paths (Phase 1's probe fetched HRI and IPR pages that robots.txt blocks).
+   - **Exact form above stem-only.** The index records which surface forms of a term each posting used (bits above the field bits). A hit on the typed form outranks one that only shares the stem: "topological" ranks a "topological" ad above a "Topology" title.
+   - **"Physics" field group.** A one-click facet next to the individual field facets, covering every physics arXiv field (hep-*, gr-qc, cond-mat, quant-ph, math-ph, astro-ph, nucl-*, nlin, physics.*). It drops the MathJobs/AJO maths postings from physics topic queries.
+   - **Weak members.** Concept members too broad to count alone (thermalization, Lyapunov, random matrix) count only next to the query word, another member, or a second weak member.
    - **Theory / computational / experimental tag** from text cues (theoretical, numerical, simulation vs experimental, laboratory, fabrication, beamline, cryostat), with confidence, as a filter. Add a few labelled cases of each to the Phase 12 eval set.
    - Acceptance:
      - "chaos" returns at least one posting that never contains the word "chaos" (e.g. an OTOC or MBL ad), and its chip says why.
@@ -233,6 +236,9 @@ Adding a source means one entry in `sources.yaml`, plus a fixture and a test. A 
      - A probe run reports HRI and IPR pages as "skipped (robots.txt)" without fetching them.
      - Editing the YAML and re-running `npm run build` changes the results.
      - The hep-th and cond-mat facet filters work.
+     - "topological" + Postdoc ranks the Leeds, SJTU and Hanyang quantum-matter postdocs above the pure-maths ones (IHES Simons, SDU Quantum Mathematics, Warsaw quantum topology).
+     - SYK and Lyapunov: no posting crawled on 2026-11-22 mentions either in its title or full ad text, so "chaos" can't find them yet. Their concept entries are covered by fixture tests, and a real SYK/Lyapunov ad will match "chaos" when one appears.
+     - "Show more" appears only when more results exist, and never while "Loading postings…" is up.
 
 3. **Health and change detection.**
    - Per-page link-set diffing gives new-since-last-run counts.
@@ -243,8 +249,11 @@ Adding a source means one entry in `sources.yaml`, plus a fixture and a test. A 
 4. **MathJobs, cross-source dedupe and link-outs.**
    - The MathJobs adapter (shared with AJO), the institution alias table, merging duplicates, and the link-out row plus static links.
    - Read the Times Higher Ed ToS and decide whether to include it.
+   - **Description similarity.** Title similarity misses some duplicates: the Oxford posting with Mezei, Schafer-Nameki and Sparks appears as INSPIRE "Three Postdoc Positions" and AJO "Postdoctoral Research Associate in Mathematical Physics", both with deadline 30 Nov. Within the institution block, also merge on description similarity (shingles over the first ~300 words) together with the deadline check. Alias "U. Oxford (main)" to "University of Oxford", and use this pair as a test fixture.
+   - **Full institution names.** Show INSPIRE institutions by their full names instead of ICN abbreviations like "Bergische U., Wuppertal (main)".
    - Acceptance:
      - A postdoc listed on both INSPIRE and AJO shows once, with both source badges.
+     - The Oxford INSPIRE/AJO pair above merges into one posting.
      - The link-out buttons open each board's search with the query already filled in.
 
 5. **PDF extraction and Indian text heuristics.**

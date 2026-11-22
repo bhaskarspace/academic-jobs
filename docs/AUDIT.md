@@ -66,7 +66,10 @@ one of four groups, and none of them is specific to the runners' location:
    `UNABLE_TO_VERIFY_LEAF_SIGNATURE` everywhere, curl on the runner included (`ssl=20`). Their
    servers leave out an intermediate certificate. The fix is to ship the missing intermediates
    in `config/ca/` (Phase 7/8), never to disable verification. HRI and IPR are link-outs under
-   robots.txt anyway.
+   robots.txt anyway. Phase 2 added their intermediates (`config/ca/README.md`) so that the
+   probe can read their robots.txt: both say `User-agent: * / Disallow: /`, and the probe now
+   reports their pages as "skipped (robots.txt)" without fetching them. Jodhpur, Bhilai and ARIES
+   still need theirs.
 3. **Responses that depend on the HTTP client.** IIT Gandhinagar (Cloudflare challenge) and IMSc's
    `other_positions` page return 403 to Node's `fetch`, and SINP's job page returns 500 to it. curl
    from the same runner gets 200 from all three, so the response depends on the client's headers or
