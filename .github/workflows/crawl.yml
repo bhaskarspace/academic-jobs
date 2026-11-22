@@ -87,6 +87,7 @@ jobs:
           path: .state/*.json
           retention-days: 90
           if-no-files-found: error
+          include-hidden-files: true   # .state/ is a dot-directory; upload-artifact skips those by default
 
       - name: Build site
         run: node tools/build.mjs
