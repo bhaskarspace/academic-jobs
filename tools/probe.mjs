@@ -5,6 +5,10 @@
 // No dependencies, so it runs on a bare runner before `npm ci`.
 
 import { readFile, writeFile } from 'node:fs/promises';
+import net from 'node:net';
+
+// Same as crawler/lib/http.mjs: give each address family 2.5 s instead of Node's 250 ms default.
+if (!process.argv.includes('--node-default-family-timeout')) net.setDefaultAutoSelectFamilyAttemptTimeout(2500);
 
 const UA = 'academic-jobs/0.1 (+https://github.com/bhaskarspace/academic-jobs/issues)';
 const TIMEOUT_MS = 30_000;

@@ -1,0 +1,126 @@
+name: crawl
+# Daily crawl -> build -> deploy to GitHub Pages. Data never lands on main:
+#   - the site (and its index) ships as a Pages artifact;
+#   - persistent state is a single force-pushed orphan commit on the `state` branch,
+#     plus a 90-day workflow artifact per run so one bad run can't destroy the only copy;
+#   - the HTTP/detail cache lives in the Actions cache (safe to lose).
+on:
+  schedule:
+    - cron: '47 0 * * *'   # 06:17 IST. Odd minute: runs at :00/:30 get delayed most.
+  workflow_dispatch:
+    inputs:
+      bootstrap:
+        description: 'First run only: start from empty state (fails if a state branch exists)'
+        type: boolean
+        default: false
+      sources:
+        description: 'Space-separated source ids to crawl (blank = all; the rest reuse cached items)'
+        type: string
+        default: ''
+
+concurrency:
+  group: crawl            # a dispatched run queues behind the cron run instead of racing on `state`
+  cancel-in-progress: false
+
+permissions:
+  contents: write         # push the state branch
+  pages: write
+  id-token: write
+  actions: write          # re-enable this workflow (60-day inactivity rule)
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Load state branch
+        env:
+          BOOTSTRAP: ${{ inputs.bootstrap }}
+        run: |
+          mkdir -p .state
+          if git ls-remote --exit-code --heads origin state >/dev/null; then
+            if [ "$BOOTSTRAP" = "true" ]; then echo "::error::state branch exists; refusing to bootstrap over it"; exit 1; fi
+            git fetch --depth=1 origin state
+            git archive FETCH_HEAD | tar -x -C .state
+            ls -la .state
+          elif [ "$BOOTSTRAP" = "true" ]; then
+            echo "Bootstrapping from empty state."
+          else
+            echo "::error::No state branch. Dispatch with bootstrap=true only for the very first run."; exit 1
+          fi
+
+      - uses: actions/cache/restore@v4
+        with:
+          path: .cache
+          key: crawl-cache-${{ github.run_id }}
+          restore-keys: crawl-cache-
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+      - name: Crawl
+        env:
+          BOOTSTRAP: ${{ inputs.bootstrap }}
+          SOURCES: ${{ inputs.sources }}
+        run: |
+          ARGS="--all"
+          if [ -n "$SOURCES" ]; then ARGS=""; for s in $SOURCES; do ARGS="$ARGS --source $s"; done; fi
+          if [ "$BOOTSTRAP" = "true" ]; then ARGS="$ARGS --bootstrap"; fi
+          node crawler/run.mjs $ARGS
+
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: .cache
+          key: crawl-cache-${{ github.run_id }}
+
+      - name: Snapshot state (90-day artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: state-${{ github.run_id }}
+          path: .state/*.json
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Build site
+        run: node tools/build.mjs
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Push state (single orphan commit, force-pushed)
+        env:
+          TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN: ${{ github.run_id }}
+        run: |
+          cd .state
+          rm -rf .git
+          git init -q
+          git checkout -q --orphan state
+          git add -A
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit -q -m "state after run $RUN ($(date -u +%Y-%m-%dT%H:%MZ))"
+          git push -q -f "https://x-access-token:${TOKEN}@github.com/${REPO}.git" state
+
+      - name: Keep the schedule alive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/crawl.yml/enable"
+
+  deploy:
+    needs: crawl
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

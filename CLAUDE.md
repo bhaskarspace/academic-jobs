@@ -29,7 +29,8 @@ https://codebpr.com/academic-jobs/, and all searching happens in the browser.
   The build and the browser must tokenize identically.
 - `site/` is the frontend: vanilla JS with no framework, bundled by esbuild into `dist/`.
 - `tests/` runs with `node --test`. `tests/fixtures/` holds saved HTML/JSON/PDF responses for
-  each adapter.
+  each adapter. The repo is public, so trim advert text in fixtures to short excerpts (INSPIRE
+  metadata is CC0 and can stay whole).
 - `.github/workflows/`: `crawl.yml` (cron and dispatch, crawl → build → deploy Pages artifact),
   `ci.yml`, `probe.yml`.
 
