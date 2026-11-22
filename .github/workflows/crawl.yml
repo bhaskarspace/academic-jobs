@@ -92,6 +92,9 @@ jobs:
       - name: Build site
         run: node tools/build.mjs
 
+      - name: No email addresses in the public index
+        run: node tools/check-emails.mjs --index dist/data/index.json --postings .out/postings.json
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

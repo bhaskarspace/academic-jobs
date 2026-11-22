@@ -244,6 +244,7 @@ Adding a source means one entry in `sources.yaml`, plus a fixture and a test. A 
    - Per-page link-set diffing gives new-since-last-run counts.
    - Gone-from-source status, `health.json`, a zero-streak counter, and an issue auto-opened after 3 zero runs (auto-closed when the source recovers).
    - `status.html` shows a table of sources: last run, items, new, errors and a streak warning.
+   - The health report warns 30 days before any certificate in `config/ca/` expires (and the status page shows it).
    - Acceptance: the status page lists every source. Pointing one source at a bad selector on a test branch opens an issue after 3 dispatched runs.
 
 4. **MathJobs, cross-source dedupe and link-outs.**
