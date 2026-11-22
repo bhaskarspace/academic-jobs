@@ -85,4 +85,7 @@ test('stopwords, bare numbers and Devanagari are dropped', () => {
 
 test('email addresses and URLs are not indexed', () => {
   assert.deepEqual(terms('Write to jane.doe@example.edu or see https://example.edu/jobs now'), ['write', 'see', 'now']);
+  assert.deepEqual(terms('E-mail: todo(at)nifs.ac.jp, chen_[at]_as.edu.tw or jo%40x.org'), ['mail', 'email']);
+  assert.deepEqual(terms('see (https://x.org/a) and physics.iisc.ac.in or ictp-ap.org.'), ['see']);
+  assert.ok(terms('Ph.D. and U.S.A.').length > 0, 'abbreviations are still indexed');
 });
