@@ -33,9 +33,9 @@ export function planIssues(health, open, branch = 'main') {
     const key = `source:${id}${tag}`;
     if ((s.zeroStreak ?? 0) >= ISSUE_STREAK) {
       want.set(key, {
-        title: `[health] ${id} returns no items${tTag}`,
+        title: `[health] ${id} returns no or too few items${tTag}`,
         body: [
-          `The source \`${id}\` (${s.name ?? id}, ${s.url}) has returned no items for ${s.zeroStreak} runs in a row.`,
+          `The source \`${id}\` (${s.name ?? id}, ${s.url}) has returned no items, or a suspect drop, for ${s.zeroStreak} runs in a row.`,
           '',
           `- Last good run: ${s.lastOk ?? 'never'}`,
           `- Last error: ${s.skipped ? `skipped (${s.skipped})` : s.error ?? (s.suspect ? s.suspect : 'none (the page parsed but matched nothing; check the selectors)')}`,
@@ -47,7 +47,7 @@ export function planIssues(health, open, branch = 'main') {
           `<!-- health:${key} -->`,
         ].filter((l) => l !== null).join('\n'),
       });
-    } else if (s.crawled && s.items > 0) recovered.add(key);
+    } else if (s.crawled && s.items > 0 && !s.suspect) recovered.add(key);
   }
   const certKeys = new Set();
   for (const c of health.certs ?? []) {

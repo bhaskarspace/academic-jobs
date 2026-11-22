@@ -129,7 +129,7 @@ export function buildIndex(postings, { variants = {}, concepts = {}, approach = 
     variants,
     concepts: compiled,
     forms: shippedForms,
-    docs: docs.map((d) => displayRecord(d)),
+    docs: docs.map((d) => displayRecord(d, built)),
     index,
   };
   // The most common surface form of every term, for the variant review (not shipped).
@@ -196,7 +196,7 @@ export function variantCandidatesYaml(cands, built) {
   ].join('\n');
 }
 
-function displayRecord({ p, len, general, approach }) {
+function displayRecord({ p, len, general, approach }, built) {
   const r = {
     id: p.id,
     t: p.title,
@@ -216,7 +216,11 @@ function displayRecord({ p, len, general, approach }) {
   };
   if (approach.length) r.ap = approach.map((a) => `${APPROACH_SHORT[a.approach]}:${SHORT_CONF[a.confidence]}`);
   if (general) r.gen = 1;
-  if (p.gone) r.g = p.gone.slice(0, 10);
+  if (p.gone) {
+    r.g = p.gone.slice(0, 10);
+    // Off an institute's list page but its deadline is still ahead: stays visible until then.
+    if (p.goneSoft && p.deadline && p.deadline >= built.slice(0, 10)) r.ol = 1;
+  }
   if (p.rolling) r.roll = 1;
   if (p.pdfUrls?.length) r.pdf = p.pdfUrls[0];
   return r;

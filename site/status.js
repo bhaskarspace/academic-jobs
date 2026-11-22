@@ -10,16 +10,18 @@ const when = (iso) => (iso ? new Date(iso).toLocaleString('en-GB', { dateStyle: 
 const STREAK_WARN = 3;
 
 function state(s) {
+  if (s.linkOut) return ['idle', 'Link-out'];
   if (!s.crawled) return ['idle', 'Not crawled this run'];
   if (s.skipped) return ['skip', `Skipped: ${s.skipped}`];
   if (!s.ok) return ['fail', 'Failed'];
   if (s.zeroStreak >= STREAK_WARN) return ['fail', `No items for ${s.zeroStreak} runs`];
-  if (s.suspect) return ['warn', 'Returned nothing'];
+  if (s.suspect) return ['warn', s.items ? 'Suspect drop' : 'Returned nothing'];
   return ['ok', 'OK'];
 }
 
 function note(s) {
   const bits = [];
+  if (s.linkOut && s.note) bits.push(s.note);
   if (s.error && !s.skipped) bits.push(s.error);
   if (s.suspect) bits.push(s.suspect);
   if (s.staleItems) bits.push(`showing ${s.staleItems} items from the last good run`);

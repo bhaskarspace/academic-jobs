@@ -9,6 +9,8 @@
 #   permission:  only if a webmaster has given written consent to crawl paths robots.txt disallows:
 #                { date: YYYY-MM-DD, from: "...", how: "email ..." }
 #   tls:         never "insecure" for a missing intermediate; put the PEM in config/ca/ instead.
+#   adapter: link-out  listed on the status page (and later in the link-out row), never crawled;
+#                      `note` says why.
 
 sources:
   - id: inspire
@@ -66,3 +68,11 @@ sources:
     title: IISER Pune Postdoctoral Research Associate (PDRA) and ANRF-NPDF positions
     categories: [postdoc, fellowship]
     text: main .rich-text
+
+  - id: ncbs
+    name: NCBS Bangalore
+    adapter: link-out
+    url: https://www.ncbs.res.in/careers
+    institution: National Centre for Biological Sciences, Bengaluru
+    country: IN
+    note: Never reachable from GitHub runners (connection timeouts on every probe, robots.txt included); answers from a residential connection. Link-out rather than a Mac fallback.

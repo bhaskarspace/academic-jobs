@@ -15,7 +15,7 @@ import { Http, sha1, errorCode } from './lib/http.mjs';
 import { loadState, saveState, resolveId, resolveExisting } from './lib/state.mjs';
 import { makeCategorizer, makeFieldTagger } from './lib/categorize.mjs';
 import { normalize, mergePostings } from './lib/normalize.mjs';
-import { diffLinks, updateGone, skipReason, warningsFor } from './lib/health.mjs';
+import { diffLinks, updateGone, skipReason, warningsFor, suspectRun, SOFT_GONE_ADAPTERS } from './lib/health.mjs';
 import { caExpiries } from './lib/ca.mjs';
 
 const ADAPTERS = {
@@ -52,7 +52,9 @@ const withTimeout = (promise, ms, what) => Promise.race([
 async function main() {
   const cfg = await loadConfig();
   const wanted = many('source');
-  const all = cfg.sources.filter((s) => s.enabled !== false);
+  // Link-outs are listed on the status page but never crawled.
+  const linkOuts = cfg.sources.filter((s) => s.adapter === 'link-out');
+  const all = cfg.sources.filter((s) => s.enabled !== false && s.adapter !== 'link-out');
   for (const id of wanted) if (!all.some((s) => s.id === id)) throw new Error(`unknown source ${id}`);
   const selected = all.filter((s) => (flag('all') || wanted.includes(s.id)) && (!runner || (s.runner ?? 'actions') === runner));
   if (!selected.length) throw new Error('nothing to crawl: pass --source <id> or --all');
@@ -86,16 +88,17 @@ async function main() {
       const mod = await ADAPTERS[s.adapter]();
       const items = await withTimeout(mod.crawl(s, { http, log, cache }), (s.timeoutMin ?? 10) * 60_000, s.id);
       const curIds = items.map((it) => it.sourceId);
-      if (!items.length && (prevState.items || prevItems.length)) {
-        // Zero items where there were some: probably broken markup or a block page, not an empty
-        // board. Keep the previous items and don't mark anything gone.
+      const suspect = suspectRun(items.length, prevItems.length || prevState.items || 0);
+      if (suspect) {
+        // Zero items, or a large drop: probably broken markup or a block page, not a board that
+        // emptied overnight. Keep the previous items and don't mark anything gone.
         itemsBySource[s.id] = prevItems;
-        health[s.id] = { ok: true, items: 0, staleItems: prevItems.length, new: 0, gone: 0, suspect: 'zero items (previous items kept)', ms: Date.now() - t0 };
-        log(`returned no items; keeping ${prevItems.length} from the last good run`);
+        health[s.id] = { ok: true, items: items.length, staleItems: prevItems.length, new: 0, gone: 0, suspect, ms: Date.now() - t0 };
+        log(`${suspect}; keeping ${prevItems.length} items from the last good run`);
         return;
       }
       const { added, gone } = prevState.links ? diffLinks(prevState.links, curIds) : { added: [], gone: [] };
-      goneBySource[s.id] = updateGone(goneBySource[s.id], { prevItems, goneIds: gone, curIds, now });
+      goneBySource[s.id] = updateGone(goneBySource[s.id], { prevItems, goneIds: gone, curIds, now, soft: SOFT_GONE_ADAPTERS.has(s.adapter) });
       itemsBySource[s.id] = items;
       await cache.set(cachedKey, items);
       await cache.set(goneKey, goneBySource[s.id]);
@@ -121,13 +124,14 @@ async function main() {
   for (const s of all) {
     const live = (itemsBySource[s.id] ?? []).map((raw) => [raw, null]);
     const live_ids = new Set(live.map(([raw]) => raw.sourceId));
-    const gone = Object.values(goneBySource[s.id] ?? {}).filter((g) => !live_ids.has(g.item.sourceId)).map((g) => [g.item, g.goneSince]);
-    for (const [raw, goneSince] of [...live, ...gone]) {
+    const gone = Object.values(goneBySource[s.id] ?? {}).filter((g) => !live_ids.has(g.item.sourceId)).map((g) => [g.item, g]);
+    for (const [raw, g] of [...live, ...gone]) {
+      const goneSince = g?.goneSince ?? null;
       const weak = (raw.weakAliases ?? []).filter((a) => weakCount.get(`${s.id}\t${a}`) === 1);
       const aliases = [...new Set([raw.sourceId, ...(raw.aliases ?? []), ...weak].filter(Boolean))];
       const id = goneSince ? resolveExisting(state.ids, aliases) : resolveId(state.ids, aliases, now);
       if (!id) continue;
-      const p = normalize(raw, { categorize, fieldsOf, sourceName: s.name, gone: goneSince });
+      const p = normalize(raw, { categorize, fieldsOf, sourceName: s.name, gone: goneSince, goneSoft: Boolean(g?.soft) });
       if (!groups.has(id)) groups.set(id, []);
       groups.get(id).push(p);
     }
@@ -144,7 +148,8 @@ async function main() {
       lastRun: now,
       lastOk: h.ok && !h.suspect ? now : prev.lastOk ?? null,
       items: h.items,
-      zeroStreak: h.items === 0 ? (prev.zeroStreak ?? 0) + 1 : 0,
+      // Runs in a row with no items or a suspect drop (named zeroStreak for history).
+      zeroStreak: h.items === 0 || h.suspect ? (prev.zeroStreak ?? 0) + 1 : 0,
       error: h.error ?? null,
       links: h.links ?? prev.links,
     };
@@ -158,6 +163,7 @@ async function main() {
     const st = state.sources[s.id] ?? {};
     report[s.id] = { name: s.name, url: s.url, crawled: Boolean(health[s.id]), ...(health[s.id] ?? { items: st.items ?? 0 }), zeroStreak: st.zeroStreak ?? 0, lastRun: st.lastRun ?? null, lastOk: st.lastOk ?? null };
   }
+  for (const s of linkOuts) report[s.id] = { name: s.name, url: s.url, linkOut: true, note: s.note ?? null, crawled: false, items: 0, zeroStreak: 0 };
   const certs = caExpiries(new Date(now));
   const robots = await http.robotsReport();
   const out = { built: now, run: process.env.GITHUB_RUN_ID ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}` : null,
