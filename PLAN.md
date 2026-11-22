@@ -221,12 +221,16 @@ Adding a source means one entry in `sources.yaml`, plus a fixture and a test. A 
    - Build-time concept tokens, query expansion, "matched via" chips and field facets.
    - **Field-gated expansion.** A literal hit of the query word counts anywhere. An expanded hit (Lyapunov, random matrix, nonlinear dynamics, thermalization) counts only when the posting's fields overlap the concept's default fields. Otherwise control-engineering jobs on AJO and probability postdocs on MathJobs flood "chaos".
    - **General calls section.** Many strong theory postdocs (ICTS, IMSc, Perimeter, KIAS) and every institute PhD admission call name no topic, so a topic query never matches them. A posting with no concept hits whose fields match the query concept's default fields is listed in a second section under the topic matches, headed e.g. "Open calls in hep-th / cond-mat that don't name a topic".
+   - **Variant candidates for review.** At build time, write candidate variant pairs (index terms that share a prefix of 6+ characters but stem differently, e.g. postdoc/postdoctoral) to a review file, so variants are approved in batches instead of being found one search at a time.
+   - **Probe obeys robots.txt.** `tools/probe.mjs` checks robots.txt the way the crawler does and skips disallowed paths (Phase 1's probe fetched HRI and IPR pages that robots.txt blocks).
    - **Theory / computational / experimental tag** from text cues (theoretical, numerical, simulation vs experimental, laboratory, fabrication, beamline, cryostat), with confidence, as a filter. Add a few labelled cases of each to the Phase 12 eval set.
    - Acceptance:
      - "chaos" returns at least one posting that never contains the word "chaos" (e.g. an OTOC or MBL ad), and its chip says why.
      - "chaos" doesn't return a control-engineering or probability posting that only matched through an expanded term.
      - "chaos" + Postdoc shows a second "Open calls in hep-th / cond-mat …" section containing at least one topic-less call (e.g. ICTS or Perimeter from AJO).
      - The theory/experiment filter hides an obviously experimental posting.
+     - The variant review file lists postdoc/postdoctoral-style pairs, and approving one (moving it into `variants:`) changes the search results after `npm run build`.
+     - A probe run reports HRI and IPR pages as "skipped (robots.txt)" without fetching them.
      - Editing the YAML and re-running `npm run build` changes the results.
      - The hep-th and cond-mat facet filters work.
 
