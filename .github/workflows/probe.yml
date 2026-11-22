@@ -14,8 +14,19 @@ jobs:
         with:
           node-version: 22
       - run: npm ci
+      # Last good robots.txt copies, used when a host's robots.txt is unreachable (RFC 9309).
+      - uses: actions/cache/restore@v4
+        with:
+          path: .probe-robots.json
+          key: probe-robots-${{ github.run_id }}
+          restore-keys: probe-robots-
       - name: Probe (Node fetch)
-        run: node tools/probe.mjs --label runner --json probe-runner.json --md probe-runner.md --allowed probe-allowed.txt
+        run: node tools/probe.mjs --label runner --json probe-runner.json --md probe-runner.md --allowed probe-allowed.txt --robots-cache .probe-robots.json
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: .probe-robots.json
+          key: probe-robots-${{ github.run_id }}
       - name: Probe (curl, for comparison; only URLs robots.txt allows)
         run: |
           while read -r u; do

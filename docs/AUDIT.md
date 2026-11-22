@@ -101,3 +101,9 @@ URLs that failed somewhere (all others answered 200 in all three runs):
 | isi-kol | https://www.isical.ac.in/public/jobs | 200 | 200 | UND_ERR_CONNECT_TIMEOUT | 000 |
 | aries | https://www.aries.res.in/opportunities/project-position | UNABLE_TO_VERIFY_LEAF_SIGNATURE | UNABLE_TO_VERIFY_LEAF_SIGNATURE | UNABLE_TO_VERIFY_LEAF_SIGNATURE | 000 |
 | ipr | https://www.ipr.res.in/careers | UNABLE_TO_VERIFY_LEAF_SIGNATURE | UNABLE_TO_VERIFY_LEAF_SIGNATURE | UNABLE_TO_VERIFY_LEAF_SIGNATURE | 000 |
+
+### NCBS: link-out (2026-11-22)
+NCBS (www.ncbs.res.in) has never answered a GitHub runner: connection timeouts on every probe,
+including on robots.txt after three tries in Phase 3. It answers from a residential connection.
+It is a link-out in `config/sources.yaml` (`adapter: link-out`) rather than a reason to build the
+Mac fallback (Phase 10).

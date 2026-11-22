@@ -1,6 +1,6 @@
 // Polite HTTP client for the crawler.
 //  - identifies itself (UA with the repo issues URL; never an email address)
-//  - obeys robots.txt (RFC 9309: 4xx = allow all, 5xx/unreachable = disallow all) and crawl-delay
+//  - obeys robots.txt (RFC 9309, see robots.mjs: retried, last good copy when unreachable) and crawl-delay
 //  - spaces requests per host (default 2 s), runs different hosts concurrently
 //  - conditional requests (ETag / Last-Modified) with an on-disk body cache for 304s
 //  - hard timeouts and a small retry with backoff
@@ -8,7 +8,7 @@ import net from 'node:net';
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import robotsParser from 'robots-parser';
+import { fetchRobots, blockedReason, RobotsDisallowed } from './robots.mjs';
 import { loadExtraCAs } from './ca.mjs';
 
 // Node's happy-eyeballs gives each address family 250 ms by default, which is too short for some
@@ -18,14 +18,11 @@ net.setDefaultAutoSelectFamilyAttemptTimeout(2500);
 loadExtraCAs();
 
 export const UA = 'academic-jobs/0.1 (+https://github.com/bhaskarspace/academic-jobs/issues)';
-const UA_TOKEN = 'academic-jobs';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export const sha1 = (s) => createHash('sha1').update(s).digest('hex');
 
-export class RobotsDisallowed extends Error {
-  constructor(url) { super(`robots.txt disallows ${url}`); this.code = 'ROBOTS_DISALLOWED'; }
-}
+export { RobotsDisallowed };
 
 export class HttpError extends Error {
   constructor(url, status) { super(`HTTP ${status} for ${url}`); this.code = `HTTP_${status}`; this.status = status; }
@@ -36,16 +33,17 @@ export class Http {
    * @param {object} o
    * @param {string} [o.cacheDir]   where 304 bodies are kept (Actions cache; safe to lose)
    * @param {object} [o.meta]       persistent {url: {etag, lastModified}} (lives in state)
+   * @param {object} [o.robotsCache] persistent {origin: {fetched, status, body}} (lives in state)
    * @param {number} [o.minGapMs]   default per-host spacing
    * @param {number} [o.timeoutMs]  total time per request, including the body
    * @param {(msg:string)=>void} [o.log]
    */
-  constructor({ cacheDir, meta = {}, minGapMs = 2000, timeoutMs = 45_000, retries = 2, log = () => {} } = {}) {
-    Object.assign(this, { cacheDir, meta, minGapMs, timeoutMs, retries, log });
+  constructor({ cacheDir, meta = {}, robotsCache = {}, minGapMs = 2000, timeoutMs = 45_000, retries = 2, log = () => {} } = {}) {
+    Object.assign(this, { cacheDir, meta, robotsCache, minGapMs, timeoutMs, retries, log });
     this.robots = new Map();     // origin -> Promise<{allowed(url), delayMs, status}>
     this.hostQueue = new Map();  // host -> Promise chain
     this.hostGap = new Map();    // host -> configured gap override (ms)
-    this.stats = { requests: 0, notModified: 0, errors: 0, bytes: 0 };
+    this.stats = { requests: 0, notModified: 0, errors: 0, bytes: 0, robotsSkipped: { disallowed: 0, unreachable: 0 } };
   }
 
   setHostDelay(host, seconds) {
@@ -54,25 +52,26 @@ export class Http {
 
   async robotsFor(origin) {
     if (!this.robots.has(origin)) {
-      this.robots.set(origin, (async () => {
-        const url = `${origin}/robots.txt`;
-        try {
-          const res = await this.#raw(url, {});
-          const status = res.status;
-          if (status >= 200 && status < 300) {
-            const txt = await res.text();
-            const r = robotsParser(url, txt);
-            return { status, allowed: (u) => r.isAllowed(u, UA_TOKEN) !== false, delayMs: (r.getCrawlDelay(UA_TOKEN) ?? 0) * 1000 };
-          }
-          await res.arrayBuffer().catch(() => {});
-          if (status >= 400 && status < 500) return { status, allowed: () => true, delayMs: 0 };
-          return { status, allowed: () => false, delayMs: 0 };
-        } catch (e) {
-          return { status: 0, error: e.cause?.code || e.name, allowed: () => false, delayMs: 0 };
-        }
-      })());
+      this.robots.set(origin, fetchRobots(origin, {
+        cache: this.robotsCache,
+        retries: this.retries,
+        get: async (url) => { const res = await this.#raw(url, {}); return { status: res.status, text: await res.text() }; },
+      }).then((r) => {
+        if (r.source !== 'live') this.log(`robots.txt for ${origin} unreachable (${r.error || r.status}); ${r.source === 'cache' ? `using the copy from ${r.cachedAt}` : 'no cached copy, so nothing is fetched'}`);
+        return r;
+      }));
     }
     return this.robots.get(origin);
+  }
+
+  /** {origin: {status, source, error, cachedAt}} for the health report. */
+  async robotsReport() {
+    const out = {};
+    for (const [origin, p] of this.robots) {
+      const r = await p;
+      out[origin] = { status: r.status, source: r.source, error: r.error ?? undefined, cachedAt: r.cachedAt };
+    }
+    return out;
   }
 
   async isAllowed(url) {
@@ -117,7 +116,10 @@ export class Http {
    */
   async get(url, { binary = false, conditional = true, ignoreRobots = false, accept } = {}) {
     const u = new URL(url);
-    if (!ignoreRobots && !(await this.isAllowed(url))) throw new RobotsDisallowed(url);
+    if (!ignoreRobots) {
+      const why = blockedReason(await this.robotsFor(u.origin), url);
+      if (why) { this.stats.robotsSkipped[why]++; throw new RobotsDisallowed(url, why); }
+    }
 
     return this.#schedule(u.host, async () => {
       const cp = this.#cachePath(url);

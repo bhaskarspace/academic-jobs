@@ -7,11 +7,13 @@ const PRIORITY = { inspire: 3, ajo: 2, mathjobs: 2 };
 const prio = (src) => PRIORITY[src] ?? 1;
 const RANK = { high: 3, medium: 2, low: 1 };
 
-export function normalize(raw, { categorize, fieldsOf, sourceName }) {
+export function normalize(raw, { categorize, fieldsOf, sourceName, gone = null, goneSoft = false }) {
   const body = clean(raw.body ?? '');
   const subjectText = raw.subject ?? (raw.scheme ? '' : `${raw.title ?? ''}\n${body.slice(0, 600)}`);
   return {
-    sources: [{ source: raw.source, name: sourceName, url: raw.url, sourceId: raw.sourceId }],
+    sources: [{ source: raw.source, name: sourceName, url: raw.url, sourceId: raw.sourceId, ...(gone ? { gone } : {}) }],
+    gone: gone ?? null,
+    goneSoft: Boolean(gone && goneSoft),
     url: raw.url,
     applyUrl: raw.applyUrl ?? null,
     // Cleaned here, not in the adapter, so clean-up fixes apply to cached items without a recrawl.
@@ -36,7 +38,8 @@ export function normalize(raw, { categorize, fieldsOf, sourceName }) {
 }
 
 export function mergePostings(list) {
-  list.sort((a, b) => b._prio - a._prio);
+  // Live copies first: a posting is "removed from source" only when every source removed it.
+  list.sort((a, b) => Boolean(a.gone) - Boolean(b.gone) || b._prio - a._prio);
   const [p, ...rest] = list;
   const out = { ...p, sources: [...p.sources] };
   const cats = new Map(p.categories.map((c) => [c.category, c.confidence]));
@@ -58,6 +61,10 @@ export function mergePostings(list) {
     .sort((a, b) => RANK[b.confidence] - RANK[a.confidence]);
   out.fields = [...fields].sort();
   out.body = bodies.join('\n\n');
+  out.gone = list.every((q) => q.gone) ? list.map((q) => q.gone).sort().at(-1) : null;
+  // "No longer on the list page" (stays visible until its deadline) only if every source that
+  // dropped it is a list page; a job board dropping it means it closed.
+  out.goneSoft = Boolean(out.gone) && list.every((q) => q.goneSoft);
   delete out._prio;
   return out;
 }

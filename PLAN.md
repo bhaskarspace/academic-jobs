@@ -1,4 +1,4 @@
-<!-- Status: plan approved 2026-11-22 with amendments to Phases 1 and 2 (folded in below). Phase 1 shipped 2026-11-22 (PRs #1, #2). Phase 2 in review. Update this line as phases land. -->
+<!-- Status: plan approved 2026-11-22 with amendments to Phases 1 and 2 (folded in below). Phase 1 shipped 2026-11-22 (PRs #1, #2). Phase 2 shipped 2026-11-22 (PR #4; email hotfix #3). Phase 3 in review. Update this line as phases land. -->
 
 # Academic job search on codebpr.com/academic-jobs/: plan
 
@@ -245,6 +245,12 @@ Adding a source means one entry in `sources.yaml`, plus a fixture and a test. A 
    - Gone-from-source status, `health.json`, a zero-streak counter, and an issue auto-opened after 3 zero runs (auto-closed when the source recovers).
    - `status.html` shows a table of sources: last run, items, new, errors and a streak warning.
    - The health report warns 30 days before any certificate in `config/ca/` expires (and the status page shows it).
+   - A suspect run keeps the previous items, marks nothing gone, warns, and counts toward the 3-run issue streak. Suspect means zero items where there were some, or fewer than half of a previous count of 10 or more: a restructure that leaves 3 stray links where there were 216 must not hide 213 postings.
+   - Removal depends on the kind of source. On a job board (INSPIRE, AJO, MathJobs), a dropped posting has closed: "removed from source", hidden like an expired posting. On an institute list page (html-list and other HTML kinds), pages trim and paginate adverts that are still open: a dropped posting with a future deadline stays visible until that deadline, marked "no longer on the list page".
+   - Dispatching `crawl.yml` on a branch other than main uses `state-test/<branch>` (seeded from `state`), tags its issues with the branch, and doesn't deploy.
+   - **robots.txt** is retried like page fetches. When it is still unreachable, the last good copy (kept in state) is used (RFC 9309 permits a cached copy); disallow-all only when there is no copy. The health report shows "skipped: robots.txt unreachable" separately from "skipped: robots.txt disallows". Test cases: IIT Kharagpur and NCBS (the probe keeps its own copies in the Actions cache).
+   - **Approach tags: explicit theory cues win.** A group/unit/department name with Theory/Theoretical, or "theoretical … physics" in the title or first ~300 characters, gives Theory with high confidence. A high-confidence Theory posting gets Experimental only from an explicit experimental phrase. Fixtures: UCSD theoretical cond-mat, Academia Sinica Quantum Matter Theory Group, IHES "Postdoctoral position in Physics", Florida theoretical/computational QI.
+   - The "Matched:" label leads the match line even when every hit came through a concept.
    - Acceptance: the status page lists every source. Pointing one source at a bad selector on a test branch opens an issue after 3 dispatched runs.
 
 4. **MathJobs, cross-source dedupe and link-outs.**
@@ -255,6 +261,7 @@ Adding a source means one entry in `sources.yaml`, plus a fixture and a test. A 
    - Acceptance:
      - A postdoc listed on both INSPIRE and AJO shows once, with both source badges.
      - The Oxford INSPIRE/AJO pair above merges into one posting.
+     - A second fixture: NYU's Feinberg fellowship appears as AJO "Postdoctoral Asscociate / Carl Feinberg Institute Fellow" (NYU CCPP) and INSPIRE "Feinberg Postdoctoral Prize Fellowship" (New York U. (main)), both closing 1 Dec. Description shingles merge it the same way as the Oxford pair.
      - The link-out buttons open each board's search with the query already filled in.
 
 5. **PDF extraction and Indian text heuristics.**
@@ -277,7 +284,7 @@ Adding a source means one entry in `sources.yaml`, plus a fixture and a test. A 
    - Playwright in the crawl job, used only for sources marked `adapter: js-rendered`: IIT Ropar, IIT Tirupati, IIT Jammu and IISER Tirupati. I'll first look for their JSON endpoints and use one wherever it exists.
    - Acceptance: postings from those sites appear, and the crawl stays under 20 minutes.
 
-10. **Mac fallback hardening.**
+10. **Mac fallback hardening.** (Likely to be dropped: NCBS, the only host so far that answers from a residential connection but never from a runner, is a link-out instead. If Phases 6–8 find no other Mac-only host, drop this phase and renumber.)
     - This phase only exists if Phase 1's probe found blocked hosts; otherwise I drop it and renumber.
     - It covers launchd scheduling, retry when the Mac was asleep, and a stale-inbox warning on the status page.
     - Acceptance: hosts marked `runner: mac` update after the Mac's run, and the status page shows when the inbox was last pushed.

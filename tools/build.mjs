@@ -20,15 +20,15 @@ await rm(out, { recursive: true, force: true });
 await mkdir(path.join(out, 'data'), { recursive: true });
 
 await build({
-  entryPoints: ['site/app.js'],
+  entryPoints: ['site/app.js', 'site/status.js'],
   bundle: true,
   minify: true,
   format: 'esm',
   target: ['es2020'],
-  outfile: path.join(out, 'app.js'),
+  outdir: out,
   logLevel: 'warning',
 });
-for (const f of ['index.html', 'styles.css']) await copyFile(path.join('site', f), path.join(out, f));
+for (const f of ['index.html', 'status.html', 'styles.css']) await copyFile(path.join('site', f), path.join(out, f));
 
 const { built, postings } = JSON.parse(await readFile(postingsFile, 'utf8'));
 const cfg = await loadIndexConfig();
