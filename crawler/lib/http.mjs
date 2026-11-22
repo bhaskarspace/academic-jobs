@@ -9,10 +9,13 @@ import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import robotsParser from 'robots-parser';
+import { loadExtraCAs } from './ca.mjs';
 
 // Node's happy-eyeballs gives each address family 250 ms by default, which is too short for some
 // Indian hosts from GitHub runners (they failed with ETIMEDOUT while curl got through).
 net.setDefaultAutoSelectFamilyAttemptTimeout(2500);
+// Missing intermediates for hosts with incomplete chains (config/ca/).
+loadExtraCAs();
 
 export const UA = 'academic-jobs/0.1 (+https://github.com/bhaskarspace/academic-jobs/issues)';
 const UA_TOKEN = 'academic-jobs';

@@ -26,7 +26,10 @@ https://codebpr.com/academic-jobs/, and all searching happens in the browser.
   - `crawler/lib/` holds http (UA, robots, rate limits, conditional requests, timeouts), pdf
     (`pdftotext`), dates, normalize, categorize, dedupe, changes, state and health.
 - `search/` is shared by the build and the browser: stem, tokenize, concepts, build-index, query.
-  The build and the browser must tokenize identically.
+  The build and the browser must tokenize identically. `search/approach.mjs` (the
+  theory/computational/experimental tag, from `config/approach.yaml`) runs only at build time.
+- Each build writes `variant-candidates.yaml` to `.out/` and to the site's `data/`, for approving
+  variant pairs in batches (into `variants:`, or reject them into `notVariants:`).
 - `site/` is the frontend: vanilla JS with no framework, bundled by esbuild into `dist/`.
 - `tests/` runs with `node --test`. `tests/fixtures/` holds saved HTML/JSON/PDF responses for
   each adapter. The repo is public, so trim advert text in fixtures to short excerpts (INSPIRE
@@ -78,7 +81,9 @@ https://codebpr.com/academic-jobs/, and all searching happens in the browser.
   aliases pointing at that ID. Never recompute an ID from the current canonical URL, because that
   breaks `firstSeen` and "new since your last visit".
 - TLS: some Indian hosts send incomplete certificate chains (`UNABLE_TO_VERIFY_LEAF_SIGNATURE`).
-  Fix that by adding the missing intermediate under `config/ca/`. Never set `tls: insecure`
+  Fix that by adding the missing intermediate under `config/ca/` (with a row in its README).
+  `crawler/lib/ca.mjs` loads it for both the crawler and the probe. Never set `tls: insecure`
   for this.
+- Email addresses and URLs in advert text are never indexed (the tokenizer drops them).
 - Cron times are UTC, set on an odd minute (00:47). `crawl.yml` runs in concurrency group `crawl` and uploads the state as an artifact on every run. Each crawl run re-enables its own workflow through the API, which works
   around the 60-day inactivity rule.

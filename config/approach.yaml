@@ -1,0 +1,25 @@
+# Theory / computational / experimental tag, from text cues (case-insensitive regexes).
+# A cue in the title gives high confidence. In the ad text, two or more distinct cues give
+# medium confidence and a single cue gives low confidence. A posting can carry several tags,
+# and one with no cue carries none (the filter keeps untagged postings).
+theory:
+  - '\btheor(y|ies|etical|etically|ist|ists)\b'
+  - '\banalytic(al)? (methods|approach|work|calculations)\b'
+  - '\bmathematical physics\b'
+  - '\bphenomenolog(y|ical|ist)\b'
+  - '\bpen[- ]and[- ]paper\b'
+computational:
+  - '\bcomputational\b'
+  - '\bnumeric(al|ally|s)\b'
+  - '\bsimulations?\b'
+  - '\bmonte carlo\b'
+  - '\b(DMRG|DFT|density functional theory|tensor networks?|exact diagonali[sz]ation|molecular dynamics)\b'
+  - '\bhigh[- ]performance computing\b|\bHPC\b'
+experimental:
+  - '\bexperiment(al|alist|alists|ally|s)?\b'
+  - '(?<!national )\blaborator(y|ies)\b|\blab[- ]based\b'
+  - '\bfabricat(e|ion|ing)\b|\bclean ?room\b|\bnanofabrication\b'
+  - '\bbeam ?lines?\b|\bsynchrotron\b'
+  - '\bcryostats?\b|\bdilution refrigerators?\b|\bcryogenic\b'
+  - '\b(STM|ARPES|MBE|thin[- ]film growth|spectroscopy|microscopy|detector development|hands-on)\b'
+  - '\b(apparatus|test ?beam|data[- ]taking|instrumentation)\b'

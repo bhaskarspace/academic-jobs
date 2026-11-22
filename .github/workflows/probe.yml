@@ -13,15 +13,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - run: npm ci
       - name: Probe (Node fetch)
-        run: node tools/probe.mjs --label runner --json probe-runner.json --md probe-runner.md
-      - name: Probe (curl, for comparison)
+        run: node tools/probe.mjs --label runner --json probe-runner.json --md probe-runner.md --allowed probe-allowed.txt
+      - name: Probe (curl, for comparison; only URLs robots.txt allows)
         run: |
-          jq -r '.[][1]' tools/probe-urls.json | while read -r u; do
+          while read -r u; do
             printf '%s\t%s\n' "$(curl -s -o /dev/null -A 'academic-jobs/0.1 (+https://github.com/bhaskarspace/academic-jobs/issues)' \
               --connect-timeout 15 -m 40 -w '%{http_code} %{time_total}s ssl=%{ssl_verify_result}' "$u" || echo ERR)" "$u"
             sleep 1
-          done | tee probe-runner-curl.tsv
+          done < probe-allowed.txt | tee probe-runner-curl.tsv
       - uses: actions/upload-artifact@v4
         with:
           name: probe-runner

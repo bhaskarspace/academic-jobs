@@ -19,12 +19,21 @@
       <input id="q" name="q" type="search" autocomplete="off" spellcheck="false"
              placeholder="Research topic, e.g. holography, many-body, AdS/CFT">
       <div class="cats" id="cats" role="radiogroup" aria-label="Category"></div>
+      <div class="cats fields" id="fields" role="radiogroup" aria-label="Field"></div>
       <div class="opts">
         <label>Sort
           <select id="sort">
             <option value="relevance">Relevance</option>
             <option value="deadline">Deadline</option>
             <option value="newest">Newest</option>
+          </select>
+        </label>
+        <label>Approach
+          <select id="approach">
+            <option value="">Any</option>
+            <option value="theory">Theory</option>
+            <option value="computational">Computational</option>
+            <option value="experimental">Experimental</option>
           </select>
         </label>
         <label class="check"><input type="checkbox" id="expired"> Show expired</label>
@@ -34,6 +43,12 @@
     <p class="summary" id="summary" aria-live="polite">Loading postings…</p>
     <ol class="results" id="results"></ol>
     <button type="button" class="more" id="more" hidden>Show more</button>
+    <section class="general" id="general" hidden>
+      <h2 id="general-head"></h2>
+      <p class="general-note">These calls name no specific topic (or list many), so a topic search can't match them. They are in the fields this topic belongs to.</p>
+      <ol class="results" id="general-results"></ol>
+      <button type="button" class="more" id="general-more" hidden>Show more</button>
+    </section>
   </main>
 
   <footer class="foot">
