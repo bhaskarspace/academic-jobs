@@ -16,6 +16,8 @@ import { loadState, saveState, resolveId, resolveExisting } from './lib/state.mj
 import { makeCategorizer, makeFieldTagger } from './lib/categorize.mjs';
 import { normalize, mergePostings } from './lib/normalize.mjs';
 import { findDuplicates } from './lib/dedupe.mjs';
+import { makeSubjectTest } from '../search/subject.mjs';
+import { loadIndexConfig } from '../search/build-index.mjs';
 import { diffLinks, updateGone, skipReason, warningsFor, suspectRun, SOFT_GONE_ADAPTERS } from './lib/health.mjs';
 import { caExpiries } from './lib/ca.mjs';
 
@@ -149,8 +151,10 @@ async function main() {
     groups.delete(drop);
     if (flag('verbose-dedupe')) console.error(`dedupe ${score}: ${keep} <- ${drop}  ${titles.map((t) => t.slice(0, 55)).join('  ||  ')}`);
   }
+  const { variants, concepts } = await loadIndexConfig();
+  const namesSubject = makeSubjectTest({ fields: cfg.fields, concepts, variants });
   const postings = [...groups].map(([id, list]) => {
-    const p = mergePostings(list);
+    const p = mergePostings(list, { namesSubject });
     const rec = state.ids.postings[id];
     return { id, ...p, firstSeen: list.length > 1 ? [rec.firstSeen, ...dups.filter((d) => d.keep === id).map((d) => firstSeenOf(d.drop))].sort()[0] : rec.firstSeen, lastSeen: rec.lastSeen };
   });

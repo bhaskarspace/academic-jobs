@@ -111,5 +111,6 @@ Mac fallback (Phase 10).
 ### Link-out search URLs (Phase 4, 2026-11-22)
 `config/linkouts.yaml` lists each board's search URL with `{q}`. Checked with the project UA:
 - jobs.ac.uk, Nature Careers and THE return the search page with the query in it.
-- EURAXESS, Physics Today, AcademicPositions, FindAPostDoc and FindAPhD answer 403 to scripts (bot walls), so their templates follow each site's own search form and haven't been confirmed by a fetch.
-- careers.aps.org redirects to www.apsphysicsjobs.com, which is used directly.
+- Physics Today, APS (www.apsphysicsjobs.com; careers.aps.org redirects there), AcademicPositions and FindAPostDoc were confirmed by Bhaskar in a real browser, with the query applied (2026-11-23).
+- EURAXESS ignores `?keywords=`. Its own search box produces `jobs/search?f%5B0%5D=keywords%3A{q}` (f[0]=keywords:<query>), which was confirmed in a browser ("chaos" leads with "Stability and chaos in the N-body problem…").
+- FindAPhD shows automated browsers a Cloudflare check, so it's unconfirmed. It uses the same `Keywords=` parameter as FindAPostDoc.

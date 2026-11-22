@@ -4,7 +4,8 @@
 # Order: broadest coverage first.
 boards:
   - name: EURAXESS
-    search: https://euraxess.ec.europa.eu/jobs/search?keywords={q}
+    # The site's own search box: f[0]=keywords:<query> (`?keywords=` is ignored).
+    search: https://euraxess.ec.europa.eu/jobs/search?f%5B0%5D=keywords%3A{q}
     home: https://euraxess.ec.europa.eu/jobs/search
     why: European research jobs; its firewall blocks automated queries
   - name: jobs.ac.uk

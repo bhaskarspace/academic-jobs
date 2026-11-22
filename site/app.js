@@ -187,6 +187,7 @@ function card({ doc: d, matched }) {
   return el('li', { class: `job${isExpired(d, today) ? ' expired' : ''}` },
     el('h2', {}, el('a', { href: d.u, target: '_blank', rel: 'noopener' }, marked(d.t, terms))),
     place ? el('p', { class: 'where' }, place) : null,
+    d.at ? el('p', { class: 'also', title: 'The same advert under another title on another board' }, 'Also listed as ', d.at.map((t, i) => [i ? '; ' : '', '“', marked(t, terms), '”'])) : null,
     el('p', { class: 'line' }, deadlineLine(d), ...cats, ...approaches, isNew ? el('span', { class: 'badge new', title: 'First seen since your last visit' }, 'New') : null),
     d.sn ? el('p', { class: 'snippet' }, marked(d.sn, terms)) : null,
     why,

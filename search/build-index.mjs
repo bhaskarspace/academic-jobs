@@ -49,7 +49,8 @@ export function buildIndex(postings, { variants = {}, concepts = {}, approach = 
   const plainTerms = new Set(); // terms seen at least once as a plain word, not only as a joined compound
   for (const p of postings) {
     const fields = {
-      title: p.title,
+      // Other sources' titles for the same advert (shown as "Also listed as") are title text too.
+      title: [p.title, ...(p.altTitles ?? [])].join(' \n '),
       meta: [p.institution, p.institutionAlt, p.subject, p.city, p.region, (p.fields || []).join(' ')].filter(Boolean).join(' \n '),
       body: p.body,
     };
@@ -200,6 +201,7 @@ function displayRecord({ p, len, general, approach }, built) {
   const r = {
     id: p.id,
     t: p.title,
+    at: p.altTitles?.length ? p.altTitles : undefined,
     i: p.institution || undefined,
     c: p.country || undefined,
     rg: p.region || undefined,

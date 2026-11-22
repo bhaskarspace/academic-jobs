@@ -83,3 +83,30 @@ test('deadline check: more than 3 days apart never merges', () => {
   const groups = groupsOf(shifted);
   assert.ok(groups.includes('ajo:33181'), groups.join('\n'));
 });
+
+test('merged title: the one title that names a subject wins; otherwise source priority; the rest stay searchable', async () => {
+  const { normalize, mergePostings } = await import('../crawler/lib/normalize.mjs');
+  const { makeSubjectTest } = await import('../search/subject.mjs');
+  const { loadIndexConfig } = await import('../search/build-index.mjs');
+  const { fields } = await loadConfig();
+  const { concepts, variants } = await loadIndexConfig();
+  const namesSubject = makeSubjectTest({ fields, concepts, variants });
+  const n = (sourceId) => {
+    const r = raw.find((x) => x.sourceId === sourceId);
+    return normalize({ ...r, url: `https://x/${sourceId}` }, { categorize: () => [{ category: 'postdoc', confidence: 'high' }], fieldsOf: () => [], sourceName: r.source });
+  };
+  const ox = mergePostings(['inspire:3222725', 'ajo:33335', 'mathjobs:29422'].map(n), { namesSubject });
+  assert.equal(ox.title, 'Postdoctoral Research Associate in Mathematical Physics');
+  assert.deepEqual(ox.altTitles, ['Three Postdoc Positions']);
+  const nyu = mergePostings(['inspire:3215723', 'ajo:33181'].map(n), { namesSubject });
+  assert.equal(nyu.title, 'Feinberg Postdoctoral Prize Fellowship');
+  assert.deepEqual(nyu.altTitles, ['Postdoctoral Asscociate / Carl Feinberg Institute Fellow']);
+  assert.ok(namesSubject('Postdoc in quantum chaos') && namesSubject('Faculty Position in Mathematics'));
+  assert.ok(!namesSubject('Three Postdoc Positions'));
+});
+
+test('EURAXESS link uses the f[0]=keywords: filter its own search box produces', async () => {
+  const { linkouts } = await loadConfig();
+  const eu = linkouts.boards.find((b) => b.name === 'EURAXESS');
+  assert.equal(eu.search.replace('{q}', encodeURIComponent('quantum chaos')), 'https://euraxess.ec.europa.eu/jobs/search?f%5B0%5D=keywords%3Aquantum%20chaos');
+});

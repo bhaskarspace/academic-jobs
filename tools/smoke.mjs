@@ -108,7 +108,9 @@ await page.unroute('**/data/index.json');
 
 // Phase 4
 r = await run('?q=%22Three+Postdoc+Positions%22+oxford&expired=1');
-const ox = r.jobs.find((j) => /Three Postdoc Positions/.test(j.title) && /Oxford/.test(j.where));
+const ox = r.jobs.find((j) => j.title === 'Postdoctoral Research Associate in Mathematical Physics' && /Oxford/.test(j.where));
+const oxAlso = await page.evaluate(() => [...document.querySelectorAll('.job')].find((j) => /Oxford/.test(j.querySelector('.where')?.textContent ?? '') && /Mathematical Physics/.test(j.querySelector('h2').textContent))?.querySelector('.also')?.textContent ?? '');
+check('merged title names the subject; the other title is shown and found', /Three Postdoc Positions/.test(oxAlso), oxAlso);
 check('Oxford INSPIRE/AJO/MathJobs duplicate shows once, with every source', Boolean(ox) && r.jobs.filter((j) => /Oxford/.test(j.where) && /Mathematical Physics|Three Postdoc/.test(j.title)).length === 1
   && /INSPIRE/.test(ox.sources) && /AcademicJobsOnline/.test(ox.sources), ox?.sources);
 check('… and INSPIRE institutions show by full name', /University of Oxford/.test(ox?.where ?? '') && !/U\. Oxford \(main\)/.test(ox?.where ?? ''), ox?.where);
