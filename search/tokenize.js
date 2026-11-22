@@ -99,6 +99,13 @@ function chunkTokens(raw, start, out, variants) {
 const LEAD = /^[\s"'“”‘’«»\[{<.,;:!?*•·]+/;
 const TRAIL = /[\s"'“”‘’«»\]}>.,;:!?*•·]+$/;
 
+// Email addresses (a@b.org, a(at)b.org, a_[at]_b.org), URLs (anything with ://, www.) and host
+// names (physics.iisc.ac.in, ictp-ap.org): the joined form of an address would otherwise be indexed.
+const UNINDEXED = new RegExp([
+  '@', '%40', '[\\[(]\\s*at\\s*[\\])]', '_at_', '://', '^\\(?www\\.',
+  '[a-z0-9-]{2,}\\.(?:com|org|net|edu|gov|ac|res|ernet|int|info|io|in|uk|cn|jp|kr|tw|hk|de|fr|it|pl|au|ch|nl|se|es|be|at|il|sg|ca|us|eu|ru|br|za|nz|dk|fi|no|pt|cz|ie|gr|ir|tr|mx|ar|cl)(?:[/:?#)]|$)',
+].join('|'), 'i');
+
 export function tokenize(text, { variants } = {}) {
   const out = [];
   if (!text) return out;
@@ -112,6 +119,8 @@ export function tokenize(text, { variants } = {}) {
     const trail = TRAIL.exec(raw);
     if (trail) raw = raw.slice(0, -trail[0].length);
     if (!raw) continue;
+    // Email addresses, URLs and host names are never indexed (no personal data in the public index).
+    if (UNINDEXED.test(raw)) continue;
     const c = fold(raw);
     if (!GROUP.test(c) && !DIMS.test(c)) {
       // Strip unbalanced/outer parentheses: "(holography)" -> "holography".
