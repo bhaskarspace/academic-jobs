@@ -102,7 +102,7 @@ r = await run('?q=celestial+holography');
 check('"Show more" hidden when everything is shown', r.jobs.length < 50 && !r.more, `${r.jobs.length} results, button ${r.more ? `shown: ${r.moreText}` : 'hidden'}`);
 r = await run('?q=zzzzqx');
 check('… and when nothing matches', !r.more);
-await page.route('**/data/index.json', async (route) => { await new Promise((res) => setTimeout(res, 1500)); await route.continue(); });
+await page.route('**/data/index.json', async (route) => { await new Promise((res) => setTimeout(res, 1500)); await route.continue().catch(() => {}); }); // the page may have moved on
 await page.goto(`${base}?q=postdoc`);
 const loadingMore = await page.evaluate(() => [document.getElementById('summary').textContent, getComputedStyle(document.getElementById('more')).display]);
 check('… and while "Loading postings…" is up', /Loading/.test(loadingMore[0]) && loadingMore[1] === 'none', loadingMore.join(' / '));
