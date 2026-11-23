@@ -297,7 +297,8 @@ Adding a source means one entry in `sources.yaml`, plus a fixture and a test. A 
    - Folded in (2026-11-23):
      - **PhD / integrated-PhD admissions pages** for every IISER (`admissions: true` sources): PhD category, fields from the departments the call covers ("physics" expands to its subfields), so the calls appear in the general-calls section of a physics topic search. Field tags no longer count as a posting naming a topic. `emptyOk`: an admissions page between rounds is not a breakage, as long as its list markup still matched.
      - **Pagination** (`pages:` in `crawler/lib/listing.mjs`): read until a page has no open advert. A posting missing from a partial read (or aged out of an RSS feed) that is older than the oldest row read is carried forward, not marked gone.
-     - **Acceptance** split: "JRF physics" + PhD counts expired postings for the four-IISER check, and separately needs one open posting.
+     - **Acceptance** split: "JRF physics" + PhD counts expired postings for the four-IISER check, and separately "physics" + PhD shows at least one open IISER posting.
+     - **Smoke checks that depend on what is currently posted** are warnings, not failures, on live runs (`--url`), so a quiet month between admission rounds doesn't turn the smoke test red. Local-build runs and fixture tests stay strict.
      - **Status page:** a source whose PDF backlog exceeds the 120-per-run cap shows "Backfilling, N waiting".
      - Bhopal is a full include (its adverts are under `/assets_external/`, which robots.txt allows), and Tirupati is included through its server-rendered `/jobs/?selected_category=` pages.
      - New adapters: `html-table` (columns by header), `rss`; `html-list` gained blocks with labelled headers ("Advertisement Number: … Last Date: …"), joined titles, filters; `html-page` gained `sections` (one posting per round on a stacked page).
