@@ -15,11 +15,11 @@ export const APPROACH = { th: 'theory', comp: 'computational', exp: 'experimenta
 const CONF_RANK = { low: 1, medium: 2, high: 3 };
 const K1 = 1.2;
 const B = 0.75;
-const FORM_SHIFT = 3;   // must match build-index.mjs
+const FORM_SHIFT = 4;   // must match build-index.mjs
 const STEM_ONLY = 0.6;  // a stem-only hit when the typed form exists elsewhere in the corpus
 const SYNONYM = 0.9;    // another `query:` entry of the concept
 const EXPANDED = 0.5;   // a member term of the concept
-const FIELD_MASK = 7;
+const FIELD_MASK = 15;  // title 1, meta 2, body 4, pdf 8
 
 export function prepare(idx) {
   const docs = idx.docs.map((d, ix) => ({

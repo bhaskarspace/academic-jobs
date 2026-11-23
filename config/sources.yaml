@@ -40,7 +40,7 @@ sources:
     institution: IISER Pune
     country: IN
     url: https://www.iiserpune.ac.in/opportunities/openings
-    timeoutMin: 20            # first run fetches ~200 detail pages at one per 2 s
+    timeoutMin: 30            # a first run fetches ~200 detail pages and up to 120 PDFs at one per 2 s
     list:
       item: ul.openings-list > li
       title: div.title h5 a

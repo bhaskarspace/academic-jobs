@@ -31,7 +31,7 @@ export function indexLeaks(idx, { postings } = {}) {
   const terms = Object.keys(idx.index ?? {});
   if (postings) {
     const stripped = new Set();
-    for (const p of postings) for (const e of findEmails([p.title, p.body, p.snippet].join(' '))) stripped.add(strip(e));
+    for (const p of postings) for (const e of findEmails([p.title, p.body, p.pdfText, p.snippet].join(' '))) stripped.add(strip(e));
     for (const t of terms) for (const s of stripped) if (s.length >= 8 && t.includes(s)) leaks.push(`term ${t} holds ${s}`);
   }
   for (const t of terms) if (STRIPPED.test(t)) leaks.push(`term ${t} looks like a stripped address`);

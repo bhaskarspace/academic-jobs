@@ -52,6 +52,58 @@ export function findDates(text) {
   return out.sort((a, b) => a.index - b.index);
 }
 
+const NUM_WORDS = { seven: 7, ten: 10, fifteen: 15, twenty: 20, 'twenty one': 21, 'twenty-one': 21, thirty: 30, 'thirty one': 31, 'forty five': 45, 'forty-five': 45, sixty: 60 };
+// Cues, strongest first. A date within CUE_WINDOW characters after the cue is taken.
+const CUES = [
+  { kind: 'deadline', re: /last\s+date\s+(?:for|of)\s+(?:the\s+)?(?:receipt|submission|submitting|receiving)\s+(?:of\s+)?(?:online\s+)?applications?/gi },
+  { kind: 'deadline', re: /(?:applications?|forms?)\s+(?:should|must|may)\s+(?:be\s+)?(?:reach|submitted|sent|received)[^.]{0,80}?\bon\s+or\s+before/gi },
+  { kind: 'deadline', re: /\b(?:last\s+date|deadline|closing\s+date|apply\s+(?:by|before)|due\s+(?:by|date)|on\s+or\s+before)\b/gi },
+  { kind: 'walk-in', re: /\bwalk[- ]?in[- ]?(?:interviews?|test|selection)?\s*(?:will\s+be\s+held\s+)?(?:on|dated?|:)?/gi },
+  { kind: 'walk-in', re: /\bdate\s+(?:and|&)\s+time\s+of\s+(?:the\s+)?(?:walk[- ]?in|interview)/gi },
+];
+const CUE_WINDOW = 120;
+// "within 21 days of (the date of) publication / from the date of this advertisement"
+const RELATIVE = /\bwithin\s+(\d{1,3}|[a-z]+(?:[\s-][a-z]+)?)\s*(?:\(\s*\d{1,3}\s*\)\s*)?days?\s+(?:of|from|after)\s+(?:the\s+)?(?:date\s+of\s+)?(?:the\s+)?(?:publication|advertisement|advt|issue|appearance|notification|release)/i;
+
+const addDays = (iso, n) => new Date(Date.parse(`${iso}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
+
+/**
+ * Deadline in free text (a page or a PDF advert).
+ *   kind 'deadline' (last date, on or before ...)          confidence medium
+ *   kind 'walk-in'  (the interview date is the deadline)   confidence medium
+ *   kind 'relative' (within N days of publication; computed from `posted`)  confidence low
+ * When several cues match, the strongest kind wins, then the nearest date; among walk-in dates
+ * the latest (an advert may list interviews on several days).
+ * @returns {{date, kind, confidence, cue} | null}
+ */
+export function extractDeadlineInfo(text, { posted = null } = {}) {
+  if (!text) return null;
+  const dates = findDates(text);
+  for (const [rank, { kind, re }] of CUES.entries()) {
+    const found = [];
+    re.lastIndex = 0;
+    let m;
+    while ((m = re.exec(text))) {
+      const end = m.index + m[0].length;
+      const near = dates.filter((x) => x.index >= end - 1 && x.index - end < CUE_WINDOW);
+      // Walk-ins can run over several days ("on 3 and 4 December"): every date in the window counts.
+      for (const d of kind === 'walk-in' ? near : near.slice(0, 1)) found.push({ date: d.date, dist: d.index - end, cue: m[0].trim().replace(/\s+/g, ' ') });
+    }
+    if (!found.length) continue;
+    const pick = kind === 'walk-in'
+      ? found.sort((a, b) => b.date.localeCompare(a.date))[0]
+      : found.sort((a, b) => a.dist - b.dist)[0];
+    return { date: pick.date, kind, confidence: 'medium', cue: pick.cue, rank };
+  }
+  const r = RELATIVE.exec(text);
+  if (r && posted) {
+    const w = r[1].toLowerCase().replace(/\s+/g, ' ');
+    const n = /^\d+$/.test(w) ? Number(w) : NUM_WORDS[w] ?? NUM_WORDS[w.replace(' ', '-')];
+    if (n && n <= 120) return { date: addDays(posted, n), kind: 'relative', confidence: 'low', cue: r[0].replace(/\s+/g, ' ') };
+  }
+  return null;
+}
+
 // The deadline in free text: the date nearest after a "last date"/"deadline"/"closing date" cue.
 export function extractDeadline(text) {
   if (!text) return null;

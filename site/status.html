@@ -10,6 +10,7 @@
 <body>
   <header class="top">
     <h1>Source status</h1>
+    <p class="stale" id="stale" role="status" hidden></p>
     <p class="status-summary" id="summary"></p>
     <p class="lede" id="lede">Loading the last crawl's report…</p>
   </header>
@@ -25,6 +26,11 @@
         <tbody></tbody>
       </table>
     </div>
+    <section id="pdfs-section" hidden>
+      <h2 class="sub">PDF adverts not read in full</h2>
+      <p class="lede" id="pdfs-note"></p>
+      <div class="table-wrap"><table class="status" id="pdfs"><thead><tr><th scope="col">Source</th><th scope="col">File</th><th scope="col">Why</th></tr></thead><tbody></tbody></table></div>
+    </section>
     <h2 class="sub">robots.txt</h2>
     <div class="table-wrap"><table class="status" id="robots"><thead><tr><th scope="col">Host</th><th scope="col">robots.txt</th></tr></thead><tbody></tbody></table></div>
     <h2 class="sub">Extra CA certificates</h2>
