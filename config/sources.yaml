@@ -83,3 +83,259 @@ sources:
     institution: National Centre for Biological Sciences, Bengaluru
     country: IN
     note: Never reachable from GitHub runners (connection timeouts on every probe, robots.txt included); answers from a residential connection. Link-out rather than a Mac fallback.
+
+  # --- Phase 6: all IISERs -------------------------------------------------------------------
+  # Admissions sources (PhD / integrated PhD) carry `admissions: true`: fixed PhD category, and
+  # `fields` naming the departments the call covers; "physics" expands to the physics subfields so
+  # the calls appear in the general-calls section of a physics topic search. `emptyOk`: a page
+  # with no open round between intakes is not a breakage.
+
+  - id: iiser-pune-phd-admissions
+    name: IISER Pune
+    adapter: html-page
+    institution: IISER Pune
+    country: IN
+    url: https://www.iiserpune.ac.in/education/admissions/phd-programme
+    title: IISER Pune PhD programme admissions
+    text: .rich-text
+    textAll: true
+    rolling: false
+    admissions: true
+    categories: [phd]
+    fields: [physics, math, chem, bio]
+
+  - id: iiser-pune-iphd-admissions
+    name: IISER Pune
+    adapter: html-page
+    institution: IISER Pune
+    country: IN
+    url: https://www.iiserpune.ac.in/education/admissions/integrated-phd-programme
+    title: IISER Pune Integrated PhD (i-PhD) admissions
+    text: .rich-text
+    textAll: true
+    rolling: false
+    admissions: true
+    categories: [phd]
+    fields: [physics, math, chem, bio]
+
+  - id: iiser-kolkata-projects
+    name: IISER Kolkata
+    adapter: html-table
+    institution: IISER Kolkata
+    country: IN
+    url: https://www.iiserkol.ac.in/web/advertisements
+    # Current openings only (older ones move to /web/advertisements/archive). The row links
+    # straight to the advert PDF; "Contact Person" is the PI.
+    columns: { name of the post: title, contact person: pi, department: subject, last date: deadline, project position details: pdf }
+
+  - id: iiser-kolkata-postdoc
+    name: IISER Kolkata
+    adapter: html-page
+    institution: IISER Kolkata
+    country: IN
+    url: https://apply.iiserkol.ac.in/pdf/
+    title: IISER Kolkata Post-doctoral Fellowship (PDF) Programme
+    text: body
+    categories: [postdoc, fellowship]
+
+  - id: iiser-kolkata-admissions
+    name: IISER Kolkata
+    adapter: html-list
+    institution: IISER Kolkata
+    country: IN
+    url: https://www.iiserkol.ac.in/web/admission
+    # The "Click Here" links carry per-session encrypted tokens (404 when fetched later), so the
+    # posting links to the admissions page itself.
+    list: { item: .inner-contain, title: h3, body: p }
+    match: 'ph\.?\s?d'
+    admissions: true
+    emptyOk: true
+    categories: [phd]
+    fields: [physics, math, chem, bio]
+
+  - id: iiser-mohali-projects
+    name: IISER Mohali
+    adapter: rss
+    institution: IISER Mohali
+    country: IN
+    url: https://web.iisermohali.ac.in/noticeportal/iiserm-project-openings?format=feed&type=rss
+    # The feed carries the full advert text (deadline in prose) and its newest 10 items.
+
+  - id: iiser-mohali-admissions
+    name: IISER Mohali
+    adapter: html-list
+    institution: IISER Mohali
+    country: IN
+    url: https://www.iisermohali.ac.in/admission-news
+    list: { item: '.item-page li', title: a, link: a }
+    match: 'ph\.?\s?d'
+    exclude: 'result|shortlist|selected|merit|waitlist|interview schedule'
+    detail: { text: '.item-page' }
+    admissions: true
+    emptyOk: true
+    categories: [phd]
+    fields: [physics, math, chem, bio]
+
+  - id: iiser-tvm-openings
+    name: IISER TVM
+    adapter: html-table
+    institution: IISER Thiruvananthapuram
+    country: IN
+    url: https://www.iisertvm.ac.in/openings
+    table: table.data_table
+    columns: { title: [title, link], publish date: posted, last date: deadline }
+    # 25 rows a page, newest first, ~31 pages: read until a page has no open advert.
+    pages: { next: 'https://www.iisertvm.ac.in/openings/index/{n}?', max: 10 }
+    detail:
+      text: .cms_content
+      pdf: 'a[href*="/files/read/"]'     # handler URLs without .pdf; the PDF step sniffs the type
+
+  - id: iiser-tvm-admissions
+    name: IISER TVM
+    adapter: html-list
+    institution: IISER Thiruvananthapuram
+    country: IN
+    url: https://www.iisertvm.ac.in/pages/admission
+    list: { item: .card_row, title: a, link: a }
+    match: 'ph\.?\s?d'
+    exclude: 'result|shortlist|selected|merit|waitlist'
+    detail:
+      text: .cms_content
+      pdf: 'a[href*="/files/read/"]'
+    admissions: true
+    emptyOk: true
+    categories: [phd]
+    fields: [physics, math, chem, bio]
+
+  - id: iiser-berhampur-contractual
+    name: IISER Berhampur
+    adapter: html-list
+    institution: IISER Berhampur
+    country: IN
+    url: https://www.iiserbpr.ac.in/opportunity/contractual
+    # One table per advert: a header row "Advertisement Number: … , Dated: … Last Date: …", then
+    # one row per post (#, Post, Department, Updates with the PDFs). The page keeps every advert
+    # since 2024, so most are closed; PDFs are fetched only for open ones.
+    list: &bpr-list
+      item: table
+      title: 'tbody tr td:nth-child(2)'
+      titleAll: true
+      subject: 'tbody tr td:nth-child(3)'
+      pdf: 'a[href$=".pdf"]'
+      labels: { sel: 'thead tr:first-child td', map: { advertisement number: ref, dated: posted, last date: deadline } }
+
+  - id: iiser-berhampur-postdoc
+    name: IISER Berhampur
+    adapter: html-list
+    institution: IISER Berhampur
+    country: IN
+    url: https://www.iiserbpr.ac.in/opportunity/post-doc
+    list: *bpr-list
+    categories: [postdoc]
+
+  - id: iiser-berhampur-admissions
+    name: IISER Berhampur
+    adapter: html-list
+    institution: IISER Berhampur
+    country: IN
+    url: https://www.iiserbpr.ac.in/opportunity/phd-admissions
+    list:
+      item: table
+      title: '@lead'
+      pdf: 'a[href$=".pdf"]'
+      labels: { sel: 'thead tr:first-child td', map: { dated: posted, last date: deadline } }
+    match: 'ph\.?\s?d'
+    exclude: 'result|shortlist|selected|merit|waitlist'
+    admissions: true
+    emptyOk: true
+    categories: [phd]
+    fields: [physics, math, chem, bio]
+
+  - id: iiser-bhopal-pdf
+    name: IISER Bhopal
+    adapter: html-table
+    institution: IISER Bhopal
+    country: IN
+    url: https://www.iiserb.ac.in/dofa/vacancy
+    # robots.txt disallows /assets/* and /assets_external/tender/*; the adverts sit under
+    # /assets_external/dofa/, which is allowed.
+    columns: { title: title, download: pdf, last date: deadline }
+    skip: 'annexure|application form|proforma'
+    categories: [postdoc]
+
+  - id: iiser-bhopal-rnd
+    name: IISER Bhopal
+    adapter: html-table
+    institution: IISER Bhopal
+    country: IN
+    url: https://www.iiserb.ac.in/careers/rnd
+    columns: { post name: title, department: subject, advertisement: pdf, last date: deadline }
+
+  - id: iiser-bhopal-admissions
+    name: IISER Bhopal
+    adapter: html-list
+    institution: IISER Bhopal
+    country: IN
+    url: https://phdadmission.iiserb.ac.in/
+    # One card per department round ("Walk-in Interview – 2nd Round of PhD Admission,
+    # Department of Chemistry"); fields come from the department line, not a fixed list.
+    list: { item: .admission-card, title: .admission-header, subject: .text-sub-title, body: .admission-body }
+    admissions: true
+    emptyOk: true
+    categories: [phd]
+
+  - id: iiser-tirupati-projects
+    name: IISER Tirupati
+    adapter: html-table
+    institution: IISER Tirupati
+    country: IN
+    url: https://www.iisertirupati.ac.in/jobs/?search_keywords=&selected_category=pa-pf&selected_jobtype=-1&selected_location=-1
+    columns: { job title: [title, link], due date: deadline }
+    # "Advertisement No.: (92/2026) – Recruitment for the post of “Project Assistant” under …"
+    titleRef: '^\s*Advertisement\s+No\.?\s*:?\s*\(?([^)–-]+?)\)?\s*[–-]\s*(?:Recruitment\s+for\s+the\s+post\s+of\s+)?'
+    pages: { next: 'https://www.iisertirupati.ac.in/jobs/?page={n}%2F&search_keywords&selected_category=pa-pf&selected_jobtype=-1&selected_location=-1', max: 10 }
+    detail: &tirupati-detail          # the page holds only the title and buttons; the PDF is the advert
+      pdf: 'section.jd-page a[href$=".pdf"]'
+
+  - id: iiser-tirupati-postdoc
+    name: IISER Tirupati
+    adapter: html-table
+    institution: IISER Tirupati
+    country: IN
+    url: https://www.iisertirupati.ac.in/jobs/?search_keywords=&selected_category=pdrf&selected_jobtype=-1&selected_location=-1
+    columns: { job title: [title, link], due date: deadline }
+    titleRef: '^\s*Advertisement\s+No\.?\s*:?\s*\(?([^)–-]+?)\)?\s*[–-]\s*(?:Recruitment\s+for\s+the\s+post\s+of\s+)?'
+    pages: { next: 'https://www.iisertirupati.ac.in/jobs/?page={n}%2F&search_keywords&selected_category=pdrf&selected_jobtype=-1&selected_location=-1', max: 10 }
+    detail: *tirupati-detail
+    categories: [postdoc]
+
+  - id: iiser-tirupati-phd-admissions
+    name: IISER Tirupati
+    adapter: html-page
+    institution: IISER Tirupati
+    country: IN
+    url: https://www.iisertirupati.ac.in/admission-phd/
+    text: .entry-content
+    # The page stacks rounds ("ADMISSION TO Ph.D. PROGRAM – JANUARY 2027", "… JANUARY 2024").
+    sections: { heading: h4, match: 'admission to', skipOld: true }
+    titlePrefix: 'IISER Tirupati: '
+    rolling: false
+    admissions: true
+    emptyOk: true
+    categories: [phd]
+    fields: [physics, math, chem, bio]
+
+  - id: iiser-tirupati-iphd-admissions
+    name: IISER Tirupati
+    adapter: html-page
+    institution: IISER Tirupati
+    country: IN
+    url: https://www.iisertirupati.ac.in/admission-iphd/
+    text: .entry-content
+    sections: { heading: h4, match: 'admission to', skipOld: true }
+    titlePrefix: 'IISER Tirupati: '
+    rolling: false
+    admissions: true
+    emptyOk: true
+    categories: [phd]
+    fields: [physics, math, chem, bio]

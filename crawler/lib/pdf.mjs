@@ -21,11 +21,15 @@ export const PDF_MAX_PAGES = 10;
 export const PDFS_PER_POSTING = 3;
 export const PDF_FETCH_BUDGET = 120; // new PDFs per source per run
 const IMAGE_ONLY_CHARS_PER_PAGE = 40;
-const CACHE_VERSION = 1; // bump to re-extract every cached PDF after a change here
+const CACHE_VERSION = 3; // bump to re-extract every cached PDF after a change here (3: notice detection)
 
 export const isPdf = (buf) => Buffer.isBuffer(buf) && buf.subarray(0, 1024).includes('%PDF-');
 
-const NOTICE = /\b(?:candidates?\s+(?:selected|shortlisted|recommended)|(?:selected|shortlisted|provisionally\s+selected)\s+candidates?|list\s+of\s+(?:selected|shortlisted|eligible|qualified)|result\s+of\s+(?:the\s+)?(?:walk[- ]in|interview|written|selection)|merit\s+list|offer\s+of\s+engagement\s+has\s+been\s+sent)\b/i;
+// A result notice names who was selected or shortlisted. Only heading-like phrases count ("Selected
+// candidate(s):" at the start of a line, "Result of the walk-in", "Merit list"): advert
+// boilerplate mentions selected candidates too ("Selected candidates must submit …", "will be
+// informed to the shortlisted candidates through email").
+const NOTICE = /\b(?:result\s+of\s+(?:the\s+)?(?:walk[- ]in|interview|written|selection)|list\s+of\s+(?:selected|shortlisted|eligible|qualified|provisionally)|merit\s+list|offer\s+of\s+engagement\s+has\s+been\s+sent|candidates?\s+(?:selected|recommended|shortlisted)\s+for\s+(?:appointment|engagement|the\s+(?:post|position)|(?:the\s+)?interview)|(?<=^|\n)(?:selected|shortlisted|waitlisted|provisionally\s+selected)\s+candidates?\s*(?:\(s\))?\s*\*?\s*(?:[:\n]|sr\.?\s*no|for\s+(?:the\s+)?(?:post|position|interview|walk[- ]in)|(?:is|are)\s+as\s+follows))/i;
 
 /** Is this the text of a result notice rather than an advert? (Looks at the opening only.) */
 export const isResultNotice = (text) => NOTICE.test(String(text ?? '').slice(0, 1500));
@@ -99,7 +103,7 @@ export async function attachPdfs(items, { http, cache, log, today, budget = PDF_
   let requests = 0;
   for (const it of items) {
     const urls = (it.pdfUrls ?? []).slice(0, PDFS_PER_POSTING);
-    if (!urls.length) continue;
+    if (!urls.length || it.noPdfFetch) continue;
     if (it.deadline && it.deadline < today) continue;
     const infos = [];
     for (const url of urls) {

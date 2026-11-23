@@ -144,6 +144,7 @@ table.status td.soon { color: var(--soon); }
 .pill.warn, .pill.skip { color: var(--fellowship); }
 .pill.fail { color: var(--soon); font-weight: 600; }
 .pill.idle { color: var(--muted); }
+.pill.fill { color: var(--postdoc, var(--phd)); font-style: italic; }
 h2.sub { font: 600 1.15rem/1.3 var(--serif); margin: 2rem 0 0; }
 
 /* Link-out row: a quiet line under the summary; a block in place of the results when nothing matches. */

@@ -141,6 +141,24 @@ const overflow = await page.evaluate(() => document.documentElement.scrollWidth 
 check('no horizontal scroll at phone width', !overflow);
 if (shots) await page.screenshot({ path: path.join(shots, 'phone-adscft.png') });
 
+// Phase 6: every IISER. Expand the result list fully, then count institutions.
+const allJobs = async (qs) => {
+  await run(qs);
+  for (let i = 0; i < 40 && await page.evaluate(() => getComputedStyle(document.getElementById('more')).display !== 'none'); i++) {
+    await page.click('#more');
+  }
+  return page.evaluate(() => [...document.querySelectorAll('#results .job')].map((j) => ({ where: j.querySelector('.where')?.textContent ?? '', expired: j.classList.contains('expired') })));
+};
+const iisers = (jobs) => [...new Set(jobs.map((j) => /IISER (?:Pune|Kolkata|Mohali|Bhopal|Thiruvananthapuram|TVM|Tirupati|Berhampur)/.exec(j.where)?.[0]).filter(Boolean))];
+const jrfAll = await allJobs('?q=JRF+physics&cat=phd&expired=1&f=');
+check('"JRF physics" + PhD (incl. expired) has postings from at least four IISERs', iisers(jrfAll).length >= 4, iisers(jrfAll).join(', '));
+const jrfOpen = await allJobs('?q=JRF+physics&cat=phd&f=');
+check('… and at least one of them is open', iisers(jrfOpen).length >= 1, `${iisers(jrfOpen).join(', ') || 'none'} (${jrfOpen.length} open results)`);
+r = await run('?q=holography&f=');
+for (let i = 0; i < 20 && await page.evaluate(() => !document.getElementById('general-more').hidden); i++) await page.click('#general-more');
+const generalIiser = await page.evaluate(() => [...document.querySelectorAll('#general .job')].filter((j) => /IISER/.test(j.querySelector('.where')?.textContent ?? '') && /ph\.?\s?d|admission/i.test(j.querySelector('h2').textContent)).map((j) => j.querySelector('h2').textContent));
+check('IISER PhD admissions calls show among the general calls of a physics topic', generalIiser.length > 0, generalIiser.slice(0, 3).join(' | '));
+
 // Phase 5: PDF adverts.
 // "condensed matter" has ~200 board hits; a Pune PDF-only hit may sit below the first page, so
 // also try a rarer term from the same advert family.
@@ -184,6 +202,23 @@ const st = await page.evaluate(() => ({
 }));
 const health = await (await fetch(`${base}data/health.json`)).json().catch(() => null);
 check('status page lists every source', st.rows.length > 0 && (!health || Object.keys(health.sources).every((id) => st.rows.includes(id))) && !/null|undefined/.test(st.lede), `${st.rows.length} sources: ${st.lede}`);
+
+// A source with more new PDFs than one run fetches shows "Backfilling, N waiting", not OK.
+{
+  const fill = await browser.newPage();
+  await fill.route('**/data/health.json', async (route) => {
+    const res = await route.fetch();
+    const h = await res.json();
+    const id = Object.keys(h.sources).find((k) => h.sources[k].crawled && h.sources[k].ok);
+    if (id) h.sources[id].pdf = { ...(h.sources[id].pdf ?? {}), deferred: 37 };
+    await route.fulfill({ response: res, json: h });
+  });
+  await fill.goto(`${base}status.html`);
+  await fill.waitForFunction(() => !/Loading/.test(document.getElementById('lede').textContent));
+  const pills = await fill.evaluate(() => [...document.querySelectorAll('#sources .pill')].map((p) => p.textContent));
+  await fill.close();
+  check('a PDF backlog shows "Backfilling, N waiting" on the status page', pills.includes('Backfilling, 37 waiting'), pills.filter((p) => !/^OK$/.test(p)).slice(0, 4).join(' | '));
+}
 
 check('status summary line counts OK, link-outs, warnings, failing', /^\d+ OK · \d+ link-outs? · \d+ warnings? · \d+ failing/.test(st.summary), st.summary);
 const ORDER = { fail: 0, warn: 1, skip: 2, ok: 3, idle: 4 };

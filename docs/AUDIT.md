@@ -29,7 +29,7 @@ Every institute's posting fields are title, a posted date and/or last date, and 
 
 | Group | Include (static HTML, robots OK) | Partial (list page only, PDF not fetched) | Link-out (robots `Disallow: /`, WAF or JS-only for now) | Volume |
 |---|---|---|---|---|
-| **IISERs** | Pune (phase 1). Kolkata: table, `DD.MM.YYYY`, encrypted IDs, so key on PDF URL + title. Mohali: Joomla RSS `?format=feed&type=rss`. TVM: `table.data_table` with ISO dates, paginated. Berhampur: table per advert | Bhopal (`/assets/*` disallowed) | Tirupati: AJAX list; the JS phase may recover it | Pune about 216 rows, Berhampur 86 PDFs |
+| **IISERs** | All seven since Phase 6: Pune, Kolkata, Mohali, Bhopal, TVM, Tirupati, Berhampur (see "IISERs (Phase 6)" below). Bhopal's adverts sit under `/assets_external/`, which robots.txt allows; Tirupati's jobs pages are server-rendered with `?selected_category=` | — | — | Pune about 216 rows, Berhampur 95 adverts, TVM ~775 (31 pages) |
 | **Research institutes** | IISc, ICTS (crawl-delay 10), IMSc (crawl-delay 10, 125 PDFs), IOP (RSS `/feed/?post_type=job_opening`), SINP (236-row table), RRI, S.N. Bose (ISO-8859-1), IACS (483-row table), IUCAA, TIFR-H (RSS), NCRA, CMI, ISI Kolkata, ISI Bangalore, ARIES (very slow; one request hung 18 minutes, so it needs hard timeouts), NCBS | NISER (`/storage/` disallowed), JNCASR (`/sites/default/files/` disallowed), IIA (`*.pdf` disallowed) | TIFR Mumbai, HRI and IPR (`Disallow: /`). PRL: robots.txt itself returns 403; treat as link-out until clarified | IACS, SINP, PRL and IMSc each 100–500 PDFs |
 | **IITs** (23) | KGP, B, M (crawl-delay 10), K, D, G, R (URL-encode paths with spaces), BBS (www only), H, J, Indore, Mandi, BHU, Palakkad, ISM, Goa (RSS), Dharwad | Patna (`*.pdf` disallowed, Next.js) | Gandhinagar (Cloudflare). Ropar, Tirupati and Jammu (JS SPAs; JS phase). Bhilai (redirects to an error page) | Varies |
 | Suggested additions | TIFR-H, NCBS, CMI, ISI Kolkata/Bangalore, IIA, ARIES, NCRA (all above); later: IMSc-affiliated HBNI, which is HTTP only | | | |
@@ -121,3 +121,33 @@ Mac fallback (Phase 10).
   no Kruti Dev seen there yet, but the filter is in place for the IISERs and IITs in Phases 6–8.
 - Phrasings seen: "Walk-in interviews on 18.11.2026", "on or before 27.11.2026", "Not more than 35 years",
   "Title of the “…” Project", "Funding Agency" (split by the table layout), "ADVERTISEMENT NO. :88/2026".
+
+### IISERs (Phase 6, 2026-11-23)
+Checked from the Mac with the project UA. "robots" is the verdict for the paths used; PDFs are
+fetched only for open adverts, at most 120 new per source per run.
+
+| IISER | Page (source id) | Kind | robots.txt | Verdict |
+|---|---|---|---|---|
+| Pune | /education/admissions/phd-programme (`iiser-pune-phd-admissions`), /education/admissions/integrated-phd-programme (`iiser-pune-iphd-admissions`) | programme pages; the dated round appears in the text | `User-agent: *` with no rules | include |
+| Kolkata | /web/advertisements (`iiser-kolkata-projects`) | table: post, contact person (PI), department, last date, PDF | 404 (no robots.txt) | include |
+| Kolkata | apply.iiserkol.ac.in/pdf/ (`iiser-kolkata-postdoc`) | standing PDF programme | 404 | include |
+| Kolkata | /web/admission (`iiser-kolkata-admissions`) | cards; "Click Here" links carry per-session tokens (404 later), so the posting links to the page | 404 | include |
+| Kolkata | apply.iiserkol.ac.in/jobs/ (non-teaching), /faculty/ | not academic / one dated faculty advert | 404 | not added |
+| Mohali | web.iisermohali.ac.in/noticeportal/iiserm-project-openings?format=feed&type=rss (`iiser-mohali-projects`) | RSS, newest 10, full advert text | 404 | include |
+| Mohali | /admission-news (`iiser-mohali-admissions`) | list; results filtered out | Joomla defaults (system folders only) | include |
+| Mohali | /faculty-positions | list of past dated adverts | allowed | not added |
+| Bhopal | /dofa/vacancy (`iiser-bhopal-pdf`), /careers/rnd (`iiser-bhopal-rnd`) | tables; PDFs under /assets_external/dofa/ and /assets_external/vacancy/ | disallows /old/*, /assets/*, /assets_external/tender/* only | include (was "partial": the adverts are not under /assets/) |
+| Bhopal | phdadmission.iiserb.ac.in (`iiser-bhopal-admissions`) | one card per department round | disallows system folders only | include |
+| TVM | /openings (`iiser-tvm-openings`) | table, 25 a page, newest first, ~31 pages; read until a page has no open advert | 404 (served as an HTML page) | include |
+| TVM | /pages/admission (`iiser-tvm-admissions`) | announcements; results filtered out; detail page per call | 404 | include |
+| Tirupati | /jobs/?selected_category=pa-pf and =pdrf (`iiser-tirupati-projects`, `iiser-tirupati-postdoc`) | server-rendered table, paginated (`?page=N%2F`); detail page links the PDF | disallows /wp-admin/ only | include (was link-out: the AJAX list has this server-rendered twin) |
+| Tirupati | /admission-phd/, /admission-iphd/ (`iiser-tirupati-*-admissions`) | stacked rounds; one posting per current heading, past years dropped | as above | include |
+| Berhampur | /opportunity/contractual, /opportunity/post-doc, /opportunity/phd-admissions | one table per advert (Advt. No., dated, last date; rows per post) | `Allow: /` | include |
+| Berhampur | /opportunity/teaching-faculty, /non-teaching-staff | not academic / few | allowed | not added |
+
+Seen while adding them:
+- Result-notice detection was too eager. Advert boilerplate ("Selected candidates must submit …",
+  "will be informed to the shortlisted candidates through email") marked 4 adverts as notices. Only
+  heading-like phrases count now; the PDF cache moved to v3 so everything was re-read.
+- Field tags were set by words of the institute's name ("Science **Education** and Research"
+  tagged humanities). That phrase is ignored now, and the humanities rule is word-bounded.

@@ -13,12 +13,22 @@ const RANK = { high: 3, medium: 2, low: 1 };
 // the page text (medium), the PDF advert (medium; low for "within N days of publication").
 function deadlineOf(raw, title, body, pdfText) {
   if (raw.deadline) return { date: raw.deadline, kind: 'deadline', confidence: 'high', from: raw.scheme ? 'source' : 'list' };
-  if (raw.scheme) return null;
+  // A standing call ("apply any time") has no deadline, whatever dates its page mentions.
+  if (raw.scheme || raw.rolling) return null;
   for (const [from, text] of [['page', `${title}\n${body}`], ['pdf', pdfText]]) {
     const d = extractDeadlineInfo(text, { posted: raw.posted ?? null });
     if (d) return { date: d.date, kind: d.kind, confidence: d.confidence, from, cue: d.cue };
   }
   return null;
+}
+
+// An admissions call that covers physics covers all of it: tag the subfields, so the call shows in
+// the general-calls section of any physics topic search.
+const PHYSICS_SUBFIELDS = ['hep-th', 'hep-ph', 'cond-mat', 'gr-qc', 'astro-ph', 'quant-ph', 'math-ph', 'nucl'];
+function fieldsWithAdmissions(raw, fields) {
+  const out = new Set(fields);
+  if (raw.admissions && out.has('physics')) for (const f of PHYSICS_SUBFIELDS) out.add(f);
+  return [...out].sort();
 }
 
 export function normalize(raw, { categorize, fieldsOf, sourceName, gone = null, goneSoft = false }) {
@@ -28,14 +38,17 @@ export function normalize(raw, { categorize, fieldsOf, sourceName, gone = null, 
   const pdfText = board ? '' : String(raw.pdfText ?? '');
   const titleRaw = raw.titleOriginal ?? raw.title ?? '';
   const pdfDesc = pdfText ? postDescription(pdfText) : '';
-  const subjectText = raw.subject ?? (board ? '' : `${raw.title ?? ''}\n${body.slice(0, 600)}\n${pdfDesc.slice(0, 1500)}`);
+  // Institute names and blurbs ("Science Education and Research", "Ministry of Education") are not
+  // the post's field.
+  const subjectText = raw.subject ?? (board ? '' : `${raw.title ?? ''}\n${body.slice(0, 600)}\n${pdfDesc.slice(0, 1500)}`
+    .replace(/science\s+education(?:\s+and\s+research)?|ministry\s+of\s+education|education\s+(?:and|&)\s+research/gi, ' '));
   const dl = deadlineOf(raw, titleRaw, body, pdfText);
   // Snippet: the post description, not the letterhead. A one-line page summary ("Temporary and
   // contractual ... in Physics department") is followed by the PDF's description.
   const pageEn = englishText(body);
   const pageDesc = board ? pageEn : postDescription(body) || pageEn;
   const snippetText = !board && pdfDesc && pageEn.length < 200 ? [pageEn, pdfDesc].filter(Boolean).join(' — ') : pageDesc;
-  const facts = board ? {} : advertFacts(`${body}\n${pdfText}`, { listRef: raw.ref ?? null });
+  const facts = board ? {} : advertFacts(`${body}\n${pdfText}`, { listRef: raw.ref ?? null, listPi: raw.pi ?? null });
   return {
     sources: [{ source: raw.source, name: sourceName, url: raw.url, sourceId: raw.sourceId, ...(gone ? { gone } : {}) }],
     gone: gone ?? null,
@@ -52,7 +65,8 @@ export function normalize(raw, { categorize, fieldsOf, sourceName, gone = null, 
     subject: raw.subject ?? null,
     ref: raw.ref ?? null,
     categories: categorize({ scheme: raw.scheme, values: raw.values, fixed: raw.fixedCategories, title: raw.title ?? '', body: pdfText ? `${body}\n${pdfDesc}` : body }),
-    fields: fieldsOf({ arxiv: raw.arxiv, subject: subjectText }),
+    // Union with the source's fixed fields (an IISER PhD admissions page covers its departments).
+    fields: fieldsWithAdmissions(raw, [...new Set([...fieldsOf({ arxiv: raw.arxiv, subject: subjectText }), ...(raw.fixedFields ?? [])])]),
     posted: raw.posted ?? null,
     // Institute pages often give the date only in prose or in the PDF ("Walk-in interviews on ...").
     deadline: dl?.date ?? null,

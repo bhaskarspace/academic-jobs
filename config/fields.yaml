@@ -11,11 +11,12 @@ rules:
   - { pattern: 'quantum (information|computing|science)', tags: [quant-ph] }
   - { pattern: 'nuclear', tags: [nucl] }
   - { pattern: 'theoretical physics', tags: [physics, hep-th, cond-mat] }
-  - { pattern: '\bphysics\b', tags: [physics] }
-  - { pattern: 'applied math|\bmathematics\b|\bmath\b|statistics', tags: [math] }
+  - { pattern: '\bphysics\b|physical sciences?', tags: [physics] }
+  - { pattern: 'applied math|\bmathematics\b|\bmath\b|mathematical sciences?|statistics', tags: [math] }
   - { pattern: 'computer science|artificial intelligence|machine learning|\bAI\b|data science|computational science', tags: [cs] }
   - { pattern: 'chemistry|chemical', tags: [chem] }
   - { pattern: 'biolog|neuroscience|biochem|microbio|biomedical|health|cardio|psychiatr', tags: [bio] }
   - { pattern: 'engineering|robotics', tags: [eng] }
   - { pattern: 'economics|finance|management|marketing|operations research', tags: [econ] }
-  - { pattern: 'philosophy|english|law|political|sociology|anthropolog|psycholog|education|media|communications|social sciences|public policy', tags: [humanities] }
+  # Word-bounded: institute advert text is tagged too ("intermediate", "Lawrence", "immediately").
+  - { pattern: '\b(?:philosophy|english|law|political|sociology|anthropolog\w*|psycholog\w*|education|media|communications|social sciences|public policy)\b', tags: [humanities] }

@@ -17,6 +17,7 @@ import { makeCategorizer, makeFieldTagger } from './lib/categorize.mjs';
 import { normalize, mergePostings } from './lib/normalize.mjs';
 import { findDuplicates } from './lib/dedupe.mjs';
 import { attachPdfs } from './lib/pdf.mjs';
+import { carryForward } from './lib/listing.mjs';
 import { advtAlias } from './lib/advert.mjs';
 import { todayISO } from './lib/dates.mjs';
 import { makeSubjectTest } from '../search/subject.mjs';
@@ -29,6 +30,8 @@ const ADAPTERS = {
   ajo: () => import('./adapters/ajo.mjs'),
   'html-list': () => import('./adapters/html-list.mjs'),
   'html-page': () => import('./adapters/html-page.mjs'),
+  'html-table': () => import('./adapters/html-table.mjs'),
+  rss: () => import('./adapters/rss.mjs'),
 };
 
 const argv = process.argv.slice(2);
@@ -76,6 +79,7 @@ async function main() {
   const now = new Date().toISOString();
 
   const health = {};
+  const emptyOkRuns = new Set();
   const pdfReports = {};
   const itemsBySource = {};
   const goneBySource = {};
@@ -103,8 +107,18 @@ async function main() {
         }
         return got;
       })(), (s.timeoutMin ?? 10) * 60_000, s.id);
+      // A paginated list read only up to its first all-closed page, or an RSS feed showing its
+      // newest N items: a posting missing from what was read has usually just moved to an unread
+      // page or aged out of the feed. Carry it forward rather than mark it gone, unless it is
+      // newer than the oldest row read (then it should have been there, and it was removed).
+      const carried = carryForward(items, prevItems);
+      if (carried.length) { items.push(...carried); log(`${carried.length} postings from unread pages carried forward`); }
       const curIds = items.map((it) => it.sourceId);
-      const suspect = suspectRun(items.length, prevItems.length || prevState.items || 0);
+      // Admissions pages can be empty between rounds: zero is not a breakage there, as long as the
+      // page still has its list markup (rows found, then filtered out as results or past rounds).
+      const emptyByDesign = s.emptyOk && items.length === 0 && items.rowsSeen > 0;
+      if (emptyByDesign) emptyOkRuns.add(s.id);
+      const suspect = emptyByDesign ? null : suspectRun(items.length, prevItems.length || prevState.items || 0);
       if (suspect) {
         // Zero items, or a large drop: probably broken markup or a block page, not a board that
         // emptied overnight. Keep the previous items and don't mark anything gone.
@@ -182,7 +196,8 @@ async function main() {
       lastOk: h.ok && !h.suspect ? now : prev.lastOk ?? null,
       items: h.items,
       // Runs in a row with no items or a suspect drop (named zeroStreak for history).
-      zeroStreak: h.items === 0 || h.suspect ? (prev.zeroStreak ?? 0) + 1 : 0,
+      // An admissions page with no open round is empty by design (emptyOk), not broken.
+      zeroStreak: (h.items === 0 && !emptyOkRuns.has(id)) || h.suspect ? (prev.zeroStreak ?? 0) + 1 : 0,
       error: h.error ?? null,
       links: h.links ?? prev.links,
     };
