@@ -17,7 +17,8 @@ const FIELDS = [
 ];
 const FIELD_KEYS = FIELDS.slice(1).map(([k]) => k);
 const APPROACHES = { theory: 'Theory', computational: 'Computational', experimental: 'Experimental' };
-const FIELD_HINT = { 1: 'title', 2: 'institution/subject', 4: 'ad text' };
+const FIELD_HINT = { 1: 'title', 2: 'institution/subject', 4: 'ad text', 8: 'PDF advert' };
+const STALE_HOURS = 26; // two daily crawls (00:43 and 12:43 UTC) plus slack
 
 /* global __LINKOUTS__ */
 const LINKOUTS = typeof __LINKOUTS__ === 'undefined' ? { boards: [], static: [] } : __LINKOUTS__;
@@ -119,7 +120,7 @@ function renderFields(counts) {
 }
 
 const resetPages = () => { state.shown = PAGE; state.generalShown = GENERAL_PAGE; };
-const where = (mask) => [1, 2, 4].filter((b) => mask & b).map((b) => FIELD_HINT[b]).join(', ');
+const where = (mask) => [1, 2, 4, 8].filter((b) => mask & b).map((b) => FIELD_HINT[b]).join(', ');
 
 function marked(text, terms) {
   return highlight(text, terms, engine.variants).map((s) => (s.hit ? el('mark', {}, s.text) : s.text));
@@ -139,9 +140,37 @@ function deadlineLine(d) {
     return el('span', { class: 'dl none', title: 'The advert did not state a deadline we could read' }, txt);
   }
   const left = daysBetween(today, d.d);
-  if (left < 0) return el('span', { class: 'dl past' }, `Closed ${fmtDate(d.d)}`);
+  const what = d.dk === 'w' ? 'Walk-in interview' : 'Deadline';
+  // Read from the advert text rather than given by the list: say so, and how sure it is.
+  const how = d.dc
+    ? (d.dk === 'r' ? 'Estimated from "within N days of publication" and the posting date'
+      : `Read from the ${d.df === 'pdf' ? 'PDF advert' : 'advert text'}${d.dc === 'l' ? ' (uncertain)' : ''}`)
+    : null;
+  const mark = d.dc ? el('span', { class: 'guess', title: how }, d.dk === 'r' ? ' ~?' : '?') : null;
+  if (left < 0) return el('span', { class: 'dl past', title: how }, `${d.dk === 'w' ? 'Walk-in was' : 'Closed'} ${fmtDate(d.d)}`, mark);
   const hint = left === 0 ? 'today' : left === 1 ? '1 day left' : `${left} days left`;
-  return el('span', { class: `dl${left <= 7 ? ' soon' : ''}` }, `Deadline ${fmtDate(d.d)} (${hint})`);
+  return el('span', { class: `dl${left <= 7 ? ' soon' : ''}`, title: how }, `${what} ${fmtDate(d.d)}`, mark, ` (${hint})`);
+}
+
+// Advert facts (institute posts), each with a "?" when guessed.
+const CONF_NOTE = { h: 'From the list page', m: 'Read from the advert', l: 'Guessed from the advert (uncertain)' };
+function factsLine(d, terms) {
+  const fx = d.fx;
+  if (!fx && !d.scan) return null;
+  const bit = (label, [v, c], body = v) => el('span', { class: 'fact', title: CONF_NOTE[c] }, `${label} `, body, c === 'h' ? '' : el('span', { class: 'guess' }, '?'));
+  const parts = [];
+  if (fx?.a) parts.push(bit('Advt. No.', fx.a));
+  if (fx?.pj) parts.push(bit('Project', fx.pj, ['“', marked(fx.pj[0], terms), '”', fx.fu ? ` (${fx.fu[0]})` : '']));
+  else if (fx?.fu) parts.push(bit('Funding', fx.fu));
+  if (fx?.pi) parts.push(bit('PI', fx.pi));
+  if (fx?.ag) {
+    const [ages, c] = fx.ag;
+    const v = ages.length > 1 ? `${ages[0]}–${ages.at(-1)} years (by post)` : `${ages[0]} years`;
+    const relax = fx.ar ? el('span', { class: 'relax', title: fx.ar[0] }, ', relaxation possible') : null;
+    parts.push(bit('Age limit', [v, c], [v, relax]));
+  }
+  if (d.scan) parts.push(el('span', { class: 'fact', title: 'The PDF is a scan with no text layer, so its content is not searchable yet' }, 'Scanned PDF'));
+  return el('p', { class: 'facts' }, parts.flatMap((p, i) => (i ? [' · ', p] : [p])));
 }
 
 function card({ doc: d, matched }) {
@@ -190,6 +219,7 @@ function card({ doc: d, matched }) {
     d.at ? el('p', { class: 'also', title: 'The same advert under another title on another board' }, 'Also listed as ', d.at.map((t, i) => [i ? '; ' : '', '“', marked(t, terms), '”'])) : null,
     el('p', { class: 'line' }, deadlineLine(d), ...cats, ...approaches, isNew ? el('span', { class: 'badge new', title: 'First seen since your last visit' }, 'New') : null),
     d.sn ? el('p', { class: 'snippet' }, marked(d.sn, terms)) : null,
+    factsLine(d, terms),
     why,
     el('p', { class: 'sources' }, 'Via ', sources.flatMap((s, i) => (i ? [' + ', s] : [s])),
       d.pdf ? [' · ', el('a', { href: d.pdf, target: '_blank', rel: 'noopener' }, 'PDF advert')] : null),
@@ -259,6 +289,12 @@ async function init() {
   const idx = await res.json();
   engine = prepare(idx);
   $('updated').textContent = `Data updated ${new Date(idx.built).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}. ${idx.n} postings indexed.`;
+  // The index is rebuilt only by a successful crawl, so its build time is the last good crawl.
+  const age = (Date.now() - Date.parse(idx.built)) / 3_600_000;
+  if (age > STALE_HOURS) {
+    $('stale').hidden = false;
+    $('stale').replaceChildren(`The data is ${Math.round(age)} hours old: the scheduled crawl hasn't run since ${new Date(idx.built).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}. Deadlines and new postings may be out of date. `, el('a', { href: 'status.html' }, 'Source status'));
+  }
   $('q').addEventListener('input', () => { state.q = $('q').value; debounced(); });
   $('sort').addEventListener('change', () => { state.sort = $('sort').value; update(); });
   $('approach').addEventListener('change', () => { state.approach = $('approach').value; savePrefs(); resetPages(); update(); });

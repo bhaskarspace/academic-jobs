@@ -114,3 +114,10 @@ Mac fallback (Phase 10).
 - Physics Today, APS (www.apsphysicsjobs.com; careers.aps.org redirects there), AcademicPositions and FindAPostDoc were confirmed by Bhaskar in a real browser, with the query applied (2026-11-23).
 - EURAXESS ignores `?keywords=`. Its own search box produces `jobs/search?f%5B0%5D=keywords%3A{q}` (f[0]=keywords:<query>), which was confirmed in a browser ("chaos" leads with "Stability and chaos in the N-body problem…").
 - FindAPhD shows automated browsers a Cloudflare check, so it's unconfirmed. It uses the same `Keywords=` parameter as FindAPostDoc.
+
+### PDF adverts (Phase 5, 2026-11-23)
+- IISER Pune: 92 PDFs on the first run (all allowed by robots.txt), 3.5 min at one request per 2 s; 36 were result
+  notices (selected candidates, not indexed), 1 a scan with no text layer. Bilingual Unicode Devanagari + English;
+  no Kruti Dev seen there yet, but the filter is in place for the IISERs and IITs in Phases 6–8.
+- Phrasings seen: "Walk-in interviews on 18.11.2026", "on or before 27.11.2026", "Not more than 35 years",
+  "Title of the “…” Project", "Funding Agency" (split by the table layout), "ADVERTISEMENT NO. :88/2026".

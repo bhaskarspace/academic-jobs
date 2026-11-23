@@ -48,6 +48,7 @@ const run = async (qs) => {
       sources: j.querySelector('.sources').textContent,
       badges: [...j.querySelectorAll('.badge')].map((b) => b.textContent),
       line: j.querySelector('.line').textContent,
+      facts: j.querySelector('.facts')?.textContent ?? '',
       expired: j.classList.contains('expired'),
     })),
   }));
@@ -59,7 +60,8 @@ check('… from INSPIRE and from AJO', r.jobs.some((j) => /INSPIRE/.test(j.sourc
 check('… with highlighted terms, or a "via" chip for hits in the ad text', r.jobs.slice(0, 5).every((j) => j.marks.length > 0 || j.via.length > 0));
 if (shots) await page.screenshot({ path: path.join(shots, 'holography-postdoc.png') });
 
-r = await run('?cat=phd&q=junior+research+fellow');
+// expired=1: Pune JRFs are walk-ins that close within weeks (their PDFs now give the dates).
+r = await run('?cat=phd&q=junior+research+fellow&expired=1');
 check('a Pune JRF shows under PhD with a guessed marker', r.jobs.some((j) => /IISER Pune/.test(j.sources) && j.badges.includes('PhD?')), r.summary);
 r = await run('?cat=postdoc&q=junior+research+fellow&expired=1');
 check('… a bundled JRF + postdoc advert also shows under Postdoc (incl. expired)', r.jobs.some((j) => /IISER Pune/.test(j.sources) && j.badges.includes('PhD?')));
@@ -138,6 +140,37 @@ r = await run('?q=AdS%2FCFT');
 const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
 check('no horizontal scroll at phone width', !overflow);
 if (shots) await page.screenshot({ path: path.join(shots, 'phone-adscft.png') });
+
+// Phase 5: PDF adverts.
+// "condensed matter" has ~200 board hits; a Pune PDF-only hit may sit below the first page, so
+// also try a rarer term from the same advert family.
+let pdfHit = null;
+for (const q of ['condensed+matter+pune', 'magnon', 'condensed+matter']) {
+  r = await run(`?q=${q}&expired=1&f=`);
+  pdfHit = r.jobs.find((j) => /IISER Pune/.test(j.sources) && /PDF advert/.test(j.why));
+  if (pdfHit) break;
+}
+check('a Pune ad matched only through its PDF says "matched in PDF"', Boolean(pdfHit), pdfHit ? `${pdfHit.title}: ${pdfHit.why}` : r.summary);
+r = await run('?q=project+associate&expired=1&f=');
+const withFacts = r.jobs.find((j) => /IISER Pune/.test(j.sources) && /Advt\. No\./.test(j.facts));
+check('… Pune cards show Advt. No. / project / age-limit facts', Boolean(withFacts), withFacts?.facts);
+
+// Stale-data banner: none while fresh, shown when the last crawl is over 26 hours old.
+const idxMeta = await (await fetch(`${base}data/index.json`)).json();
+const ageH = (Date.now() - Date.parse(idxMeta.built)) / 3.6e6;
+r = await run('?q=holography');
+const staleNow = await page.evaluate(() => !document.getElementById('stale').hidden);
+check('no stale-data banner while the data is fresh', staleNow === (ageH > 26), `data ${ageH.toFixed(1)} h old, banner ${staleNow ? 'shown' : 'hidden'}`);
+const later = await browser.newPage();
+await later.addInitScript((skew) => { const now = Date.now; Date.now = () => now() + skew; }, Math.max(0, (27 - ageH) * 3.6e6));
+await later.goto(`${base}?q=holography`);
+await later.waitForFunction(() => !/Loading/.test(document.getElementById('summary').textContent));
+const staleSearch = await later.evaluate(() => (document.getElementById('stale').hidden ? '' : document.getElementById('stale').textContent));
+await later.goto(`${base}status.html`);
+await later.waitForFunction(() => !/Loading/.test(document.getElementById('lede').textContent));
+const staleStatus = await later.evaluate(() => (document.getElementById('stale').hidden ? '' : document.getElementById('stale').textContent));
+await later.close();
+check('"data is N hours old" warning on search and status pages after 26 h', /data is 2\d hours old/.test(staleSearch) && /data is 2\d hours old/.test(staleStatus), staleSearch.slice(0, 60));
 
 await page.goto(`${base}status.html`);
 await page.waitForFunction(() => !/Loading/.test(document.getElementById('lede').textContent));

@@ -92,5 +92,11 @@ https://codebpr.com/academic-jobs/, and all searching happens in the browser.
   (issues labelled `source-health`), `site/status.html`. A zero-item run keeps the previous items.
   To test a breakage, dispatch `crawl.yml` on a branch: it uses `state-test/<branch>` and never deploys.
   Delete the `state-test/*` branch and close its `[test: …]` issues afterwards.
-- Cron times are UTC, set on an odd minute (00:47). `crawl.yml` runs in concurrency group `crawl` and uploads the state as an artifact on every run. Each crawl run re-enables its own workflow through the API, which works
-  around the 60-day inactivity rule.
+- Cron times are UTC, set on odd minutes, twice a day 12 h apart (00:43 and 12:43). `crawl.yml` runs in concurrency group `crawl` and uploads the state as an artifact on every run. Each crawl run re-enables its own workflow through the API when it isn't `active`, which works
+  around the 60-day inactivity rule. The search and status pages warn when the data is over 26 h old.
+- PDFs (`crawler/lib/pdf.mjs`): at most 15 MB, the first 10 pages, 3 per posting, 120 new per source per run; text cached
+  under `pdf:v1:<url>` (bump `CACHE_VERSION` to re-extract). The text is indexed as the `pdf` field and never shipped.
+  Result notices (selected candidates) are never indexed. Legacy-font (Kruti Dev) lines are dropped by
+  `crawler/lib/garble.mjs`; regenerate its word list with `node tools/make-wordlist.mjs` after a full crawl.
+- Card facts (`crawler/lib/advert.mjs`: Advt. No., PI, project/funding, age limit) and text-derived deadlines carry a
+  confidence; the card marks anything not from the list page with "?".

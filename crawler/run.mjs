@@ -16,6 +16,9 @@ import { loadState, saveState, resolveId, resolveExisting } from './lib/state.mj
 import { makeCategorizer, makeFieldTagger } from './lib/categorize.mjs';
 import { normalize, mergePostings } from './lib/normalize.mjs';
 import { findDuplicates } from './lib/dedupe.mjs';
+import { attachPdfs } from './lib/pdf.mjs';
+import { advtAlias } from './lib/advert.mjs';
+import { todayISO } from './lib/dates.mjs';
 import { makeSubjectTest } from '../search/subject.mjs';
 import { loadIndexConfig } from '../search/build-index.mjs';
 import { diffLinks, updateGone, skipReason, warningsFor, suspectRun, SOFT_GONE_ADAPTERS } from './lib/health.mjs';
@@ -73,6 +76,7 @@ async function main() {
   const now = new Date().toISOString();
 
   const health = {};
+  const pdfReports = {};
   const itemsBySource = {};
   const goneBySource = {};
   await Promise.all(all.map(async (s) => {
@@ -89,7 +93,16 @@ async function main() {
     const prevState = state.sources[s.id] ?? {};
     try {
       const mod = await ADAPTERS[s.adapter]();
-      const items = await withTimeout(mod.crawl(s, { http, log, cache }), (s.timeoutMin ?? 10) * 60_000, s.id);
+      const items = await withTimeout((async () => {
+        const got = await mod.crawl(s, { http, log, cache });
+        // PDF adverts: text for matching, deadlines and card facts (fetched once per URL, capped).
+        if (got.some((it) => it.pdfUrls?.length)) {
+          pdfReports[s.id] = await attachPdfs(got, { http, cache, log, today: todayISO() });
+          const r = pdfReports[s.id];
+          log(`PDFs: ${r.fetched} fetched, ${r.skipped.length} skipped, ${r.truncated.length} truncated, ${r.imageOnly} image-only, ${r.notices} result notices${r.deferred ? `, ${r.deferred} deferred to the next run` : ''}`);
+        }
+        return got;
+      })(), (s.timeoutMin ?? 10) * 60_000, s.id);
       const curIds = items.map((it) => it.sourceId);
       const suspect = suspectRun(items.length, prevItems.length || prevState.items || 0);
       if (suspect) {
@@ -118,8 +131,11 @@ async function main() {
   const fieldsOf = makeFieldTagger(cfg.fields);
   // A weak alias (an external URL a posting links to) is used only if exactly one item of that
   // source claims it; an umbrella ad shared by several postings must not merge them.
+  // The Advt. No. is one too, within an institution: the same advert often sits on two of its list
+  // pages (openings and postdoc), and two rows of one page with one number are not merged.
+  const weakOf = (raw) => [...(raw.weakAliases ?? []), advtAlias(raw)].filter(Boolean);
   const weakCount = new Map();
-  for (const s of all) for (const raw of itemsBySource[s.id] ?? []) for (const a of raw.weakAliases ?? []) {
+  for (const s of all) for (const raw of itemsBySource[s.id] ?? []) for (const a of weakOf(raw)) {
     const k = `${s.id}\t${a}`;
     weakCount.set(k, (weakCount.get(k) ?? 0) + 1);
   }
@@ -130,7 +146,7 @@ async function main() {
     const gone = Object.values(goneBySource[s.id] ?? {}).filter((g) => !live_ids.has(g.item.sourceId)).map((g) => [g.item, g]);
     for (const [raw, g] of [...live, ...gone]) {
       const goneSince = g?.goneSince ?? null;
-      const weak = (raw.weakAliases ?? []).filter((a) => weakCount.get(`${s.id}\t${a}`) === 1);
+      const weak = weakOf(raw).filter((a) => weakCount.get(`${s.id}\t${a}`) === 1);
       const aliases = [...new Set([raw.sourceId, ...(raw.aliases ?? []), ...weak].filter(Boolean))];
       const id = goneSince ? resolveExisting(state.ids, aliases) : resolveId(state.ids, aliases, now);
       if (!id) continue;
@@ -179,12 +195,23 @@ async function main() {
   for (const s of all) {
     const st = state.sources[s.id] ?? {};
     report[s.id] = { name: s.name, institution: s.institution ?? s.name, page: s.page ?? pageLabel(s), url: s.url, crawled: Boolean(health[s.id]), ...(health[s.id] ?? { items: st.items ?? 0 }), zeroStreak: st.zeroStreak ?? 0, lastRun: st.lastRun ?? null, lastOk: st.lastOk ?? null };
+    if (pdfReports[s.id]) {
+      const r = pdfReports[s.id];
+      report[s.id].pdf = { fetched: r.fetched, skipped: r.skipped.length, truncated: r.truncated.length, imageOnly: r.imageOnly, notices: r.notices, deferred: r.deferred };
+    }
   }
   for (const s of linkOuts) report[s.id] = { name: s.name, institution: s.institution ?? s.name, url: s.url, linkOut: true, note: s.note ?? null, crawled: false, items: 0, zeroStreak: 0 };
   const certs = caExpiries(new Date(now));
   const robots = await http.robotsReport();
   const out = { built: now, run: process.env.GITHUB_RUN_ID ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}` : null,
-    postings: postings.length, gone: postings.filter((p) => p.gone).length, http: http.stats, sources: report, robots, certs };
+    postings: postings.length, gone: postings.filter((p) => p.gone).length, http: http.stats, sources: report, robots, certs,
+    // PDFs not read in full: skipped (too large, robots, not a PDF, fetch failed) or cut at 10 pages.
+    pdfs: {
+      skipped: Object.entries(pdfReports).flatMap(([source, r]) => r.skipped.map((x) => ({ source, ...x }))),
+      truncated: Object.entries(pdfReports).flatMap(([source, r]) => r.truncated.map((x) => ({ source, ...x }))),
+      imageOnly: Object.values(pdfReports).reduce((a, r) => a + r.imageOnly, 0),
+      deferred: Object.values(pdfReports).reduce((a, r) => a + r.deferred, 0),
+    } };
   out.warnings = warningsFor(out);
 
   await mkdir(outDir, { recursive: true });

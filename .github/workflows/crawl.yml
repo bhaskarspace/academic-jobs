@@ -9,7 +9,10 @@ name: crawl
 # tagged with the branch, and neither deploys nor touches `state`.
 on:
   schedule:
-    - cron: '47 0 * * *'   # 06:17 IST. Odd minute: runs at :00/:30 get delayed most.
+    # Twice a day, 12 h apart, so one dropped scheduled run costs 12 hours, not 24. Odd minutes:
+    # runs at :00/:30 get delayed most.
+    - cron: '43 0 * * *'    # 06:13 IST
+    - cron: '43 12 * * *'   # 18:13 IST
   workflow_dispatch:
     inputs:
       bootstrap:
@@ -72,6 +75,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - name: Poppler (pdftotext, pdfinfo)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils
       - run: npm ci
       - run: npm test
 
@@ -139,7 +144,12 @@ jobs:
         if: github.ref_name == 'main'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/crawl.yml/enable"
+        # Only when GitHub has disabled it (60 days without activity). Re-enabling an active
+        # workflow re-registers it, which is a suspect for the first scheduled run never firing.
+        run: |
+          state=$(gh api "repos/${{ github.repository }}/actions/workflows/crawl.yml" --jq .state)
+          echo "workflow state: $state"
+          if [ "$state" != "active" ]; then gh api -X PUT "repos/${{ github.repository }}/actions/workflows/crawl.yml/enable"; fi
 
   deploy:
     needs: crawl

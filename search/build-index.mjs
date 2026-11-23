@@ -13,9 +13,11 @@ import { makeApproachTagger, APPROACH_SHORT } from './approach.mjs';
 import { loadYaml } from '../crawler/lib/config.mjs';
 
 // Field weights (BM25F-style: weighted term frequency).
-export const FIELDS = { title: { bit: 1, w: 3 }, meta: { bit: 2, w: 2 }, body: { bit: 4, w: 1 } };
+// pdf: text of the PDF advert (Indian institutes), indexed but never shipped; a hit there shows
+// "in PDF advert".
+export const FIELDS = { title: { bit: 1, w: 3 }, meta: { bit: 2, w: 2 }, body: { bit: 4, w: 1 }, pdf: { bit: 8, w: 0.7 } };
 // Bits above the field bits record which surface forms of a term a document used (see `forms`).
-export const FORM_SHIFT = 3;
+export const FORM_SHIFT = 4;
 const MAX_FORMS = 7;
 const BODY_TERMS_MAX = 150; // per document, by tf-idf; title, meta and concept terms are always kept
 // A posting "names no topic" when its title hits no concept and its text hits none, or so many
@@ -53,9 +55,10 @@ export function buildIndex(postings, { variants = {}, concepts = {}, approach = 
       title: [p.title, ...(p.altTitles ?? [])].join(' \n '),
       meta: [p.institution, p.institutionAlt, p.subject, p.city, p.region, (p.fields || []).join(' ')].filter(Boolean).join(' \n '),
       body: p.body,
+      pdf: p.pdfText ?? '',
     };
     const terms = new Map();
-    const hitConcepts = { title: new Set(), meta: new Set(), body: new Set() };
+    const hitConcepts = { title: new Set(), meta: new Set(), body: new Set(), pdf: new Set() };
     let len = 0;
     for (const [name, text] of Object.entries(fields)) {
       const f = FIELDS[name];
@@ -78,7 +81,7 @@ export function buildIndex(postings, { variants = {}, concepts = {}, approach = 
       for (const form of e.forms) fc.set(form, (fc.get(form) ?? 0) + 1);
       formCount.set(t, fc);
     }
-    const bodyConcepts = new Set([...hitConcepts.meta, ...hitConcepts.body]);
+    const bodyConcepts = new Set([...hitConcepts.meta, ...hitConcepts.body, ...hitConcepts.pdf]);
     const general = hitConcepts.title.size === 0 && (bodyConcepts.size === 0 || bodyConcepts.size >= UMBRELLA_CONCEPTS);
     docs.push({ p, len, general, approach: approachOf({ title: p.title ?? '', body: p.body ?? '', unit: p.institution ?? '' }) });
   }
@@ -97,7 +100,8 @@ export function buildIndex(postings, { variants = {}, concepts = {}, approach = 
   const N = postings.length;
   const idf = (t) => Math.log(1 + (N - df.get(t) + 0.5) / (df.get(t) + 0.5));
   for (const terms of perDoc) {
-    const bodyOnly = [...terms].filter(([t, e]) => e.mask === FIELDS.body.bit && !keyConcepts.has(t));
+    const textOnly = FIELDS.body.bit | FIELDS.pdf.bit;
+    const bodyOnly = [...terms].filter(([t, e]) => (e.mask & ~textOnly) === 0 && !keyConcepts.has(t));
     if (bodyOnly.length <= BODY_TERMS_MAX) continue;
     bodyOnly.sort((a, b) => b[1].wtf * idf(b[0]) - a[1].wtf * idf(a[0]));
     for (const [t] of bodyOnly.slice(BODY_TERMS_MAX)) terms.delete(t);
@@ -225,6 +229,23 @@ function displayRecord({ p, len, general, approach }, built) {
   }
   if (p.rolling) r.roll = 1;
   if (p.pdfUrls?.length) r.pdf = p.pdfUrls[0];
+  // How the deadline was found, when not from the list/source: kind (w = walk-in, r = relative)
+  // and confidence (m/l), and where (page or PDF).
+  const di = p.deadlineInfo;
+  if (p.deadline && di && di.confidence !== 'high') {
+    r.dc = SHORT_CONF[di.confidence];
+    r.df = di.from === 'pdf' ? 'pdf' : 'page';
+  }
+  if (p.deadline && di?.kind === 'walk-in') r.dk = 'w';
+  if (p.deadline && di?.kind === 'relative') r.dk = 'r';
+  // Advert facts, each [value, confidence]; age is a list of limits.
+  const fx = {};
+  for (const [k, short] of [['advt', 'a'], ['pi', 'pi'], ['project', 'pj'], ['funding', 'fu'], ['age', 'ag'], ['ageRelax', 'ar']]) {
+    const f = p.facts?.[k];
+    if (f) fx[short] = [f.value, SHORT_CONF[f.confidence]];
+  }
+  if (Object.keys(fx).length) r.fx = fx;
+  if (p.pdfInfo?.some((i) => i.imageOnly)) r.scan = 1;
   return r;
 }
 

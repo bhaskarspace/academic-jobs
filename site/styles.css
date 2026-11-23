@@ -165,3 +165,12 @@ tr.inst th .count { font-family: var(--sans); font-weight: 400; color: var(--mut
 tr.page th { font-weight: 400; padding-left: 1rem; }
 td.date { white-space: nowrap; }
 .job .also { margin: 0.1rem 0 0.3rem; font-size: 0.88rem; color: var(--muted); }
+
+/* Stale-data warning (search and status pages). */
+.stale { margin: 0 0 1rem; padding: 0.7rem 0.9rem; border-radius: 8px; border: 1px solid var(--soon); color: var(--soon); background: var(--card); font-size: 0.95rem; }
+.stale a { color: inherit; }
+/* Advert facts and guessed values. */
+.job .facts { margin: 0.25rem 0 0.3rem; font-size: 0.88rem; color: var(--muted); }
+.job .facts .fact { white-space: normal; }
+.guess { color: var(--muted); font-size: 0.85em; margin-left: 0.1em; cursor: help; }
+.relax { text-decoration: underline dotted; cursor: help; }

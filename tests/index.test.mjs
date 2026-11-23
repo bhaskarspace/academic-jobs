@@ -72,3 +72,23 @@ test('highlight marks the matched word in the title', () => {
   const segs = highlight('Postdoc in holographic QFT', new Set(['holographi']), variants);
   assert.deepEqual(segs.filter((s) => s.hit).map((s) => s.text), ['holographic']);
 });
+
+test('Phase 5 acceptance: a Pune ad whose research area is only in its PDF is found, "matched in PDF"', () => {
+  const pune = P({
+    id: 'pune', title: 'Research Associate', institution: 'Indian Institute of Science Education and Research (IISER) Pune',
+    body: 'Temporary and contractual on consolidated emoluments under funded project in Physics department.',
+    pdfText: 'Institute invites applications for a Research Associate in condensed matter physics: magnon transport in thin films.',
+    snippet: 'Temporary and contractual on consolidated emoluments under funded project in Physics department.',
+    deadline: '2026-12-31', deadlineInfo: { kind: 'walk-in', confidence: 'medium', from: 'pdf' },
+    facts: { advt: { value: '86/2026', confidence: 'medium' }, age: { value: [35], confidence: 'low' } },
+  });
+  const ix = buildIndex([...postings, pune], { variants, built: '2026-11-22T00:00:00Z' });
+  assert.ok(!JSON.stringify(ix).includes('magnon transport'), 'PDF text is never shipped');
+  const r = search(prepare(JSON.parse(JSON.stringify(ix))), 'condensed matter', { today });
+  const hit = r.results.find((x) => x.doc.id === 'pune');
+  assert.ok(hit, 'found by a term only in the PDF');
+  assert.ok(hit.matched.every((m) => m.mask === 8), 'matched in the PDF field only');
+  assert.equal(r.results[0].doc.id, 'b', 'a title hit still ranks above a PDF-only hit');
+  assert.deepEqual([hit.doc.dk, hit.doc.dc, hit.doc.df], ['w', 'm', 'pdf']);
+  assert.deepEqual(hit.doc.fx, { a: ['86/2026', 'm'], ag: [[35], 'l'] });
+});

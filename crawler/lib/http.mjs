@@ -113,8 +113,9 @@ export class Http {
    * @param {boolean} [opt.binary]       return a Buffer (PDFs)
    * @param {boolean} [opt.conditional]  use ETag/Last-Modified (default true)
    * @param {boolean} [opt.ignoreRobots] only for sources with a recorded `permission:`
+   * @param {number}  [opt.maxBytes]     stop and throw TooLarge (code TOO_LARGE) past this size
    */
-  async get(url, { binary = false, conditional = true, ignoreRobots = false, accept } = {}) {
+  async get(url, { binary = false, conditional = true, ignoreRobots = false, accept, maxBytes = 0 } = {}) {
     const u = new URL(url);
     if (!ignoreRobots) {
       const why = blockedReason(await this.robotsFor(u.origin), url);
@@ -153,12 +154,17 @@ export class Http {
             await res.arrayBuffer().catch(() => {});
             throw new HttpError(url, res.status);
           }
-          const buf = Buffer.from(await res.arrayBuffer());
+          const declared = Number(res.headers.get('content-length') || 0);
+          if (maxBytes && declared > maxBytes) {
+            await res.body?.cancel().catch(() => {});
+            throw new TooLarge(url, declared);
+          }
+          const buf = maxBytes ? await readCapped(res, maxBytes, url) : Buffer.from(await res.arrayBuffer());
           this.stats.bytes += buf.length;
           const contentType = res.headers.get('content-type') || '';
           const etag = res.headers.get('etag');
           const lastModified = res.headers.get('last-modified');
-          if (cp && (etag || lastModified)) {
+          if (cp && conditional && (etag || lastModified)) {
             this.meta[url] = { etag: etag || undefined, lastModified: lastModified || undefined, contentType };
             await mkdir(path.dirname(cp), { recursive: true });
             await writeFile(cp, buf);
@@ -166,6 +172,7 @@ export class Http {
           return { url: res.url || url, status: res.status, notModified: false, contentType, body: binary ? buf : decode(buf, contentType) };
         } catch (e) {
           if (e instanceof HttpError) { this.stats.errors++; throw e; }
+          if (e instanceof TooLarge) throw e;
           lastErr = e;
         }
       }
@@ -195,4 +202,26 @@ export function errorCode(e) {
   const c = e.cause ?? e;
   if (e.name === 'TimeoutError' || c.name === 'TimeoutError') return 'TIMEOUT';
   return c.code || c.name || 'ERROR';
+}
+
+/** A response larger than the caller's limit (PDF cap). Not retried, not counted as an error. */
+export class TooLarge extends Error {
+  constructor(url, bytes) {
+    super(`larger than the limit (${(bytes / 1e6).toFixed(1)} MB or more): ${url}`);
+    this.code = 'TOO_LARGE';
+    this.bytes = bytes;
+    this.url = url;
+  }
+}
+
+async function readCapped(res, maxBytes, url) {
+  if (!res.body) return Buffer.from(await res.arrayBuffer());
+  const chunks = [];
+  let n = 0;
+  for await (const c of res.body) {
+    n += c.length;
+    if (n > maxBytes) throw new TooLarge(url, n); // leaving the loop cancels the stream
+    chunks.push(c);
+  }
+  return Buffer.concat(chunks.map((c) => Buffer.from(c)));
 }

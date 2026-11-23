@@ -31,10 +31,31 @@ function note(s) {
   return bits.join('; ');
 }
 
+function renderPdfs(p) {
+  if (!p || (!p.skipped?.length && !p.truncated?.length && !p.imageOnly && !p.deferred)) return;
+  $('pdfs-section').hidden = false;
+  $('pdfs-note').textContent = [
+    p.skipped?.length ? `${p.skipped.length} skipped` : '',
+    p.truncated?.length ? `${p.truncated.length} read only in part (first 10 pages)` : '',
+    p.imageOnly ? `${p.imageOnly} scanned (no text layer; OCR comes later)` : '',
+    p.deferred ? `${p.deferred} waiting for the next run (at most 120 new PDFs per source per run)` : '',
+  ].filter(Boolean).join(' · ') + '.';
+  $('pdfs').tBodies[0].replaceChildren(...[...(p.skipped ?? []), ...(p.truncated ?? [])].map((x) => el('tr', {},
+    el('th', { scope: 'row' }, x.source),
+    el('td', { class: 'note' }, el('a', { href: x.url }, decodeURIComponent(x.url.split('/').pop()).slice(0, 60))),
+    el('td', {}, x.reason))));
+}
+
 async function main() {
   const res = await fetch('data/health.json');
   if (!res.ok) throw new Error(`health ${res.status}`);
   const h = await res.json();
+  const ageH = (Date.now() - Date.parse(h.built)) / 3_600_000;
+  if (ageH > 26) {
+    $('stale').hidden = false;
+    $('stale').textContent = `The data is ${Math.round(ageH)} hours old: no crawl has succeeded since ${when(h.built)}. Check the Actions tab for the scheduled runs.`;
+  }
+  renderPdfs(h.pdfs);
   $('lede').replaceChildren(...[`Last crawl ${when(h.built)}: ${h.postings} postings`, h.gone ? `, ${h.gone} of them removed from their source` : '', '. ',
     h.run ? el('a', { href: h.run }, 'Run log') : ''].filter((x) => x !== ''));
   if (h.warnings?.length) {
