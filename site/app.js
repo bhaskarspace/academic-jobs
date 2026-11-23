@@ -18,7 +18,7 @@ const FIELDS = [
 const FIELD_KEYS = FIELDS.slice(1).map(([k]) => k);
 const APPROACHES = { theory: 'Theory', computational: 'Computational', experimental: 'Experimental' };
 const FIELD_HINT = { 1: 'title', 2: 'institution/subject', 4: 'ad text', 8: 'PDF advert' };
-const STALE_HOURS = 26; // two daily crawls (00:47 and 12:47 UTC) plus slack
+const STALE_HOURS = 26; // two daily crawls (00:43 and 12:43 UTC) plus slack
 
 /* global __LINKOUTS__ */
 const LINKOUTS = typeof __LINKOUTS__ === 'undefined' ? { boards: [], static: [] } : __LINKOUTS__;

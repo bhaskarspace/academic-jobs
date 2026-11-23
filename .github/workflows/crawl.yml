@@ -11,8 +11,8 @@ on:
   schedule:
     # Twice a day, 12 h apart, so one dropped scheduled run costs 12 hours, not 24. Odd minutes:
     # runs at :00/:30 get delayed most.
-    - cron: '47 0 * * *'    # 06:17 IST
-    - cron: '47 12 * * *'   # 18:17 IST
+    - cron: '43 0 * * *'    # 06:13 IST
+    - cron: '43 12 * * *'   # 18:13 IST
   workflow_dispatch:
     inputs:
       bootstrap:
