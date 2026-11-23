@@ -74,6 +74,16 @@ export function buildIndex(postings, { variants = {}, concepts = {}, approach = 
         for (const id of keyConcepts.get(t.term) ?? []) hitConcepts[name].add(id);
       }
     }
+    // Field tags ("math-ph") are in meta for matching, but they are not the posting naming a topic:
+    // a PhD admissions call tagged with every physics subfield is still a general call.
+    const tagText = (p.fields || []).join(' ');
+    if (tagText) {
+      const own = new Set();
+      const metaOwn = [p.institution, p.institutionAlt, p.subject, p.city, p.region].filter(Boolean).join(' \n ');
+      const toks = tokenize(metaOwn, { variants });
+      for (const t of [...toks, ...phrases(toks)]) for (const id of keyConcepts.get(t.term) ?? []) own.add(id);
+      hitConcepts.meta = own;
+    }
     perDoc.push(terms);
     for (const [t, e] of terms) {
       df.set(t, (df.get(t) ?? 0) + 1);

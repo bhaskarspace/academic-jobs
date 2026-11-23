@@ -86,7 +86,14 @@ test('Advt. No. is a dedupe key within an institution, never across institutions
 test('result notices are recognised (their text names people, not a position)', () => {
   assert.ok(isResultNotice('ADVT. NO.: 76/2026\nCandidate selected for appointment purely on temporary and contractual Basis\nSr. No. Name'));
   assert.ok(isResultNotice('Result of the selection process\nPost Counsellor\nSelected Candidate(s)*'));
-  assert.ok(!isResultNotice('Institute invites applications for the following post. Selected candidates will be informed by email.'.replace('Selected candidates', 'Shortlisted applicants')));
+  assert.ok(isResultNotice('Walk-in interview held on 10.11.2026\nSelected candidate(s):\nSr. No. Name'));
+  // Advert boilerplate (IISER TVM and Berhampur adverts were taken for notices before).
+  for (const t of [
+    'Institute invites applications for the following post. Selected candidates will be informed by email.',
+    'Interviews will be held online. Selected candidates must submit the following documents to the office.',
+    'Send the application via email. Only selected candidates will be intimated via email.',
+    'The date of interview will be informed later to the shortlisted candidates\nthrough Email/phone.',
+  ]) assert.ok(!isResultNotice(t), t);
 });
 
 // --- pdftotext, caps and the fetch path ----------------------------------------------------------

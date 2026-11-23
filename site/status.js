@@ -9,7 +9,7 @@ const el = (tag, props = {}, ...kids) => {
 const when = (iso) => (iso ? new Date(iso).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : 'never');
 const STREAK_WARN = 3;
 // Problems first: failing, then suspect/warning, then skipped, then fine, then link-outs.
-const ORDER = { fail: 0, warn: 1, skip: 2, ok: 3, idle: 4 };
+const ORDER = { fail: 0, warn: 1, skip: 2, fill: 3, ok: 3, idle: 4 };
 
 function state(s) {
   if (s.linkOut) return ['idle', 'Link-out'];
@@ -18,6 +18,8 @@ function state(s) {
   if (!s.ok) return ['fail', 'Failed'];
   if (s.zeroStreak >= STREAK_WARN) return ['fail', `No items for ${s.zeroStreak} runs`];
   if (s.suspect) return ['warn', s.items ? 'Suspect drop' : 'Returned nothing'];
+  // More new PDFs than one run may fetch (120 per source): working through the backlog.
+  if (s.pdf?.deferred) return ['fill', `Backfilling, ${s.pdf.deferred} waiting`];
   return ['ok', 'OK'];
 }
 
@@ -67,6 +69,7 @@ async function main() {
   const n = (k) => rows.filter((r) => r.st[0] === k).length;
   const linkOuts = rows.filter((r) => r.s.linkOut).length;
   const parts = [[n('ok'), 'OK'], [linkOuts, linkOuts === 1 ? 'link-out' : 'link-outs'], [n('warn'), n('warn') === 1 ? 'warning' : 'warnings'], [n('fail'), 'failing']];
+  if (n('fill')) parts.push([n('fill'), 'backfilling PDFs']);
   if (n('skip')) parts.push([n('skip'), 'skipped (robots.txt)']);
   const idle = n('idle') - linkOuts;
   if (idle) parts.push([idle, 'not crawled this run']);

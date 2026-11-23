@@ -25,7 +25,12 @@ https://codebpr.com/academic-jobs/, and all searching happens in the browser.
   its ordering.
 - `crawler/run.mjs` is the CLI.
   - `crawler/adapters/` has one adapter per *kind* of source: inspire, ajo (which also serves
-    MathJobs), rss, html-list, html-table, wp-json, js-rendered.
+    MathJobs), rss, html-list, html-table, html-page (wp-json and js-rendered come later).
+    `crawler/lib/listing.mjs` is their shared loop: pagination (`pages:`, read until a page has no
+    open advert), `match`/`exclude`/`skipOld` filters, detail pages, and the carry-forward rule
+    for postings on unread pages.
+  - Admissions sources (`admissions: true`, `emptyOk: true`) are PhD calls with fixed `fields`;
+    they belong in the general-calls section, so field tags never count as naming a topic.
   - `crawler/lib/` holds http (UA, robots, rate limits, conditional requests, timeouts), pdf
     (`pdftotext`), dates, normalize, categorize, dedupe, changes, state and health.
 - `search/` is shared by the build and the browser: stem, tokenize, concepts, build-index, query.

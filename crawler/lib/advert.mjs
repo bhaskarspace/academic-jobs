@@ -40,10 +40,10 @@ const RELAX = /\b(?:age\s+relax\w*|relax\w*\s+(?:in|of)\s+(?:the\s+)?(?:upper\s+
 const HINDI = /[\u0900-\u097F\u200C\u200D][\u0900-\u097F\u200C\u200D\s\-–()]*(?:\s*\/\s*)?/g;
 const english = (text) => String(text ?? '').split('\n')
   .map((l) => l.replace(HINDI, ' ').replace(/^[\s\/]+/, '').replace(/[ \t]+/g, ' ').trim())
-  .filter((l) => /[A-Za-z]/.test(l)).join('\n');
+  .filter((l) => /[A-Za-z0-9]/.test(l)).join('\n'); // keep date-only lines ("20.11.2026")
 export { english as englishLines };
 
-export function advertFacts(text, { listRef = null } = {}) {
+export function advertFacts(text, { listRef = null, listPi = null } = {}) {
   const t = english(text);
   const facts = {};
   const ref = listRef ? normalizeAdvt(listRef) : null;
@@ -53,7 +53,8 @@ export function advertFacts(text, { listRef = null } = {}) {
     const v = m && normalizeAdvt(m[1]);
     if (v) facts.advt = { value: v, confidence: 'medium' };
   }
-  for (const m of t.matchAll(PI_LABEL)) {
+  if (listPi) facts.pi = { value: trimValue(listPi, 80), confidence: 'high' };
+  else for (const m of t.matchAll(PI_LABEL)) {
     const name = PI_NAME.exec(t.slice(m.index + m[0].length, m.index + m[0].length + 80));
     if (name && name[1].replace(/(?:Dr|Prof|Professor|Mr|Ms|Mrs)\.?\s*/g, '').length >= 3) { facts.pi = { value: trimValue(name[1], 80), confidence: 'medium' }; break; }
   }
