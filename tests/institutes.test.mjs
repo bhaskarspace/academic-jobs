@@ -179,11 +179,13 @@ test('ARIES: its source has a short watchdog and its missing intermediate is in 
 
 test('robots verdicts: IACS, IMSc other_positions, CMI, TIFR, HRI, IPR and PRL are link-outs; NISER, JNCASR and IIA never fetch PDFs', () => {
   const by = Object.fromEntries(cfg.sources.map((s) => [s.id, s]));
-  for (const id of ['iacs', 'imsc-other', 'cmi', 'tifr', 'hri', 'ipr', 'prl']) {
+  for (const id of ['iacs', 'imsc-programmes', 'imsc-other', 'isi-kolkata-linkout', 'cmi', 'tifr', 'hri', 'ipr', 'prl']) {
     assert.equal(by[id].adapter, 'link-out', id);
     assert.ok(by[id].note, `${id} says why`);
   }
   for (const id of ['niser-fixed-term', 'jncasr', 'iia']) assert.equal(by[id].pdfs, false, id);
+  // Runner-blocked: configured and fixture-tested, but not crawled until they answer.
+  for (const id of ['imsc-postdoc', 'imsc-faculty', 'isi-kolkata']) assert.equal(by[id].enabled, false, id);
 });
 
 // ---- source fixtures (trimmed pages fetched 2026-11-24) --------------------------------------

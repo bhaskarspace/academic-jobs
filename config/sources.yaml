@@ -363,7 +363,11 @@ sources:
     exclude: 'non-academic|tender|result|selected'
     detail: { text: '.description' }
 
+  # IMSc: Cloudflare answered the runner with 403 on these pages too in the Phase 7 branch crawl
+  # (2026-11-24 08:54 UTC), though the probe two hours earlier got 200. Kept configured (and
+  # fixture-tested) but disabled; `imsc-programmes` below is the link-out. Re-enable if it answers.
   - id: imsc-postdoc
+    enabled: false
     name: IMSc Chennai
     adapter: html-page
     institution: The Institute of Mathematical Sciences
@@ -376,6 +380,7 @@ sources:
     # "Applications are accepted all year round."
 
   - id: imsc-faculty
+    enabled: false
     name: IMSc Chennai
     adapter: html-page
     institution: The Institute of Mathematical Sciences
@@ -385,6 +390,14 @@ sources:
     categories: [faculty]
     text: '.node-main-content .field-name-body'
     rolling: false
+
+  - id: imsc-programmes
+    name: IMSc Chennai
+    adapter: link-out
+    url: https://www.imsc.res.in/post_doctoral_programme
+    institution: The Institute of Mathematical Sciences
+    country: IN
+    note: Cloudflare answers GitHub runners with 403 (the postdoc and faculty pages on 24 Nov; other_positions on every probe). The postdoc call is a standing one ("applications are accepted all year round"); the faculty page is /facultyrecruitment.
 
   - id: imsc-other
     name: IMSc Chennai (other positions)
@@ -493,7 +506,10 @@ sources:
     country: IN
     note: Refused connections on ports 443 and 80 from the Mac and from a GitHub runner on 2026-11-24. Re-probe and switch to html-page when it answers.
 
+  # ISI Kolkata: connection timeouts from GitHub runners on 22 Nov and twice on 24 Nov (robots.txt
+  # unreachable, so nothing is fetched); answers from the Mac. Disabled like NCBS, with a link-out.
   - id: isi-kolkata
+    enabled: false
     name: ISI Kolkata
     adapter: html-table
     institution: Indian Statistical Institute, Kolkata
@@ -504,6 +520,14 @@ sources:
     titleSelector: a.post-title     # the cell also holds a two-line description
     detail: { text: '.content-box' }
     exclude: 'doctor|ophthalmolog|consultant \(legal\)|security|driver|clerk'
+
+  - id: isi-kolkata-linkout
+    name: ISI Kolkata
+    adapter: link-out
+    url: https://www.isical.ac.in/public/jobs
+    institution: Indian Statistical Institute, Kolkata
+    country: IN
+    note: Connection timeouts from GitHub runners (22 Nov, and twice on 24 Nov), robots.txt included; answers from a residential connection. The crawl config is kept (enabled false) for when it answers.
 
   - id: isi-bangalore
     name: ISI Bangalore

@@ -228,9 +228,9 @@ check('status page lists every source', st.rows.length > 0 && (!health || Object
 
 // Phase 7: every research-institute source is on the status page (crawled or link-out), and ARIES,
 // the slow host, finished or was cut off within its watchdog.
-const PHASE7 = ['iisc-contractual', 'icts-opportunities', 'imsc-postdoc', 'imsc-faculty', 'iop', 'sinp', 'rri-postdoc', 'bose', 'iucaa',
-  'tifrh-postdoc', 'tifrh-jrf', 'ncra-postdoc', 'isi-kolkata', 'isi-bangalore', 'aries', 'niser-fixed-term', 'jncasr', 'iia',
-  'imsc-other', 'iacs', 'cmi', 'tifr', 'hri', 'ipr', 'prl'];
+const PHASE7 = ['iisc-contractual', 'icts-opportunities', 'iop', 'sinp', 'rri-postdoc', 'bose', 'iucaa',
+  'tifrh-postdoc', 'tifrh-jrf', 'ncra-postdoc', 'isi-bangalore', 'aries', 'niser-fixed-term', 'jncasr', 'iia',
+  'imsc-programmes', 'imsc-other', 'isi-kolkata-linkout', 'iacs', 'cmi', 'tifr', 'hri', 'ipr', 'prl'];
 check('status page lists every Phase 7 institute source (crawled, partial or link-out)', PHASE7.every((id) => st.rows.includes(id)), PHASE7.filter((id) => !st.rows.includes(id)).join(', ') || `${PHASE7.length} listed`);
 {
   const a = health?.sources?.aries;

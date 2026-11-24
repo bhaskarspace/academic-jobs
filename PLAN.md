@@ -308,16 +308,17 @@ Adding a source means one entry in `sources.yaml`, plus a fixture and a test. A 
      - New adapters: `html-table` (columns by header), `rss`; `html-list` gained blocks with labelled headers ("Advertisement Number: … Last Date: …"), joined titles, filters; `html-page` gained `sections` (one posting per round on a stacked page).
 
 7. **Research institutes.**
-   - IISc, ICTS, IMSc, IOP, SINP, RRI, Bose, IUCAA, TIFR-H, NCRA, ISI Kolkata, ISI Bangalore and ARIES.
-   - NISER, JNCASR and IIA are partial. TIFR, HRI, IPR, PRL, IACS, IMSc other_positions, CMI and NCBS are link-outs.
+   - IISc, ICTS, IOP, SINP, RRI, Bose, IUCAA, TIFR-H, NCRA, ISI Bangalore and ARIES.
+   - NISER, JNCASR and IIA are partial. TIFR, HRI, IPR, PRL, IACS, IMSc, ISI Kolkata, CMI and NCBS are link-outs.
    - Acceptance: an IMSc or ICTS postdoc call is searchable, and ARIES' slowness doesn't stall the run (it's watchdog-killed and reported).
    - Folded in (2026-11-24):
      - **Sources as found** (docs/AUDIT.md "Research institutes (Phase 7)"): IOP through its RSS feed (no wp-json adapter);
        ICTS as one source (its postdoc page repeats the opportunities list); ISI Bangalore from its homepage list;
        NISER's real adverts at /career/staff/ft/cr; TIFR-H as small tables, not RSS.
      - **Link-outs:** IACS (robots.txt names its job pages in invalid full-URL `Disallow:` lines; the intent is followed),
-       IMSc other_positions (Cloudflare challenges Node but not curl: a fingerprint rule, not worked around), CMI
-       (connection refused on 24 Nov). TIFR, HRI, IPR and PRL moved from static links to `link-out` sources, so the status page lists them.
+       IMSc (Cloudflare challenges Node but not curl on other_positions, and 403'd the postdoc and faculty pages in the
+       branch crawl), ISI Kolkata (runner timeouts, like NCBS), CMI (connection refused on 24 Nov). The IMSc and ISI
+       Kolkata crawl configs stay in the registry with `enabled: false`, fixture-tested, for when they answer. TIFR, HRI, IPR and PRL moved from static links to `link-out` sources, so the status page lists them.
      - **Per-source headers:** `headers:` may set Accept, Accept-Language and Accept-Encoding only. SINP needs
        `Accept-Encoding: identity`; its server returns 500 to gzip/deflate.
      - **ARIES:** the missing GlobalSign GCC R46 AlphaSSL intermediate in config/ca/; a 5-minute watchdog that now aborts
