@@ -30,7 +30,7 @@ Every institute's posting fields are title, a posted date and/or last date, and 
 | Group | Include (static HTML, robots OK) | Partial (list page only, PDF not fetched) | Link-out (robots `Disallow: /`, WAF or JS-only for now) | Volume |
 |---|---|---|---|---|
 | **IISERs** | All seven since Phase 6: Pune, Kolkata, Mohali, Bhopal, TVM, Tirupati, Berhampur (see "IISERs (Phase 6)" below). Bhopal's adverts sit under `/assets_external/`, which robots.txt allows; Tirupati's jobs pages are server-rendered with `?selected_category=` | — | — | Pune about 216 rows, Berhampur 95 adverts, TVM ~775 (31 pages) |
-| **Research institutes** | IISc, ICTS (crawl-delay 10), IMSc (crawl-delay 10, 125 PDFs), IOP (RSS `/feed/?post_type=job_opening`), SINP (236-row table), RRI, S.N. Bose (ISO-8859-1), IACS (483-row table), IUCAA, TIFR-H (RSS), NCRA, CMI, ISI Kolkata, ISI Bangalore, ARIES (very slow; one request hung 18 minutes, so it needs hard timeouts), NCBS | NISER (`/storage/` disallowed), JNCASR (`/sites/default/files/` disallowed), IIA (`*.pdf` disallowed) | TIFR Mumbai, HRI and IPR (`Disallow: /`). PRL: robots.txt itself returns 403; treat as link-out until clarified | IACS, SINP, PRL and IMSc each 100–500 PDFs |
+| **Research institutes** | Since Phase 7 (see "Research institutes (Phase 7)" below): IISc, ICTS, IOP, SINP, RRI, S.N. Bose, IUCAA, TIFR-H, NCRA, ISI Bangalore, ARIES | NISER, JNCASR, IIA | TIFR Mumbai, HRI, IPR (`Disallow: /`); PRL (robots.txt 403); IACS (robots.txt intent); IMSc (Cloudflare blocks runners); ISI Kolkata and NCBS (runner timeouts); CMI (unreachable) | SINP keeps ~230 rows back to 2022 |
 | **IITs** (23) | KGP, B, M (crawl-delay 10), K, D, G, R (URL-encode paths with spaces), BBS (www only), H, J, Indore, Mandi, BHU, Palakkad, ISM, Goa (RSS), Dharwad | Patna (`*.pdf` disallowed, Next.js) | Gandhinagar (Cloudflare). Ropar, Tirupati and Jammu (JS SPAs; JS phase). Bhilai (redirects to an error page) | Varies |
 | Suggested additions | TIFR-H, NCBS, CMI, ISI Kolkata/Bangalore, IIA, ARIES, NCRA (all above); later: IMSc-affiliated HBNI, which is HTTP only | | | |
 
@@ -151,3 +151,45 @@ Seen while adding them:
   heading-like phrases count now; the PDF cache moved to v3 so everything was re-read.
 - Field tags were set by words of the institute's name ("Science **Education** and Research"
   tagged humanities). That phrase is ignored now, and the humanities rule is word-bounded.
+
+### Research institutes (Phase 7, 2026-11-24)
+Re-checked from the Mac and from a GitHub runner (`probe.yml` with `--html-headers`: the project UA plus
+`Accept: text/html`, `Accept-Language: en`, `Accept-Encoding: identity`; never a browser UA). "robots" is the
+verdict for the paths used.
+
+| Institute | Page (source id) | Kind | robots.txt | Verdict |
+|---|---|---|---|---|
+| IISc | /careers/contractual-positions/ (`iisc-contractual`) | TablePress table: Advt. No., post, department, PDF, start and closing dates | only /wp-admin/ | include. /positions-open/ is now an "IISc in numbers" page |
+| ICTS | /opportunities (`icts-opportunities`) | card grid, posted date; deadline from the detail page | Crawl-delay 10 | include. /academic/postdoctoral-fellowships repeats the same calls, so it is not a second source |
+| IMSc | /post_doctoral_programme (`imsc-postdoc`), /facultyrecruitment (`imsc-faculty`) | programme pages; the postdoc call is rolling ("Applications are accepted all year round") | Crawl-delay 10 | **link-out** (`imsc-programmes`). The runner probe got 200 at 06:50 UTC, but the branch crawl at 08:54 UTC got 403 from Cloudflare on both pages. The crawl config is kept with `enabled: false` (and fixture-tested) for if they answer again |
+| IMSc | /other_positions (`imsc-other`) | advert list | allowed | **link-out**: Cloudflare answers Node with a 403 challenge from runners, with or without ordinary headers, while curl from the same runner gets 200 (a client-fingerprint rule). The other two IMSc pages answer normally |
+| IOP Bhubaneswar | /feed/?post_type=job_opening (`iop`) | RSS, newest 10 | only /wp-admin/ | include (the existing `rss` adapter; no wp-json adapter needed) |
+| SINP | /web/job-opportunities (`sinp`) | one long table of PDFs with published dates; closing dates in titles | 404 (allow all) | include. The server answers **500** to `Accept-Encoding: gzip` or `deflate` (with the full page as the body) and 200 to identity, br or none, so the source sends `Accept-Encoding: identity`. Merit lists, Hindi copies and undated rows older than 180 days are filtered out |
+| RRI | /careers/post-doctoral-fellowships (`rri-postdoc`) | programme page (rolling) | Drupal defaults | include |
+| S.N. Bose | JobOpenings.jsp?type=ACADEMIC (`bose`) | table: position, ref., publish and closing dates | only /site-admin | include |
+| IACS | /research-associate | table (~480 rows) | the job pages are named in `Disallow:` lines written as full URLs (`Disallow:http://iacs.res.in/research-associate.html`, `faculty-position.html?id=…`), some under `User agent:*` without the hyphen. RFC 9309 parsers ignore those lines, but the intent is clear | **link-out** (decided 2026-11-24). A probe dispatched by mistake fetched /research-associate once from a runner (2026-11-24 06:50 UTC) before it was cancelled; IACS is no longer in `tools/probe-urls.json` |
+| IUCAA | /en/opportunities (`iucaa`) | "Current Openings" table (deadline column) and a "throughout the year" table (rolling: `rollingTables`) | Joomla system folders | include. The rolling table's prose still names 2024/25 rounds; those dates are ignored. "Apply Online" form links on web.iucaa.in:8080 are not taken as PDFs (`pdfLinks`) |
+| TIFR Hyderabad | /careers/post-doctoral-and-visiting-positions/, /careers/jrf-srf-positions/ (`tifrh-postdoc`, `tifrh-jrf`) | small tables, header row in `<td>`s | only /wp-admin/ | include (not RSS, as the 22 Nov audit said) |
+| NCRA | /jobs/academic/pdf (`ncra-postdoc`) | list + detail pages | `Disallow:` (empty) | include. An annual call (deadline 31 October) |
+| *Runner-blocked hosts and the Mac* | — | — | — | Decided 2026-11-24: IMSc and ISI Kolkata stay link-outs, and the Mac runner (`runner: mac`) is **not** used to reach them. Crawling a bot-protected site (IMSc's Cloudflare) from a home connection gets past the protection just as a spoofed client would, which the rules exclude. The Mac runner is only for a host that blocks no one and simply can't be reached from GitHub's network; ISI Kolkata isn't treated as one either. Phase 10 (Mac fallback) stays likely to be dropped |
+| CMI | /positions/ | — | was 404 on 22 Nov | **link-out**: connection refused on 443 and 80 from the Mac and a runner on 24 Nov. Re-probe later |
+| ISI Kolkata | /public/jobs (`isi-kolkata`) | table: issue date, submission deadline, walk-in date; detail page per advert | 404 | **link-out** (`isi-kolkata-linkout`), like NCBS: connection timeouts from runners on 22 Nov and twice on 24 Nov (probe and branch crawl; robots.txt unreachable, so nothing is fetched). Answers from the Mac. The crawl config is kept with `enabled: false` |
+| ISI Bangalore | homepage left bar (`isi-bangalore`) | "Job Notifications" PDFs | 404 | include (it has no jobs page) |
+| ARIES | /opportunities/project-position (`aries`) | current adverts in boxes above an older table; "[Last date: …]" in titles | Drupal defaults | include. The server sends the GlobalSign GCC **R6** AlphaSSL intermediate for a leaf issued by GCC **R46** AlphaSSL CA 2025, which is now in `config/ca/`. Watchdog 5 min; a cold run (26 detail pages, ~9 s each) took 292 s before list-title dates let expired rows skip their detail page |
+| NISER | /career/staff/ft/cr (`niser-fixed-term`) | fixed-term adverts: section, description, deadline | /storage/ disallowed | **partial**: list text only. (/sps/postdoc, in the 22 Nov audit, lists current postdocs, not adverts) |
+| JNCASR | /announcements (`jncasr`) | table; job announcements filtered by title | /sites/default/files/ disallowed (unchanged) | **partial** |
+| IIA | /iia_jobs/ (`iia`) | table: post, job ID, posted on, last date | `/*.pdf$` disallowed | **partial** |
+| TIFR Mumbai, HRI, IPR | — | — | `Disallow: /` for `*` (TIFR allows only Googlebot) | **link-out** (now listed on the status page as sources) |
+| PRL | — | — | robots.txt returns 403 | **link-out** |
+
+### Schedule (2026-11-24)
+- **Cause.** The 00:47 cron never fired. GitHub runs a scheduled workflow as the user who last committed
+  its cron line, and those commits were authored as `bhaskar@Bhaskars-MacBook-Air.local`, which no GitHub
+  account owns.
+- **Fix.** 4a40ff0 recommitted the cron lines (now 00:43 and 12:43 UTC) under
+  `134090427+bhaskarspace@users.noreply.github.com`, and git is set to that identity globally.
+  CLAUDE.md now requires it for any commit touching the cron lines.
+- **Delays.** The first scheduled run (#15) started at 00:23 UTC on 24 Nov, 11.7 h after its 12:43 slot.
+  At 06:38 UTC the 00:43 slot hadn't run yet.
+- **Decision.** Keep the two slots and add no external trigger. Revisit only if the status page shows
+  a gap over 26 h during the week to 1 Dec.

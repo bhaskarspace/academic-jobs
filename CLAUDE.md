@@ -17,7 +17,8 @@ https://codebpr.com/academic-jobs/, and all searching happens in the browser.
   `adapter`, `url(s)`, `institution`, `country`, `runner: actions|mac`, `tls`, `crawlDelay`,
   `permission`, and the parse hints.
 - `config/categories.yaml`, `config/institutions.yaml`, `config/linkouts.yaml`: category rules,
-  institution aliases (plus `notDuplicates`, to block a wrong merge), and the link-out boards (bundled into
+  institution aliases (plus `notDuplicates`, to block a wrong merge, and `display`, to show a generic
+  name with its city: `crawler/lib/display.mjs`, after dedupe), and the link-out boards (bundled into
   `app.js` at build time). A source with `adapter: link-out` is listed, never crawled.
 - `crawler/lib/dedupe.mjs` merges cross-source duplicates that share no URL (institution + deadline
   + description shingles). Run `node crawler/run.mjs --all --dry --verbose-dedupe` to see every merge.
@@ -88,6 +89,11 @@ https://codebpr.com/academic-jobs/, and all searching happens in the browser.
 - A posting ID is assigned at first sight and stored in state. Later URLs from other sources are
   aliases pointing at that ID. Never recompute an ID from the current canonical URL, because that
   breaks `firstSeen` and "new since your last visit".
+- Per-source `headers:` may set only Accept, Accept-Language and Accept-Encoding (checked in
+  `crawler/lib/http.mjs`). Never a browser User-Agent, cookies or a TLS fingerprint: a site that only answers
+  a browser-like client becomes a link-out.
+  Nor `runner: mac` for a bot-protected site (Cloudflare and the like): reaching it from a home connection
+  gets past the protection just as spoofing would. The Mac runner is only for hosts that block no one.
 - TLS: some Indian hosts send incomplete certificate chains (`UNABLE_TO_VERIFY_LEAF_SIGNATURE`).
   Fix that by adding the missing intermediate under `config/ca/` (with a row in its README).
   `crawler/lib/ca.mjs` loads it for both the crawler and the probe. Never set `tls: insecure`
@@ -97,6 +103,13 @@ https://codebpr.com/academic-jobs/, and all searching happens in the browser.
   (issues labelled `source-health`), `site/status.html`. A zero-item run keeps the previous items.
   To test a breakage, dispatch `crawl.yml` on a branch: it uses `state-test/<branch>` and never deploys.
   Delete the `state-test/*` branch and close its `[test: …]` issues afterwards.
+- **Cron authorship.** GitHub runs a schedule as the user who last committed the cron line. Any commit that
+  touches the cron lines in `.github/workflows/` must be authored as `Bhaskar Shukla
+  <134090427+bhaskarspace@users.noreply.github.com>` (the linked account); under any other identity the
+  schedule silently stops firing.
+- **Smoke checks.** On live runs (`tools/smoke.mjs --url …`), checks that depend on what's currently posted
+  (a particular advert, an open admissions round) warn; checks on code behaviour fail. Local-build and
+  fixture runs stay strict.
 - Cron times are UTC, set on odd minutes, twice a day 12 h apart (00:43 and 12:43). `crawl.yml` runs in concurrency group `crawl` and uploads the state as an artifact on every run. Each crawl run re-enables its own workflow through the API when it isn't `active`, which works
   around the 60-day inactivity rule. The search and status pages warn when the data is over 26 h old.
 - PDFs (`crawler/lib/pdf.mjs`): at most 15 MB, the first 10 pages, 3 per posting, 120 new per source per run; text cached

@@ -1,7 +1,7 @@
 // Raw adapter item -> Posting (see PLAN.md "Normalisation"), and merging of items that resolved
 // to the same stable ID.
 import { snippet, clean, englishText, englishTitle } from './text.mjs';
-import { extractDeadlineInfo } from './dates.mjs';
+import { extractDeadlineInfo, rollingCue, reviewStart } from './dates.mjs';
 import { advertFacts, postDescription } from './advert.mjs';
 import { dropGarbled } from './garble.mjs';
 
@@ -11,12 +11,32 @@ const RANK = { high: 3, medium: 2, low: 1 };
 
 // Where the deadline came from, strongest first: the list/table or a board's own field (high),
 // the page text (medium), the PDF advert (medium; low for "within N days of publication").
+// A standing call ("applications are accepted throughout the year", "on a rolling basis") has no
+// deadline: the source says so (`rolling:`), or the text does. An explicit "last date / deadline"
+// in the same text still wins over the text's rolling phrase (a rolling programme with a dated
+// round), but a walk-in or "within N days" date doesn't.
 function deadlineOf(raw, title, body, pdfText) {
   if (raw.deadline) return { date: raw.deadline, kind: 'deadline', confidence: 'high', from: raw.scheme ? 'source' : 'list' };
   // A standing call ("apply any time") has no deadline, whatever dates its page mentions.
-  if (raw.scheme || raw.rolling) return null;
+  if (raw.rolling) return { rolling: true, from: 'list' };
+  // Boards (INSPIRE, AJO, MathJobs) give their own deadline field; their text dates are not used,
+  // but a board advert with no deadline that says "on a rolling basis" is a rolling call.
+  if (raw.scheme) {
+    const rs = reviewStart(body);
+    if (rs) return { rolling: true, from: 'page', cue: rs.cue, confidence: 'medium', reviewFrom: rs.date };
+    const cue = rollingCue(body);
+    return cue ? { rolling: true, from: 'page', cue, confidence: 'medium' } : null;
+  }
   for (const [from, text] of [['page', `${title}\n${body}`], ['pdf', pdfText]]) {
+    if (!text) continue;
     const d = extractDeadlineInfo(text, { posted: raw.posted ?? null });
+    // A stated last date wins over a rolling phrase, except when that date only starts the review
+    // of a call that runs until filled ("review will begin on …", "priority deadline").
+    const rs = reviewStart(text);
+    if (rs && (d?.kind !== 'deadline' || d.date === rs.date)) return { rolling: true, from, cue: rs.cue, confidence: 'medium', reviewFrom: rs.date };
+    if (d?.kind === 'deadline') return { date: d.date, kind: d.kind, confidence: d.confidence, from, cue: d.cue };
+    const cue = rollingCue(text);
+    if (cue) return { rolling: true, from, cue, confidence: 'medium' };
     if (d) return { date: d.date, kind: d.kind, confidence: d.confidence, from, cue: d.cue };
   }
   return null;
@@ -64,14 +84,18 @@ export function normalize(raw, { categorize, fieldsOf, sourceName, gone = null, 
     city: raw.city ?? null,
     subject: raw.subject ?? null,
     ref: raw.ref ?? null,
-    categories: categorize({ scheme: raw.scheme, values: raw.values, fixed: raw.fixedCategories, title: raw.title ?? '', body: pdfText ? `${body}\n${pdfDesc}` : body }),
+    categories: categorize({ scheme: raw.scheme, values: raw.values, fixed: raw.fixedCategories, title: raw.title ?? '', body: pdfText ? `${body}\n${pdfDesc}` : body,
+      institution: [raw.institution, raw.institutionAlt].filter(Boolean).join('; ') }),
     // Union with the source's fixed fields (an IISER PhD admissions page covers its departments).
     fields: fieldsWithAdmissions(raw, [...new Set([...fieldsOf({ arxiv: raw.arxiv, subject: subjectText }), ...(raw.fixedFields ?? [])])]),
     posted: raw.posted ?? null,
     // Institute pages often give the date only in prose or in the PDF ("Walk-in interviews on ...").
     deadline: dl?.date ?? null,
-    deadlineInfo: dl ? { kind: dl.kind, confidence: dl.confidence, from: dl.from } : null,
-    rolling: Boolean(raw.rolling),
+    deadlineInfo: dl?.date ? { kind: dl.kind, confidence: dl.confidence, from: dl.from } : null,
+    rolling: Boolean(dl?.rolling),
+    rollingInfo: dl?.rolling && dl.from !== 'list' ? { from: dl.from, cue: dl.cue, confidence: dl.confidence } : null,
+    // A rolling call's review-start date ("review of applications will begin on …"): shown, never a deadline.
+    reviewFrom: dl?.reviewFrom ?? null,
     pdfUrls: raw.pdfUrls ?? [],
     pdfInfo: raw.pdfInfo ?? [],
     facts,

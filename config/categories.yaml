@@ -10,7 +10,7 @@ structured:
     JUNIOR: faculty
     SENIOR: faculty
     STAFF: faculty
-    VISITOR: other
+    VISITOR: other    # but see `conditional:` below (Indian research institutes)
     MASTER: other
     UNDERGRADUATE: other
   ajo:                # AJO / MathJobs `type`
@@ -30,6 +30,17 @@ structured:
     Government or industry: other
     Other: other
 
+# 1b. Structured values that mean something else in context -> medium confidence.
+#     At TIFR, ICTS, IUCAA and the other Indian research institutes, "Visiting Fellow" is the
+#     postdoc position, and INSPIRE files those adverts under rank VISITOR.
+conditional:
+  - scheme: inspire
+    value: VISITOR
+    category: postdoc
+    # Either condition is enough: the institution (matched on the full name or ICN), or the text.
+    institution: '\b(ICTS|International Centre for Theoretical Sciences|Tata Inst|TIFR|IMSc|Inst(itute|\.)? (of )?Math(ematical|\.)? Sci|Harish[- ]Chandra|\bHRI\b|IUCAA|Inter[- ]University Centre for Astronomy|Raman Res|\bRRI\b|Saha Inst|\bSINP\b|IACS|Indian Association for the Cultivation|Inst(itute|\.)? (of )?Phys(ics|\.)?,? Bhubaneswar|Bhubaneswar, Inst|Physical Research Lab|\bPRL\b|S\.? ?N\.? Bose|Radio Astrophysics|NCRA|ARIES|Aryabhatta|Indian Inst(itute|\.)? (of )?Astrophys)'
+    text: 'post[- ]?doc'
+
 # 2. Title rules -> medium confidence. 3. The same rules on the body text -> low confidence,
 #    used only when nothing above fired. Patterns are case-insensitive JS regexes.
 rules:
@@ -37,6 +48,11 @@ rules:
   # (?<!post[- ]?) keeps "Postdoctoral position" out of the PhD rule.
   - { pattern: '\bph\.?\s?d\.?\s+(student|position|candidate|program|programme|fellowship|scholarship|admission|studentship)|\bphd\b(?!\s+(holders?|required|degree))|(?<!post[- ]?)doctoral (student|candidate|position|programme|program|researcher)|integrated ph|graduate (student|program)|studentship', category: phd }
   - { pattern: 'post[- ]?doc|\bP\.?D\.?F\b|\bN-?PDF\b|\bPDRA\b|research associate|\bRA\b', category: postdoc }
-  - { pattern: '(assistant|associate|full)\s+professor|\bprofessor\b|faculty|lecturer|tenure', category: faculty }
-  - { pattern: 'fellowship|ramanujan|inspire faculty|marie (sk[lł]odowska-)?curie|\bMSCA\b|humboldt', category: fellowship }
+  # TIFR / ICTS / IUCAA style: the visiting fellow or scientist is the postdoc-level position.
+  - { pattern: 'visiting\s+(fellow|scientist)s?\b(?!ship)', category: postdoc }
+  # "INSPIRE Faculty" is a DST fellowship, not a faculty post.
+  - { pattern: '(assistant|associate|full)\s+professor|\bprofessor\b|(?<!inspire[- ])faculty|lecturer|tenure', category: faculty }
+  # DAE grades (TIFR, IMSc, HRI, SINP, IOP, NCRA): Reader-F, Fellow-E/F/G, Scientific Officer-D/E/F.
+  - { pattern: '\breader[- ]?F\b|\bfellow[- ]?[EFG]\b|scientific officer', category: faculty }
+  - { pattern: 'fellowship|ramanujan|inspire[- ]faculty|marie (sk[lł]odowska-)?curie|\bMSCA\b|humboldt|\bN-?PDF\b|national post[- ]?doctoral fellow', category: fellowship }
   - { pattern: 'project (assistant|associate|scientist|engineer|manager)|technical|administrative|executive|officer|engineer|apprentice|consultant|clerk|driver|nurse|attendant', category: other }

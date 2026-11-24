@@ -104,6 +104,73 @@ export function extractDeadlineInfo(text, { posted = null } = {}) {
   return null;
 }
 
+// Standing calls: "applications are accepted throughout the year", "on a rolling basis", "no last
+// date", "apply at any time". "At any time" only counts next to an application word, and not in
+// "may be withdrawn / cancelled / modified at any time" (an advert's small print).
+const ROLLING = [
+  /\b(?:accepted|received|considered|invited|open)\s+(?:all\s+)?throughout\s+the\s+year\b/i,
+  /\bthroughout\s+the\s+year\b[^.]{0,60}\bappl/i,
+  /\bappl[a-z]*\b[^.]{0,60}\bthroughout\s+the\s+year\b/i,
+  /\ball\s+(?:the\s+)?year\s+round\b/i,
+  /\bon\s+a\s+rolling\s+basis\b/i,
+  /\brolling\s+(?:call|admissions?|applications?|deadline)\b/i,
+  /\bno\s+(?:fixed\s+)?(?:last\s+date|deadline)\b/i,
+  /\b(?:apply|applications?|submitted|considered|accepted|received)\b[^.]{0,40}?\bat\s+any\s+time\b/i,
+];
+const ROLLING_NOT = /\b(?:withdraw|cancel|terminat|modif|amend|revok|reject|discontinu|chang)[a-z]*\b[^.]{0,40}\bat\s+any\s+time\b|\bat\s+any\s+time\b[^.]{0,40}\b(?:withdraw|cancel|terminat|modif|amend|revok|reject|discontinu|without\s+(?:any\s+)?(?:notice|reason))/i;
+
+/** The phrase that marks a standing ("rolling") call, or null. */
+export function rollingCue(text) {
+  if (!text) return null;
+  for (const re of ROLLING) {
+    const m = re.exec(text);
+    if (!m) continue;
+    // Check the "at any time" small print in the sentence around the match.
+    const from = Math.max(0, text.lastIndexOf('.', m.index) + 1);
+    const to = text.indexOf('.', m.index + m[0].length);
+    if (/at\s+any\s+time/i.test(m[0]) && ROLLING_NOT.test(text.slice(from, to < 0 ? undefined : to + 1))) continue;
+    return m[0].replace(/\s+/g, ' ').trim();
+  }
+  return null;
+}
+
+// A review-start date is not a closing date: "review of applications will begin on 1 December",
+// "applications received by 1 December will receive first (or full) consideration", "priority
+// deadline: 1 December", together with "until the position is filled". Such a call stays open after
+// that date, so it is rolling, with the date shown as "review from".
+const REVIEW_CUES = [
+  /\breview\s+of\s+applications\s+(?:will\s+)?(?:begins?|beginning|starts?|starting|commenc[a-z]*)\b(?:\s+(?:on|from|after))?/gi,
+  /\b(?:applications?\s+)?review\s+(?:will\s+)?(?:begins?|starts?|commenc[a-z]*)\b(?:\s+(?:on|from|after))?/gi,
+  /\b(?:first|full)\s+consideration\b/gi,
+  /\bpriority\s+(?:deadline|date)\b/gi,
+];
+const UNTIL_FILLED = /\buntil\s+(?:the\s+)?(?:positions?|posts?|vacanc(?:y|ies)|roles?|openings?)?\s*(?:(?:is|are|has\s+been|have\s+been)\s+)?filled\b|\buntil\s+filled\b/i;
+
+/**
+ * The review-start date of a call that runs until filled, or null when the text has no
+ * "until filled" or no dated review cue. The date is the one nearest the cue, on either side
+ * ("applications received by 1 December will receive first consideration").
+ * @returns {{date, cue} | null}
+ */
+export function reviewStart(text) {
+  if (!text || !UNTIL_FILLED.test(text)) return null;
+  const dates = findDates(text);
+  let best = null;
+  for (const re of REVIEW_CUES) {
+    re.lastIndex = 0;
+    let m;
+    while ((m = re.exec(text))) {
+      const end = m.index + m[0].length;
+      for (const d of dates) {
+        const dist = d.index >= end - 1 ? d.index - end : m.index - d.index;
+        if (dist < 0 || dist > CUE_WINDOW) continue;
+        if (!best || dist < best.dist) best = { date: d.date, cue: m[0].trim().replace(/\s+/g, ' '), dist };
+      }
+    }
+  }
+  return best && { date: best.date, cue: best.cue };
+}
+
 // The deadline in free text: the date nearest after a "last date"/"deadline"/"closing date" cue.
 export function extractDeadline(text) {
   if (!text) return null;

@@ -53,7 +53,7 @@ export function buildIndex(postings, { variants = {}, concepts = {}, approach = 
     const fields = {
       // Other sources' titles for the same advert (shown as "Also listed as") are title text too.
       title: [p.title, ...(p.altTitles ?? [])].join(' \n '),
-      meta: [p.institution, p.institutionAlt, p.subject, p.city, p.region, (p.fields || []).join(' ')].filter(Boolean).join(' \n '),
+      meta: [p.institution, p.institutionSource, p.institutionAlt, p.subject, p.city, p.region, (p.fields || []).join(' ')].filter(Boolean).join(' \n '),
       body: p.body,
       pdf: p.pdfText ?? '',
     };
@@ -79,7 +79,7 @@ export function buildIndex(postings, { variants = {}, concepts = {}, approach = 
     const tagText = (p.fields || []).join(' ');
     if (tagText) {
       const own = new Set();
-      const metaOwn = [p.institution, p.institutionAlt, p.subject, p.city, p.region].filter(Boolean).join(' \n ');
+      const metaOwn = [p.institution, p.institutionSource, p.institutionAlt, p.subject, p.city, p.region].filter(Boolean).join(' \n ');
       const toks = tokenize(metaOwn, { variants });
       for (const t of [...toks, ...phrases(toks)]) for (const id of keyConcepts.get(t.term) ?? []) own.add(id);
       hitConcepts.meta = own;
@@ -238,6 +238,7 @@ function displayRecord({ p, len, general, approach }, built) {
     if (p.goneSoft && p.deadline && p.deadline >= built.slice(0, 10)) r.ol = 1;
   }
   if (p.rolling) r.roll = 1;
+  if (p.rolling && p.reviewFrom) r.rv = p.reviewFrom;
   if (p.pdfUrls?.length) r.pdf = p.pdfUrls[0];
   // How the deadline was found, when not from the list/source: kind (w = walk-in, r = relative)
   // and confidence (m/l), and where (page or PDF).

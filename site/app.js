@@ -131,6 +131,7 @@ function deadlineLine(d) {
     return [deadlineLine({ ...d, g: undefined, ol: undefined }), ' ', el('span', { class: 'dl none', title: 'The institute no longer lists this advert; its deadline has not passed, so it may still be open' }, `· no longer on the list page (since ${fmtDate(d.g)})`)];
   }
   if (d.g) return el('span', { class: 'dl past', title: 'No source lists this advert any more; it was probably filled or withdrawn' }, `Removed from source ${fmtDate(d.g)}`);
+  if (d.roll && d.rv) return el('span', { class: 'dl rolling', title: 'Open until filled; applications are reviewed from this date' }, `Rolling call · review from ${fmtDate(d.rv)}`);
   if (d.roll) return el('span', { class: 'dl rolling' }, 'Rolling call, no fixed deadline');
   if (!d.d) {
     // No deadline is a flag, never a reason to drop the posting. Old ones are marked as possibly closed.

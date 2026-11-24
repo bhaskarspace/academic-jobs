@@ -339,3 +339,283 @@ sources:
     emptyOk: true
     categories: [phd]
     fields: [physics, math, chem, bio]
+
+  # --- Phase 7: research institutes ----------------------------------------------------------
+  # Checked 2026-11-24 from the Mac and a runner (docs/AUDIT.md "Research institutes (Phase 7)").
+  - id: iisc-contractual
+    name: IISc Bangalore
+    adapter: html-table
+    institution: Indian Institute of Science
+    country: IN
+    url: https://www.iisc.ac.in/careers/contractual-positions/
+    table: table.tablepress
+    columns: { advt. no: ref, post: title, department: subject, detailed advertisement: [pdf, link], application closing date: deadline, application start date: posted }
+
+  - id: icts-opportunities
+    name: ICTS Bengaluru
+    adapter: html-list
+    institution: International Centre for Theoretical Sciences
+    country: IN
+    url: https://www.icts.res.in/opportunities
+    # robots.txt Crawl-delay 10 (applied automatically). /academic/postdoctoral-fellowships repeats
+    # the same calls, so it isn't a second source.
+    list: { item: 'table.views-view-grid article.news', title: '.news-heading a', link: '.news-heading a', body: '.news-content', dates: { sel: '.news-date', map: { '': posted } } }
+    exclude: 'non-academic|tender|result|selected'
+    detail: { text: '.description' }
+
+  # IMSc: Cloudflare answered the runner with 403 on these pages too in the Phase 7 branch crawl
+  # (2026-11-24 08:54 UTC), though the probe two hours earlier got 200. Kept configured (and
+  # fixture-tested) but disabled; `imsc-programmes` below is the link-out. Re-enable if it answers.
+  - id: imsc-postdoc
+    enabled: false
+    name: IMSc Chennai
+    adapter: html-page
+    institution: The Institute of Mathematical Sciences
+    country: IN
+    url: https://www.imsc.res.in/post_doctoral_programme
+    title: IMSc post-doctoral fellowships (theoretical physics, mathematics, theoretical computer science, computational biology)
+    categories: [postdoc]
+    fields: [hep-th, cond-mat, math-ph, math, cs]
+    text: '.node-main-content .field-name-body'
+    # "Applications are accepted all year round."
+
+  - id: imsc-faculty
+    enabled: false
+    name: IMSc Chennai
+    adapter: html-page
+    institution: The Institute of Mathematical Sciences
+    country: IN
+    url: https://www.imsc.res.in/facultyrecruitment
+    title: IMSc faculty positions
+    categories: [faculty]
+    text: '.node-main-content .field-name-body'
+    rolling: false
+
+  - id: imsc-programmes
+    name: IMSc Chennai
+    adapter: link-out
+    url: https://www.imsc.res.in/post_doctoral_programme
+    institution: The Institute of Mathematical Sciences
+    country: IN
+    note: Cloudflare answers GitHub runners with 403 (the postdoc and faculty pages on 24 Nov; other_positions on every probe). The postdoc call is a standing one ("applications are accepted all year round"); the faculty page is /facultyrecruitment.
+
+  - id: imsc-other
+    name: IMSc Chennai (other positions)
+    adapter: link-out
+    url: https://www.imsc.res.in/other_positions
+    institution: The Institute of Mathematical Sciences
+    country: IN
+    note: Cloudflare answers the crawler (Node) with a 403 challenge on this page only, from GitHub runners, with or without ordinary Accept headers, while curl gets 200; a client-fingerprint rule we don't work around. The postdoc and faculty pages answer normally.
+
+  - id: iop
+    name: IOP Bhubaneswar
+    adapter: rss
+    institution: Institute of Physics, Bhubaneswar
+    country: IN
+    url: https://www.iopb.res.in/feed/?post_type=job_opening
+    exclude: 'short-?listed|result|selected candidates|tradesman'
+
+  - id: sinp
+    name: SINP Kolkata
+    adapter: html-table
+    institution: Saha Institute of Nuclear Physics
+    country: IN
+    url: https://www.saha.ac.in/web/job-opportunities
+    # The server answers 500 to a gzip/deflate Accept-Encoding (with the full page as the body).
+    headers: { Accept-Encoding: identity }
+    columns: { title: [title, link, pdf], published date: posted }
+    exclude: 'merit list|result|selected|short-?listed|interview schedule|list of (eligible|candidates)|addendum|corrigendum|cancell|hindi version|application portal|application proforma|^notice'
+    skipOld: true
+    maxAgeDays: 180     # the page keeps undated adverts from 2022 on; their PDFs are gone (403)
+
+  - id: rri-postdoc
+    name: RRI Bengaluru
+    adapter: html-page
+    institution: Raman Research Institute
+    country: IN
+    url: https://www.rri.res.in/careers/post-doctoral-fellowships
+    title: RRI post-doctoral fellowships
+    categories: [postdoc]
+    fields: [astro-ph, cond-mat, quant-ph, physics]
+    text: 'article .text-formatted'
+
+  - id: bose
+    name: S.N. Bose Centre Kolkata
+    adapter: html-table
+    institution: S. N. Bose National Centre for Basic Sciences
+    country: IN
+    url: https://www.bose.res.in/InfoAnnouncements/JobOpenings.jsp?type=ACADEMIC
+    table: table.data-tbl
+    columns: { job position: title, ref. no: ref, publish date: posted, closing date: deadline, download: [pdf, link] }
+
+  - id: iacs
+    name: IACS Kolkata
+    adapter: link-out
+    url: https://iacs.res.in/research-associate
+    institution: Indian Association for the Cultivation of Science
+    country: IN
+    note: robots.txt lists the research-associate and faculty-position pages under Disallow lines written as full URLs (invalid under RFC 9309, so a parser ignores them). The intent to keep crawlers out is clear, so we don't crawl.
+
+  - id: iucaa
+    name: IUCAA Pune
+    adapter: html-table
+    institution: Inter-University Centre for Astronomy and Astrophysics
+    country: IN
+    url: https://www.iucaa.in/en/opportunities
+    # Two tables matter: "Current Openings" (with a deadline column) and "Positions for which we
+    # are accepting applications throughout the year" (rolling; its prose still names old rounds).
+    columns: { name of the post: title, advertisement details: [body, pdf, link], deadline for submission: deadline }
+    pdfLinks: '\.pdf($|\?)'
+    rollingTables: 'throughout the year'
+    exclude: 'administrative|section officer|accounts|engineer|technician|driver|clerk|devops'
+
+  - id: tifrh-postdoc
+    name: TIFR Hyderabad
+    adapter: html-table
+    institution: Tata Institute of Fundamental Research, Hyderabad
+    country: IN
+    url: https://www.tifrh.res.in/careers/post-doctoral-and-visiting-positions/
+    columns: { post & lab: title, advt/poster: [link, pdf] }
+    categories: [postdoc]
+
+  - id: tifrh-jrf
+    name: TIFR Hyderabad
+    adapter: html-table
+    institution: Tata Institute of Fundamental Research, Hyderabad
+    country: IN
+    url: https://www.tifrh.res.in/careers/jrf-srf-positions/
+    columns: { post & lab: title, advt/poster: [link, pdf] }
+    emptyOk: true
+
+  - id: ncra-postdoc
+    name: NCRA-TIFR Pune
+    adapter: html-list
+    institution: National Centre for Radio Astrophysics
+    country: IN
+    url: https://www.ncra.tifr.res.in/jobs/academic/pdf
+    list: { item: '.card .list-group > .list-group-item.d-flex', title: 'a.flex-grow-1', link: 'a.flex-grow-1' }
+    detail: { text: '.content-body' }
+    categories: [postdoc]
+    fields: [astro-ph]
+
+  - id: cmi
+    name: CMI Chennai
+    adapter: link-out
+    url: https://www.cmi.ac.in/positions/
+    institution: Chennai Mathematical Institute
+    country: IN
+    note: Refused connections on ports 443 and 80 from the Mac and from a GitHub runner on 2026-11-24. Re-probe and switch to html-page when it answers.
+
+  # ISI Kolkata: connection timeouts from GitHub runners on 22 Nov and twice on 24 Nov (robots.txt
+  # unreachable, so nothing is fetched); answers from the Mac. Disabled like NCBS, with a link-out.
+  - id: isi-kolkata
+    enabled: false
+    name: ISI Kolkata
+    adapter: html-table
+    institution: Indian Statistical Institute, Kolkata
+    country: IN
+    url: https://www.isical.ac.in/public/jobs
+    table: table.table-list
+    columns: { title: [title, body], advertisement no: ref, issue date: posted, applicationsubmissiondeadline: deadline, action: link }
+    titleSelector: a.post-title     # the cell also holds a two-line description
+    detail: { text: '.content-box' }
+    exclude: 'doctor|ophthalmolog|consultant \(legal\)|security|driver|clerk'
+
+  - id: isi-kolkata-linkout
+    name: ISI Kolkata
+    adapter: link-out
+    url: https://www.isical.ac.in/public/jobs
+    institution: Indian Statistical Institute, Kolkata
+    country: IN
+    note: Connection timeouts from GitHub runners (22 Nov, and twice on 24 Nov), robots.txt included; answers from a residential connection. The crawl config is kept (enabled false) for when it answers.
+
+  - id: isi-bangalore
+    name: ISI Bangalore
+    adapter: html-list
+    institution: Indian Statistical Institute, Bangalore
+    country: IN
+    url: https://www.isibang.ac.in/
+    # No jobs page: the homepage's left bar lists the notifications, one PDF each.
+    list: { item: '#leftbar li:has(a[href*="Job_Notifications"])', title: 'a', link: 'a', pdf: 'a[href$=".pdf"]' }
+    exclude: 'application format|instructions|corrigendum|doctor|physician|consultant|engineer'
+
+  - id: aries
+    name: ARIES Nainital
+    adapter: html-list
+    institution: Aryabhatta Research Institute of Observational Sciences
+    country: IN
+    url: https://www.aries.res.in/opportunities/project-position
+    # Very slow host (one request hung 18 min in the 22 Nov audit): short watchdog on top of the
+    # 10 s connect / 45 s request timeouts. Needs config/ca/globalsign-gcc-r46-alphassl-2025.pem.
+    timeoutMin: 5
+    # Current adverts are boxes above the table; the table keeps the older ones.
+    list: { item: '.node__content .address > div:has(a), .node__content table td:has(a)', title: 'a', link: 'a' }
+    exclude: '^past\b|result|selected|selection|short-?listed'
+    detail: { text: 'article, .node__content, main' }
+    fields: [astro-ph]
+
+  - id: niser-fixed-term
+    name: NISER Bhubaneswar
+    adapter: html-table
+    institution: National Institute of Science Education and Research
+    country: IN
+    url: https://www.niser.ac.in/career/staff/ft/cr
+    columns: { section: subject, description: [title, link, pdf], deadline: deadline }
+    # robots.txt disallows /storage/, where the adverts are: index the list text, link the PDF.
+    pdfs: false
+
+  - id: jncasr
+    name: JNCASR Bengaluru
+    adapter: html-table
+    institution: Jawaharlal Nehru Centre for Advanced Scientific Research
+    country: IN
+    url: https://www.jncasr.ac.in/announcements
+    columns: { title: [title, link], date: posted }
+    match: 'research associate|post-?doc|\bRA\b|faculty|fellow|JRF|SRF|project (associate|scientist)'
+    # robots.txt disallows /sites/default/files/ (the attachments): the detail page text only.
+    detail: { text: '.notice-b' }
+    pdfs: false
+
+  - id: iia
+    name: IIA Bengaluru
+    adapter: html-table
+    institution: Indian Institute of Astrophysics
+    country: IN
+    url: https://www.iiap.res.in/iia_jobs/
+    # By position: the label "post" would also match "POSTED ON".
+    columns: { '#1': title, job id: ref, posted on: posted, last date: deadline, view details: [link, pdf] }
+    # robots.txt disallows /*.pdf$: the list text is indexed, the advert linked, never fetched.
+    pdfs: false
+    fields: [astro-ph]
+
+  - id: tifr
+    name: TIFR Mumbai
+    adapter: link-out
+    url: https://www.tifr.res.in/positions
+    institution: Tata Institute of Fundamental Research
+    country: IN
+    note: robots.txt disallows everything for all user agents except Googlebot.
+
+  - id: hri
+    name: HRI Prayagraj
+    adapter: link-out
+    url: https://www.hri.res.in/advertisements/
+    institution: Harish-Chandra Research Institute
+    country: IN
+    note: robots.txt disallows everything.
+
+  - id: ipr
+    name: IPR Gandhinagar
+    adapter: link-out
+    url: https://www.ipr.res.in/careers
+    institution: Institute for Plasma Research
+    country: IN
+    note: robots.txt disallows everything.
+
+  - id: prl
+    name: PRL Ahmedabad
+    adapter: link-out
+    url: https://www.prl.res.in/prl-eng/advertisement
+    institution: Physical Research Laboratory
+    country: IN
+    note: robots.txt itself returns 403, so there is no permission to read.
