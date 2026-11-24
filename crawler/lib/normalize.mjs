@@ -1,7 +1,7 @@
 // Raw adapter item -> Posting (see PLAN.md "Normalisation"), and merging of items that resolved
 // to the same stable ID.
 import { snippet, clean, englishText, englishTitle } from './text.mjs';
-import { extractDeadlineInfo, rollingCue } from './dates.mjs';
+import { extractDeadlineInfo, rollingCue, reviewStart } from './dates.mjs';
 import { advertFacts, postDescription } from './advert.mjs';
 import { dropGarbled } from './garble.mjs';
 
@@ -22,12 +22,18 @@ function deadlineOf(raw, title, body, pdfText) {
   // Boards (INSPIRE, AJO, MathJobs) give their own deadline field; their text dates are not used,
   // but a board advert with no deadline that says "on a rolling basis" is a rolling call.
   if (raw.scheme) {
+    const rs = reviewStart(body);
+    if (rs) return { rolling: true, from: 'page', cue: rs.cue, confidence: 'medium', reviewFrom: rs.date };
     const cue = rollingCue(body);
     return cue ? { rolling: true, from: 'page', cue, confidence: 'medium' } : null;
   }
   for (const [from, text] of [['page', `${title}\n${body}`], ['pdf', pdfText]]) {
     if (!text) continue;
     const d = extractDeadlineInfo(text, { posted: raw.posted ?? null });
+    // A stated last date wins over a rolling phrase, except when that date only starts the review
+    // of a call that runs until filled ("review will begin on …", "priority deadline").
+    const rs = reviewStart(text);
+    if (rs && (d?.kind !== 'deadline' || d.date === rs.date)) return { rolling: true, from, cue: rs.cue, confidence: 'medium', reviewFrom: rs.date };
     if (d?.kind === 'deadline') return { date: d.date, kind: d.kind, confidence: d.confidence, from, cue: d.cue };
     const cue = rollingCue(text);
     if (cue) return { rolling: true, from, cue, confidence: 'medium' };
@@ -88,6 +94,8 @@ export function normalize(raw, { categorize, fieldsOf, sourceName, gone = null, 
     deadlineInfo: dl?.date ? { kind: dl.kind, confidence: dl.confidence, from: dl.from } : null,
     rolling: Boolean(dl?.rolling),
     rollingInfo: dl?.rolling && dl.from !== 'list' ? { from: dl.from, cue: dl.cue, confidence: dl.confidence } : null,
+    // A rolling call's review-start date ("review of applications will begin on …"): shown, never a deadline.
+    reviewFrom: dl?.reviewFrom ?? null,
     pdfUrls: raw.pdfUrls ?? [],
     pdfInfo: raw.pdfInfo ?? [],
     facts,

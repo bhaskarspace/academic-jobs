@@ -9,6 +9,7 @@
 // Sources not crawled this run (or that fail) contribute their last good items from the cache,
 // so a partial or failed run never makes postings vanish.
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { compileDisplay, displayInstitution } from './lib/display.mjs';
 import path from 'node:path';
 import { loadConfig } from './lib/config.mjs';
 import { Http, sha1, errorCode } from './lib/http.mjs';
@@ -183,8 +184,9 @@ async function main() {
   }
   const { variants, concepts } = await loadIndexConfig();
   const namesSubject = makeSubjectTest({ fields: cfg.fields, concepts, variants });
+  const display = compileDisplay(cfg.institutions.display);
   const postings = [...groups].map(([id, list]) => {
-    const p = mergePostings(list, { namesSubject });
+    const p = displayInstitution(mergePostings(list, { namesSubject }), display);
     const rec = state.ids.postings[id];
     return { id, ...p, firstSeen: list.length > 1 ? [rec.firstSeen, ...dups.filter((d) => d.keep === id).map((d) => firstSeenOf(d.drop))].sort()[0] : rec.firstSeen, lastSeen: rec.lastSeen };
   });

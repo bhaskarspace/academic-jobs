@@ -17,7 +17,8 @@ https://codebpr.com/academic-jobs/, and all searching happens in the browser.
   `adapter`, `url(s)`, `institution`, `country`, `runner: actions|mac`, `tls`, `crawlDelay`,
   `permission`, and the parse hints.
 - `config/categories.yaml`, `config/institutions.yaml`, `config/linkouts.yaml`: category rules,
-  institution aliases (plus `notDuplicates`, to block a wrong merge), and the link-out boards (bundled into
+  institution aliases (plus `notDuplicates`, to block a wrong merge, and `display`, to show a generic
+  name with its city: `crawler/lib/display.mjs`, after dedupe), and the link-out boards (bundled into
   `app.js` at build time). A source with `adapter: link-out` is listed, never crawled.
 - `crawler/lib/dedupe.mjs` merges cross-source duplicates that share no URL (institution + deadline
   + description shingles). Run `node crawler/run.mjs --all --dry --verbose-dedupe` to see every merge.
@@ -91,6 +92,8 @@ https://codebpr.com/academic-jobs/, and all searching happens in the browser.
 - Per-source `headers:` may set only Accept, Accept-Language and Accept-Encoding (checked in
   `crawler/lib/http.mjs`). Never a browser User-Agent, cookies or a TLS fingerprint: a site that only answers
   a browser-like client becomes a link-out.
+  Nor `runner: mac` for a bot-protected site (Cloudflare and the like): reaching it from a home connection
+  gets past the protection just as spoofing would. The Mac runner is only for hosts that block no one.
 - TLS: some Indian hosts send incomplete certificate chains (`UNABLE_TO_VERIFY_LEAF_SIGNATURE`).
   Fix that by adding the missing intermediate under `config/ca/` (with a row in its README).
   `crawler/lib/ca.mjs` loads it for both the crawler and the probe. Never set `tls: insecure`

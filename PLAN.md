@@ -330,8 +330,13 @@ Adding a source means one entry in `sources.yaml`, plus a fixture and a test. A 
        time" (not the "may be cancelled at any time" small print). A list or board deadline wins; an explicit "last date"
        in the same text wins; otherwise the call is rolling and walk-in or relative dates are ignored. Rolling calls never
        show "possibly closed". `rollingTables` marks a whole table as standing calls (IUCAA).
+       Exception (review, 24 Nov): a date that only starts the review ("review of applications will begin on …", "first/full
+       consideration", "priority deadline") of a call that runs "until filled" keeps it rolling; the card shows "Rolling
+       call · review from <date>". A separate closing date still wins, and a board's deadline field always wins.
+     - **Display names:** `display:` in config/institutions.yaml shows a generic name with its city ("Institute of Physics,
+       Bhubaneswar") when the ICN, AJO city or country matches; applied after dedupe, the source name stays searchable.
      - **Aliases** for every institute, from INSPIRE's records (name + ICN) and AJO's spellings; dedupe also keys on the
-       ICN. IOP's INSPIRE name is plain "Institute of Physics", so only its ICN is aliased. Commas in aliases are quoted:
+       ICN. IOP's INSPIRE name is plain "Institute of Physics", so only its ICN is aliased (and `display:` adds the city). Commas in aliases are quoted:
        three older entries (ITP-CAS, Caltech, WUSTL) had been split by the YAML flow list, making "Beijing" and
        "St. Louis" aliases on their own.
      - **Smoke:** the Phase 7 listing and the ARIES timing are strict; posting-dependent checks (an ICTS/IMSc postdoc is
@@ -344,7 +349,7 @@ Adding a source means one entry in `sources.yaml`, plus a fixture and a test. A 
    - Playwright in the crawl job, used only for sources marked `adapter: js-rendered`: IIT Ropar, IIT Tirupati, IIT Jammu and IISER Tirupati. I'll first look for their JSON endpoints and use one wherever it exists.
    - Acceptance: postings from those sites appear, and the crawl stays under 20 minutes.
 
-10. **Mac fallback hardening.** (Likely to be dropped: NCBS, the only host so far that answers from a residential connection but never from a runner, is a link-out instead. If Phases 6–8 find no other Mac-only host, drop this phase and renumber.)
+10. **Mac fallback hardening.** (Likely to be dropped: NCBS, the only host so far that answers from a residential connection but never from a runner, is a link-out instead. If Phases 6–8 find no other Mac-only host, drop this phase and renumber. Phase 7's IMSc and ISI Kolkata don't count: a bot-protected site is never reached from the Mac, since that gets past its protection like spoofing; decided 2026-11-24.)
     - This phase only exists if Phase 1's probe found blocked hosts; otherwise I drop it and renumber.
     - It covers launchd scheduling, retry when the Mac was asleep, and a stale-inbox warning on the status page.
     - Acceptance: hosts marked `runner: mac` update after the Mac's run, and the status page shows when the inbox was last pushed.

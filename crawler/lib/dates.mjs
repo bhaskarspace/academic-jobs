@@ -134,6 +134,43 @@ export function rollingCue(text) {
   return null;
 }
 
+// A review-start date is not a closing date: "review of applications will begin on 1 December",
+// "applications received by 1 December will receive first (or full) consideration", "priority
+// deadline: 1 December", together with "until the position is filled". Such a call stays open after
+// that date, so it is rolling, with the date shown as "review from".
+const REVIEW_CUES = [
+  /\breview\s+of\s+applications\s+(?:will\s+)?(?:begins?|beginning|starts?|starting|commenc[a-z]*)\b(?:\s+(?:on|from|after))?/gi,
+  /\b(?:applications?\s+)?review\s+(?:will\s+)?(?:begins?|starts?|commenc[a-z]*)\b(?:\s+(?:on|from|after))?/gi,
+  /\b(?:first|full)\s+consideration\b/gi,
+  /\bpriority\s+(?:deadline|date)\b/gi,
+];
+const UNTIL_FILLED = /\buntil\s+(?:the\s+)?(?:positions?|posts?|vacanc(?:y|ies)|roles?|openings?)?\s*(?:(?:is|are|has\s+been|have\s+been)\s+)?filled\b|\buntil\s+filled\b/i;
+
+/**
+ * The review-start date of a call that runs until filled, or null when the text has no
+ * "until filled" or no dated review cue. The date is the one nearest the cue, on either side
+ * ("applications received by 1 December will receive first consideration").
+ * @returns {{date, cue} | null}
+ */
+export function reviewStart(text) {
+  if (!text || !UNTIL_FILLED.test(text)) return null;
+  const dates = findDates(text);
+  let best = null;
+  for (const re of REVIEW_CUES) {
+    re.lastIndex = 0;
+    let m;
+    while ((m = re.exec(text))) {
+      const end = m.index + m[0].length;
+      for (const d of dates) {
+        const dist = d.index >= end - 1 ? d.index - end : m.index - d.index;
+        if (dist < 0 || dist > CUE_WINDOW) continue;
+        if (!best || dist < best.dist) best = { date: d.date, cue: m[0].trim().replace(/\s+/g, ' '), dist };
+      }
+    }
+  }
+  return best && { date: best.date, cue: best.cue };
+}
+
 // The deadline in free text: the date nearest after a "last date"/"deadline"/"closing date" cue.
 export function extractDeadline(text) {
   if (!text) return null;

@@ -342,3 +342,58 @@ test('IISc contractual table: advert PDF as the URL, closing date as the deadlin
   assert.equal(lim.posted, '2026-10-29');
   assert.match(lim.url, /wp-content\/uploads\/.*\.pdf$/);
 });
+
+// ---- review-start dates and display names (PR #11 review) --------------------------------------
+
+import { reviewStart } from '../crawler/lib/dates.mjs';
+import { buildIndex } from '../search/build-index.mjs';
+import { compileDisplay, displayInstitution } from '../crawler/lib/display.mjs';
+
+test('a stated last date beats a rolling phrase; a review-start date of an until-filled call stays rolling ("review from")', async () => {
+  const of = async (f, raw = {}) => {
+    const [title, ...rest] = (await fx(`rolling/${f}.txt`)).trim().split('\n');
+    return norm({ title, body: rest.join('\n'), ...raw });
+  };
+  const last = await of('last-date-beats-rolling');
+  assert.equal(last.deadline, '2026-12-15');
+  assert.equal(last.rolling, false);
+  assert.equal(last.reviewFrom, null);
+  for (const [f, date] of [['review-begins', '2026-12-01'], ['first-consideration', '2027-01-15'], ['priority-deadline', '2027-01-10']]) {
+    const p = await of(f);
+    assert.equal(p.rolling, true, f);
+    assert.equal(p.deadline, null, `${f}: the review date is not a deadline`);
+    assert.equal(p.reviewFrom, date, f);
+  }
+  const both = await of('review-with-separate-closing-date');
+  assert.equal(both.deadline, '2027-01-31', 'a separate closing date is still the deadline');
+  assert.equal(both.rolling, false);
+  const noFill = await of('consideration-without-until-filled');
+  assert.equal(noFill.rolling, false, 'no "until filled": not a standing call');
+  // Boards: no deadline field, review-start text → rolling with the review date; a deadline field still wins.
+  const body = (await fx('rolling/review-begins.txt')).split('\n').slice(1).join('\n');
+  const ajo = norm({ scheme: 'ajo', values: ['Postdoctoral'], title: 'Postdoc', body });
+  assert.deepEqual([ajo.rolling, ajo.deadline, ajo.reviewFrom], [true, null, '2026-12-01']);
+  const ajoDl = norm({ scheme: 'ajo', values: ['Postdoctoral'], title: 'Postdoc', body, deadline: '2026-12-01' });
+  assert.deepEqual([ajoDl.rolling, ajoDl.deadline], [false, '2026-12-01']);
+  assert.equal(reviewStart('Review begins 1 Dec 2026.'), null);
+  // The card record carries the review date only for a rolling call.
+  const idx = buildIndex([{ id: 'a', firstSeen: '2026-11-24', ...(await of('review-begins')) }, { id: 'b', firstSeen: '2026-11-24', ...last }], { built: '2026-11-24T00:00:00Z' });
+  assert.deepEqual(idx.docs.map((d) => [d.roll ?? 0, d.rv ?? null]), [[1, '2026-12-01'], [0, null]]);
+});
+
+test('display names: "Institute of Physics" shows its city only when the ICN, city or country says Bhubaneswar', () => {
+  const rules = compileDisplay(cfg.institutions.display);
+  const inspire = displayInstitution({ institution: 'Institute of Physics', institutionAlt: 'Bhubaneswar, Inst. Phys.' }, rules);
+  assert.equal(inspire.institution, 'Institute of Physics, Bhubaneswar');
+  assert.equal(inspire.institutionSource, 'Institute of Physics', 'the source name stays searchable');
+  const ajo = displayInstitution({ institution: 'Institute of Physics', city: 'Bhubaneswar', country: 'IN' }, rules);
+  assert.equal(ajo.institution, 'Institute of Physics, Bhubaneswar');
+  const multi = displayInstitution({ institution: 'Institute of Physics; Utkal University', institutionAlt: 'Bhubaneswar, Inst. Phys.; Utkal U.' }, rules);
+  assert.equal(multi.institution, 'Institute of Physics, Bhubaneswar; Utkal University');
+  for (const other of [
+    { institution: 'Institute of Physics', institutionAlt: 'Zagreb, Inst. Phys.' },
+    { institution: 'Institute of Physics', city: 'Prague' },
+    { institution: 'Institute of Physics, Chinese Academy of Sciences' },
+  ]) assert.equal(displayInstitution(other, rules), other, JSON.stringify(other));
+  assert.throws(() => compileDisplay([{ name: 'X', show: 'Y' }]), /when/);
+});
