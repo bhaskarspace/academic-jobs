@@ -200,6 +200,19 @@ const staleStatus = await later.evaluate(() => (document.getElementById('stale')
 await later.close();
 check('"data is N hours old" warning on search and status pages after 26 h', /data is 2\d hours old/.test(staleSearch) && /data is 2\d hours old/.test(staleStatus), staleSearch.slice(0, 60));
 
+// Phase 7: an institute's own postdoc call is searchable; ICTS's merges with its INSPIRE/AJO copies;
+// a standing call reads as rolling. All depend on what is posted now: warnings on the live site.
+{
+  const inst = await run('?q=ICTS%20IMSc%20postdoctoral&cat=postdoc&expired=1&f=');
+  const hit = inst.jobs.find((j) => /ICTS|Theoretical Sciences|Mathematical Sciences|IMSc/.test(`${j.where} ${j.sources}`));
+  posted('an IMSc or ICTS postdoc call is searchable', Boolean(hit), hit ? `${hit.title} (${hit.sources})` : inst.summary);
+  const icts = (await run('?q=ICTS%20Postdoctoral%20Program%202027&expired=1&f=')).jobs.filter((j) => /ICTS.{0,10}Postdoctoral Program 2027/i.test(j.title));
+  posted('ICTS Postdoctoral Program 2027 shows once, with INSPIRE + AJO + ICTS sources', icts.length === 1 && /INSPIRE/.test(icts[0].sources) && /AcademicJobsOnline/.test(icts[0].sources) && /ICTS/.test(icts[0].sources),
+    icts.map((j) => `${j.title} [${j.sources}]`).join(' | ') || 'not found');
+  const roll = (await run('?q=post-doctoral%20fellowships%20IMSc%20RRI&cat=postdoc&f=')).jobs.find((j) => /IMSc|RRI|Raman/.test(`${j.title} ${j.where}`));
+  posted('a standing call (IMSc or RRI postdoc) reads "Rolling call" and never "possibly closed"', Boolean(roll && /Rolling call/.test(roll.line) && !/possibly closed/.test(roll.line)), roll ? roll.line : 'not found');
+}
+
 await page.goto(`${base}status.html`);
 await page.waitForFunction(() => !/Loading/.test(document.getElementById('lede').textContent));
 const st = await page.evaluate(() => ({
@@ -212,6 +225,21 @@ const st = await page.evaluate(() => ({
 }));
 const health = await (await fetch(`${base}data/health.json`)).json().catch(() => null);
 check('status page lists every source', st.rows.length > 0 && (!health || Object.keys(health.sources).every((id) => st.rows.includes(id))) && !/null|undefined/.test(st.lede), `${st.rows.length} sources: ${st.lede}`);
+
+// Phase 7: every research-institute source is on the status page (crawled or link-out), and ARIES,
+// the slow host, finished or was cut off within its watchdog.
+const PHASE7 = ['iisc-contractual', 'icts-opportunities', 'imsc-postdoc', 'imsc-faculty', 'iop', 'sinp', 'rri-postdoc', 'bose', 'iucaa',
+  'tifrh-postdoc', 'tifrh-jrf', 'ncra-postdoc', 'isi-kolkata', 'isi-bangalore', 'aries', 'niser-fixed-term', 'jncasr', 'iia',
+  'imsc-other', 'iacs', 'cmi', 'tifr', 'hri', 'ipr', 'prl'];
+check('status page lists every Phase 7 institute source (crawled, partial or link-out)', PHASE7.every((id) => st.rows.includes(id)), PHASE7.filter((id) => !st.rows.includes(id)).join(', ') || `${PHASE7.length} listed`);
+{
+  const a = health?.sources?.aries;
+  const ARIES_LIMIT_MS = 5 * 60_000; // config/sources.yaml timeoutMin: 5
+  check('ARIES finished or was cut off within its watchdog', !health || (a && a.ms <= ARIES_LIMIT_MS + 5000 && (a.ok || a.error === 'WATCHDOG' || a.staleItems != null)),
+    a ? `${a.ok ? 'ok' : a.error} in ${(a.ms / 1000).toFixed(0)} s` : 'no aries entry');
+  const ok7 = PHASE7.filter((id) => health?.sources?.[id]?.crawled && !health.sources[id].ok);
+  posted('Phase 7 crawled sources are green', ok7.length === 0, ok7.join(', ') || 'all OK');
+}
 
 // A source with more new PDFs than one run fetches shows "Backfilling, N waiting", not OK.
 {

@@ -7,6 +7,8 @@
 //            the last OPEN_WITHOUT_DEADLINE_DAYS days), or no rows, or `max`.
 //   match / exclude:  regexes (case-insensitive) a row title must / must not match.
 //   skipOld: true     drop rows whose title names only past years ("… January 2024").
+//   maxAgeDays: N     drop rows with no deadline posted more than N days ago (a page that keeps
+//                     years of undated adverts, as SINP does).
 //   detail:  { text?, rows?, rowMap?, pdf? }   fetched once per new, unexpired row.
 //   pdfs: false       link to PDFs but never fetch them (robots.txt disallows the PDF folder).
 // A row is { title, url?, ref?, deadline?, posted?, body?, subject?, pi?, pdfUrls? }.
@@ -64,7 +66,8 @@ export function parseDetail(html, source, baseUrl) {
   return out;
 }
 
-function keepRow(row, source, year) {
+function keepRow(row, source, year, today) {
+  if (source.maxAgeDays && !row.deadline && row.posted && row.posted < addDays(today, -source.maxAgeDays)) return false;
   if (source.match && !new RegExp(source.match, 'i').test(row.title)) return false;
   if (source.exclude && new RegExp(source.exclude, 'i').test(row.title)) return false;
   if (source.skipOld) {
@@ -111,7 +114,15 @@ export async function crawlListing(source, { http, log, cache, today: todayOverr
       if (rest) r.title = rest.replace(/^[“"](.+?)[”"]/, '$1');
     }
   }
-  const kept = rows.filter((r) => keepRow(r, source, year));
+  // A deadline written into the list title ("… [Last date: 05.06.2026]", "(Last Date :28-02-2024)")
+  // is list data: it dates the row, so an expired row's detail page isn't fetched.
+  for (const r of rows) {
+    if (r.deadline) continue;
+    const m = /\b(?:last\s+date|closing\s+date|deadline)\s*(?:of\s+application\s*)?[:\-–]?\s*([0-9]{1,2}[./-][0-9]{1,2}[./-][0-9]{2,4}|[0-9]{1,2}(?:st|nd|rd|th)?\s+[A-Za-z]{3,9},?\s+20[0-9]{2}|[A-Za-z]{3,9}\s+[0-9]{1,2},?\s+20[0-9]{2})/i.exec(r.title);
+    const d = m && parseDate(m[1]);
+    if (d) r.deadline = d;
+  }
+  const kept = rows.filter((r) => keepRow(r, source, year, today));
   let fetched = 0;
   let detailErrors = 0;
   const items = [];
@@ -157,6 +168,7 @@ export async function crawlListing(source, { http, log, cache, today: todayOverr
       fixedCategories: source.categories ?? undefined,
       fixedFields: source.fields ?? undefined,
       admissions: source.admissions || undefined,
+      rolling: row.rolling || undefined,
       pdfUrls,
       noPdfFetch: source.pdfs === false || undefined,
     });

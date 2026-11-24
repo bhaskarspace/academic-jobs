@@ -104,6 +104,36 @@ export function extractDeadlineInfo(text, { posted = null } = {}) {
   return null;
 }
 
+// Standing calls: "applications are accepted throughout the year", "on a rolling basis", "no last
+// date", "apply at any time". "At any time" only counts next to an application word, and not in
+// "may be withdrawn / cancelled / modified at any time" (an advert's small print).
+const ROLLING = [
+  /\b(?:accepted|received|considered|invited|open)\s+(?:all\s+)?throughout\s+the\s+year\b/i,
+  /\bthroughout\s+the\s+year\b[^.]{0,60}\bappl/i,
+  /\bappl[a-z]*\b[^.]{0,60}\bthroughout\s+the\s+year\b/i,
+  /\ball\s+(?:the\s+)?year\s+round\b/i,
+  /\bon\s+a\s+rolling\s+basis\b/i,
+  /\brolling\s+(?:call|admissions?|applications?|deadline)\b/i,
+  /\bno\s+(?:fixed\s+)?(?:last\s+date|deadline)\b/i,
+  /\b(?:apply|applications?|submitted|considered|accepted|received)\b[^.]{0,40}?\bat\s+any\s+time\b/i,
+];
+const ROLLING_NOT = /\b(?:withdraw|cancel|terminat|modif|amend|revok|reject|discontinu|chang)[a-z]*\b[^.]{0,40}\bat\s+any\s+time\b|\bat\s+any\s+time\b[^.]{0,40}\b(?:withdraw|cancel|terminat|modif|amend|revok|reject|discontinu|without\s+(?:any\s+)?(?:notice|reason))/i;
+
+/** The phrase that marks a standing ("rolling") call, or null. */
+export function rollingCue(text) {
+  if (!text) return null;
+  for (const re of ROLLING) {
+    const m = re.exec(text);
+    if (!m) continue;
+    // Check the "at any time" small print in the sentence around the match.
+    const from = Math.max(0, text.lastIndexOf('.', m.index) + 1);
+    const to = text.indexOf('.', m.index + m[0].length);
+    if (/at\s+any\s+time/i.test(m[0]) && ROLLING_NOT.test(text.slice(from, to < 0 ? undefined : to + 1))) continue;
+    return m[0].replace(/\s+/g, ' ').trim();
+  }
+  return null;
+}
+
 // The deadline in free text: the date nearest after a "last date"/"deadline"/"closing date" cue.
 export function extractDeadline(text) {
   if (!text) return null;

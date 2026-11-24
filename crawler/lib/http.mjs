@@ -24,6 +24,18 @@ export const sha1 = (s) => createHash('sha1').update(s).digest('hex');
 
 export { RobotsDisallowed };
 
+// Headers a source may set for its host (config/sources.yaml `headers:`). Only ordinary content
+// negotiation: never a User-Agent or anything that would make the crawler look like a browser.
+export const SOURCE_HEADERS = new Set(['accept', 'accept-language', 'accept-encoding']);
+export function checkSourceHeaders(headers = {}, id = '?') {
+  for (const k of Object.keys(headers)) if (!SOURCE_HEADERS.has(k.toLowerCase())) throw new Error(`${id}: header ${k} is not allowed in sources.yaml (only ${[...SOURCE_HEADERS].join(', ')})`);
+  return headers;
+}
+
+export class Aborted extends Error {
+  constructor(url) { super(`aborted: ${url}`); this.code = 'WATCHDOG'; }
+}
+
 export class HttpError extends Error {
   constructor(url, status) { super(`HTTP ${status} for ${url}`); this.code = `HTTP_${status}`; this.status = status; }
 }
@@ -43,7 +55,25 @@ export class Http {
     this.robots = new Map();     // origin -> Promise<{allowed(url), delayMs, status}>
     this.hostQueue = new Map();  // host -> Promise chain
     this.hostGap = new Map();    // host -> configured gap override (ms)
+    this.hostHeaders = new Map(); // host -> extra ordinary headers (SOURCE_HEADERS only)
     this.stats = { requests: 0, notModified: 0, errors: 0, bytes: 0, robotsSkipped: { disallowed: 0, unreachable: 0 } };
+  }
+
+  setHostHeaders(host, headers) {
+    if (headers && Object.keys(headers).length) this.hostHeaders.set(host, { ...(this.hostHeaders.get(host) ?? {}), ...checkSourceHeaders(headers, host) });
+  }
+
+  /**
+   * A view of this client for one source: every request carries `signal`, so the source's
+   * watchdog stops its queued and in-flight requests instead of leaving them running.
+   */
+  withSignal(signal) {
+    return {
+      get: (url, o = {}) => this.get(url, { ...o, signal }),
+      json: (url, o = {}) => this.json(url, { ...o, signal }),
+      isAllowed: (url) => this.isAllowed(url),
+      stats: this.stats,
+    };
   }
 
   setHostDelay(host, seconds) {
@@ -94,11 +124,12 @@ export class Http {
     return run;
   }
 
-  #raw(url, headers) {
+  #raw(url, headers, signal) {
+    const timeout = AbortSignal.timeout(this.timeoutMs);
     return fetch(url, {
-      headers: { 'User-Agent': UA, Accept: '*/*', ...headers },
+      headers: { 'User-Agent': UA, Accept: '*/*', ...(this.hostHeaders.get(new URL(url).host) ?? {}), ...headers },
       redirect: 'follow',
-      signal: AbortSignal.timeout(this.timeoutMs),
+      signal: signal ? AbortSignal.any([timeout, signal]) : timeout,
     });
   }
 
@@ -114,8 +145,10 @@ export class Http {
    * @param {boolean} [opt.conditional]  use ETag/Last-Modified (default true)
    * @param {boolean} [opt.ignoreRobots] only for sources with a recorded `permission:`
    * @param {number}  [opt.maxBytes]     stop and throw TooLarge (code TOO_LARGE) past this size
+   * @param {AbortSignal} [opt.signal]  the source's watchdog (see withSignal)
    */
-  async get(url, { binary = false, conditional = true, ignoreRobots = false, accept, maxBytes = 0 } = {}) {
+  async get(url, { binary = false, conditional = true, ignoreRobots = false, accept, maxBytes = 0, signal } = {}) {
+    if (signal?.aborted) throw new Aborted(url);
     const u = new URL(url);
     if (!ignoreRobots) {
       const why = blockedReason(await this.robotsFor(u.origin), url);
@@ -123,6 +156,7 @@ export class Http {
     }
 
     return this.#schedule(u.host, async () => {
+      if (signal?.aborted) throw new Aborted(url);
       const cp = this.#cachePath(url);
       const m = this.meta[url];
       let cached = null;
@@ -137,9 +171,10 @@ export class Http {
       let lastErr;
       for (let attempt = 0; attempt <= this.retries; attempt++) {
         if (attempt) await sleep(2000 * 3 ** (attempt - 1));
+        if (signal?.aborted) throw new Aborted(url);
         this.stats.requests++;
         try {
-          const res = await this.#raw(url, headers);
+          const res = await this.#raw(url, headers, signal);
           if (res.status === 304 && cached) {
             await res.arrayBuffer().catch(() => {});
             this.stats.notModified++;
@@ -173,6 +208,7 @@ export class Http {
         } catch (e) {
           if (e instanceof HttpError) { this.stats.errors++; throw e; }
           if (e instanceof TooLarge) throw e;
+          if (signal?.aborted) throw new Aborted(url);
           lastErr = e;
         }
       }

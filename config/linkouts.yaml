@@ -44,18 +44,6 @@ boards:
 # Pages to check by hand: no search to fill in. Sources with `adapter: link-out` in
 # config/sources.yaml are added to this list automatically.
 static:
-  - name: TIFR Mumbai
-    url: https://www.tifr.res.in/positions
-    why: robots.txt disallows crawling
-  - name: HRI Prayagraj
-    url: https://www.hri.res.in/advertisements/
-    why: robots.txt disallows crawling
-  - name: IPR Gandhinagar
-    url: https://www.ipr.res.in/careers
-    why: robots.txt disallows crawling
-  - name: PRL Ahmedabad
-    url: https://www.prl.res.in/prl-eng/advertisement
-    why: robots.txt returns 403
   - name: ICTP Trieste
     url: https://www.ictp.it/
     why: timed out in the audit

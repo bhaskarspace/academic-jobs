@@ -6,8 +6,15 @@ const RANK = { high: 3, medium: 2, low: 1 };
 export function makeCategorizer(cfg) {
   const rules = (cfg.rules || []).map((r) => ({ re: new RegExp(r.pattern, 'i'), category: r.category }));
   const structured = cfg.structured || {};
+  // Structured values that mean something else in context (INSPIRE VISITOR at an Indian research
+  // institute is the postdoc position): either the institution or the text pattern is enough.
+  const conditional = (cfg.conditional || []).map((c) => ({
+    ...c,
+    inst: c.institution ? new RegExp(c.institution, 'i') : null,
+    text: c.text ? new RegExp(c.text, 'i') : null,
+  }));
 
-  return function categorize({ scheme, values = [], fixed = [], title = '', body = '' }) {
+  return function categorize({ scheme, values = [], fixed = [], title = '', body = '', institution = '' }) {
     const got = new Map();
     const add = (category, confidence) => {
       const prev = got.get(category);
@@ -19,6 +26,10 @@ export function makeCategorizer(cfg) {
       if (v == null) continue;
       const m = table[v] ?? table[String(v).trim()];
       for (const c of [].concat(m ?? [])) add(c, 'high');
+    }
+    for (const c of conditional) {
+      if (c.scheme !== scheme || !values.some((v) => String(v ?? '').trim() === c.value)) continue;
+      if ((c.inst && c.inst.test(institution)) || (c.text && c.text.test(`${title}\n${body}`))) add(c.category, c.confidence ?? 'medium');
     }
     for (const r of rules) if (r.re.test(title)) add(r.category, 'medium');
     if (!got.size && body) for (const r of rules) if (r.re.test(body)) add(r.category, 'low');

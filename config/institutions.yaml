@@ -9,10 +9,88 @@ aliases:
   New York University: [New York U. (main), New York U., NYU]
   College of William & Mary: [Coll. William and Mary, William & Mary, William and Mary]
   University of Copenhagen: [Bohr Inst., Niels Bohr Institute]
-  Institute of Theoretical Physics, Chinese Academy of Sciences: [Beijing, Inst. Theor. Phys., ITP-CAS]
-  California Institute of Technology: [Caltech, Caltech, Pasadena (main)]
-  Washington University in St. Louis: [WUSTL, Washington U., St. Louis]
+  "Institute of Theoretical Physics, Chinese Academy of Sciences": ["Beijing, Inst. Theor. Phys.", ITP-CAS]
+  California Institute of Technology: [Caltech, "Caltech, Pasadena (main)"]
+  Washington University in St. Louis: [WUSTL, "Washington U., St. Louis"]
   Stanford University: [Stanford U., SLAC]
+  # Indian research institutes (Phase 7). INSPIRE names come from its institution records, ICNs
+  # stay as institutionAlt; AJO uses its own spelling. Whole strings only: never a bare
+  # "Institute of Physics" or "Tata Institute of Fundamental Research", which other institutes
+  # share. Quote anything with a comma (a flow list would split it).
+  "International Centre for Theoretical Sciences":
+    - "International Centre for Theoretical Sciences, Tata Institute of Fundamental Research"
+    - "Tata Institute of Fundamental Research, International Centre for Theoretical Sciences"
+    - "ICTS, Bangalore"
+    - "ICTS-TIFR"
+    - "ICTS-TIFR, Bengaluru"
+    - "ICTS"
+  "The Institute of Mathematical Sciences":
+    - "Institute of Mathematical Sciences"
+    - "IMSc, Chennai"
+    - "IMSc"
+    - "Institute of Mathematical Sciences, Chennai"
+  "Saha Institute of Nuclear Physics":
+    - "Saha Inst."
+    - "SINP"
+    - "Saha Institute of Nuclear Physics, Kolkata"
+  "Harish-Chandra Research Institute":
+    - "Harish-Chandra Res. Inst."
+    - "HRI"
+    - "Harish-Chandra Research Institute, Prayagraj"
+  "Inter-University Centre for Astronomy and Astrophysics":
+    - "IUCAA, Pune"
+    - "IUCAA"
+    - "Inter-University Centre for Astronomy & Astrophysics"
+  "Raman Research Institute":
+    - "Raman Research Inst., Bangalore"
+    - "Raman Research Inst."
+    - "RRI"
+  "Institute of Physics, Bhubaneswar":
+    - "Bhubaneswar, Inst. Phys."
+    - "IOP Bhubaneswar"
+    - "Institute of Physics Bhubaneswar"
+  "S. N. Bose National Centre for Basic Sciences":
+    - "Bose Natl. Ctr., Kolkata"
+    - "S.N. Bose National Centre for Basic Sciences"
+    - "SNBNCBS"
+  "Tata Institute of Fundamental Research, Hyderabad":
+    - "TIFR Hyderabad"
+    - "TIFR-H"
+    - "Tata Institute of Fundamental Research Hyderabad"
+  "National Centre for Radio Astrophysics":
+    - "National Centre for Radio Astrophysics, Tata Institute of Fundamental Research"
+    - "Tata Institute of Fundamental Research, National Centre for Radio Astrophysics"
+    - "NCRA, Ganeshkhind"
+    - "NCRA-TIFR"
+  "Indian Statistical Institute, Kolkata":
+    - "Indian Statistical Inst., Calcutta"
+    - "ISI Kolkata"
+  "Indian Statistical Institute, Bangalore":
+    - "ISI Bangalore"
+    - "Indian Statistical Institute Bangalore"
+  "Chennai Mathematical Institute":
+    - "Chennai Math. Inst."
+    - "CMI"
+  "Aryabhatta Research Institute of Observational Sciences":
+    - "ARIES, Nainital"
+    - "ARIES"
+  "National Institute of Science Education and Research":
+    - "NISER, Jatni"
+    - "Bhubaneswar, NISER"
+    - "NISER"
+  "Jawaharlal Nehru Centre for Advanced Scientific Research":
+    - "JNCASR"
+    - "JNCASR, Bangalore"
+  "Indian Institute of Astrophysics":
+    - "Bangalore, Indian Inst. Astrophys."
+    - "IIA Bangalore"
+  "Indian Institute of Science":
+    - "Bangalore, Indian Inst. Sci."
+    - "IISc"
+    - "IISc Bangalore"
+  "Indian Association for the Cultivation of Science":
+    - "IACS, Kolkata"
+    - "IACS"
 
 # Pairs that look like duplicates but aren't. Each entry is two source IDs (as in postings.json
 # `sources[].sourceId`, e.g. inspire:123456 and ajo:31234); they are never merged by similarity.

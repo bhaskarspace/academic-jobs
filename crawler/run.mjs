@@ -24,6 +24,7 @@ import { makeSubjectTest } from '../search/subject.mjs';
 import { loadIndexConfig } from '../search/build-index.mjs';
 import { diffLinks, updateGone, skipReason, warningsFor, suspectRun, SOFT_GONE_ADAPTERS } from './lib/health.mjs';
 import { caExpiries } from './lib/ca.mjs';
+import { withWatchdog } from './lib/watchdog.mjs';
 
 const ADAPTERS = {
   inspire: () => import('./adapters/inspire.mjs'),
@@ -53,10 +54,6 @@ function kv(dir) {
   };
 }
 
-const withTimeout = (promise, ms, what) => Promise.race([
-  promise,
-  new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error(`${what} exceeded ${ms / 60000} min`), { code: 'WATCHDOG' })), ms).unref()),
-]);
 
 async function main() {
   const cfg = await loadConfig();
@@ -75,6 +72,8 @@ async function main() {
   state.robots ??= {};
   const http = new Http({ cacheDir: flag('no-cache') ? undefined : cacheDir, meta: state.http, robotsCache: state.robots, log: (m) => console.error(m) });
   for (const s of all) if (s.crawlDelay) http.setHostDelay(new URL(s.url).host, s.crawlDelay);
+  // Ordinary headers a host needs (SINP returns 500 to gzip/deflate): Accept* only, checked in http.mjs.
+  for (const s of all) if (s.headers) http.setHostHeaders(new URL(s.url).host, s.headers);
   const cache = kv(cacheDir);
   const now = new Date().toISOString();
 
@@ -97,16 +96,17 @@ async function main() {
     const prevState = state.sources[s.id] ?? {};
     try {
       const mod = await ADAPTERS[s.adapter]();
-      const items = await withTimeout((async () => {
-        const got = await mod.crawl(s, { http, log, cache });
+      const items = await withWatchdog(async (signal) => {
+        const h = http.withSignal(signal);
+        const got = await mod.crawl(s, { http: h, log, cache });
         // PDF adverts: text for matching, deadlines and card facts (fetched once per URL, capped).
         if (got.some((it) => it.pdfUrls?.length)) {
-          pdfReports[s.id] = await attachPdfs(got, { http, cache, log, today: todayISO() });
+          pdfReports[s.id] = await attachPdfs(got, { http: h, cache, log, today: todayISO() });
           const r = pdfReports[s.id];
           log(`PDFs: ${r.fetched} fetched, ${r.skipped.length} skipped, ${r.truncated.length} truncated, ${r.imageOnly} image-only, ${r.notices} result notices${r.deferred ? `, ${r.deferred} deferred to the next run` : ''}`);
         }
         return got;
-      })(), (s.timeoutMin ?? 10) * 60_000, s.id);
+      }, (s.timeoutMin ?? 10) * 60_000, s.id);
       // A paginated list read only up to its first all-closed page, or an RSS feed showing its
       // newest N items: a posting missing from what was read has usually just moved to an unread
       // page or aged out of the feed. Carry it forward rather than mark it gone, unless it is

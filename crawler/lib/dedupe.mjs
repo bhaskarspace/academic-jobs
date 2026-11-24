@@ -95,7 +95,7 @@ export function findDuplicates(postings, { aliases = {}, notDuplicates = [] } = 
   const blocked = new Set(notDuplicates.map(([a, b]) => [a, b].sort().join('|')));
   const rows = postings.map((p) => ({
     p, srcs: new Set(p.sources.map((s) => s.source)), ids: p.sources.map((s) => s.sourceId),
-    inst: instKey(p.institution), sh: shingles(p.body ?? ''), tt: titleSet(p.title), subj: titleSubject(p.title), day: p.deadline ? Date.parse(p.deadline) / 86_400_000 : null,
+    inst: instKey([p.institution, p.institutionAlt].filter(Boolean).join('; ')) /* plus the INSPIRE ICN */, sh: shingles(p.body ?? ''), tt: titleSet(p.title), subj: titleSubject(p.title), day: p.deadline ? Date.parse(p.deadline) / 86_400_000 : null,
   }));
   // Candidate pairs come from shared distinctive words or keys (cheap blocking).
   const byTok = new Map();
