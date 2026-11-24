@@ -2,7 +2,9 @@
 // Reachability probe: fetch every URL in tools/probe-urls.json (plus each host's robots.txt)
 // with the project User-Agent, and report status, time, size and TLS/network errors.
 // Usage: node tools/probe.mjs [--label mac|runner] [--json out.json] [--md out.md] [--allowed urls.txt]
-//                            [--only id,id] [--robots-cache FILE]
+//                            [--only id,id] [--robots-cache FILE] [--html-headers]
+// --html-headers adds ordinary browser-neutral headers (Accept: text/html, Accept-Language: en,
+// Accept-Encoding: identity) to compare against the bare request. Never a browser User-Agent.
 // robots.txt is obeyed exactly as the crawler obeys it (crawler/lib/robots.mjs): retried, then the
 // last good copy (--robots-cache FILE, kept between runs by probe.yml in the Actions cache) when it
 // is unreachable, and disallow-all only with no copy. Blocked URLs are reported as
@@ -30,6 +32,9 @@ const opt = (name, dflt) => {
   return i >= 0 ? args[i + 1] : dflt;
 };
 const label = opt('label', 'local');
+const HTML_HEADERS = args.includes('--html-headers')
+  ? { Accept: 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8', 'Accept-Language': 'en', 'Accept-Encoding': 'identity' }
+  : { Accept: '*/*' };
 
 const robotsCache = opt('robots-cache') ? JSON.parse(await readFile(opt('robots-cache'), 'utf8').catch(() => '{}')) : {};
 const only = opt('only', '').split(',').filter(Boolean); // --only hri,ipr: probe just these ids
@@ -57,7 +62,7 @@ async function probe(url, { text = false } = {}) {
   const t0 = performance.now();
   try {
     const res = await fetch(url, {
-      headers: { 'User-Agent': UA, Accept: '*/*' },
+      headers: { 'User-Agent': UA, ...HTML_HEADERS },
       redirect: 'follow',
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });

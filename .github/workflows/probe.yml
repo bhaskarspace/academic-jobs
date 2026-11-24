@@ -2,6 +2,15 @@ name: probe
 # One-off / on-demand reachability check of every source URL from a GitHub-hosted runner.
 on:
   workflow_dispatch:
+    inputs:
+      only:
+        description: 'Comma-separated probe ids (empty = all)'
+        required: false
+        default: ''
+      args:
+        description: 'Extra probe.mjs flags, e.g. --html-headers'
+        required: false
+        default: ''
 permissions:
   contents: read
 jobs:
@@ -21,7 +30,12 @@ jobs:
           key: probe-robots-${{ github.run_id }}
           restore-keys: probe-robots-
       - name: Probe (Node fetch)
-        run: node tools/probe.mjs --label runner --json probe-runner.json --md probe-runner.md --allowed probe-allowed.txt --robots-cache .probe-robots.json
+        env:
+          ONLY: ${{ inputs.only }}
+          ARGS: ${{ inputs.args }}
+        run: |
+          node tools/probe.mjs --label runner --json probe-runner.json --md probe-runner.md --allowed probe-allowed.txt --robots-cache .probe-robots.json ${ONLY:+--only "$ONLY"}
+          if [ -n "$ARGS" ]; then node tools/probe.mjs --label runner-headers --json probe-runner-headers.json --md probe-runner-headers.md --robots-cache .probe-robots.json ${ONLY:+--only "$ONLY"} $ARGS; fi
       - uses: actions/cache/save@v4
         if: always()
         with:
