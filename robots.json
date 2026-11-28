@@ -1,0 +1,142 @@
+{
+ "https://academicjobsonline.org": {
+  "fetched": "2026-11-28T08:26:11.721Z",
+  "status": 200,
+  "body": "### robots.txt for http://www2.math.duke.edu etc\nUser-agent: *\nCrawl-delay: 5\nDisallow: /cgi-bin\nDisallow: /perl-bin\nDisallow: /jam\nDisallow: /acjobs\nDisallow: /mpo\n#Disallow: /photos\nDisallow: /scripts\nDisallow: /styles\nDisallow: /archive\nDisallow: /tw\nDisallow: /sqltut.htm\nDisallow: /filename.html\nDisallow: /manual\n#Disallow: /db/aas/cs\n\n#Block bots\nUser-agent: The Knowledge AI \nDisallow: /\n"
+ },
+ "https://inspirehep.net": {
+  "fetched": "2026-11-28T08:26:08.594Z",
+  "status": 200,
+  "body": "User-agent: Google-Extended\nDisallow: /\n\nUser-agent: *\nDisallow: /api/accounts\nDisallow: /api/submissions\nDisallow: /api/literature/import\nDisallow: /editor\nDisallow: /holdingpen\nDisallow: /api/holdingpen\nDisallow: /workflows\nDisallow: /api/workflows\nDisallow: /tools\nDisallow: /journals\nDisallow: /data\nSitemap: https://inspirehep.net/sitemap/sitemap.xml\n"
+ },
+ "https://www.iiserpune.ac.in": {
+  "fetched": "2026-11-28T08:25:59.600Z",
+  "status": 200,
+  "body": "User-agent: *"
+ },
+ "https://www.mathjobs.org": {
+  "fetched": "2026-11-28T08:26:12.099Z",
+  "status": 200,
+  "body": "### robots.txt for http://www2.math.duke.edu etc\nUser-agent: *\nCrawl-delay: 5\nDisallow: /cgi-bin\nDisallow: /perl-bin\nDisallow: /jam\nDisallow: /acjobs\nDisallow: /mpo\n#Disallow: /photos\nDisallow: /scripts\nDisallow: /styles\nDisallow: /archive\nDisallow: /tw\nDisallow: /sqltut.htm\nDisallow: /filename.html\nDisallow: /manual\n#Disallow: /db/aas/cs\n\n#Block bots\nUser-agent: The Knowledge AI \nDisallow: /\n"
+ },
+ "https://www.iiserkol.ac.in": {
+  "fetched": "2026-11-28T08:26:00.016Z",
+  "status": 404,
+  "body": ""
+ },
+ "https://web.iisermohali.ac.in": {
+  "fetched": "2026-11-28T08:26:00.062Z",
+  "status": 404,
+  "body": ""
+ },
+ "https://apply.iiserkol.ac.in": {
+  "fetched": "2026-11-28T08:25:59.898Z",
+  "status": 404,
+  "body": ""
+ },
+ "https://www.iisertvm.ac.in": {
+  "fetched": "2026-11-28T08:26:00.604Z",
+  "status": 404,
+  "body": ""
+ },
+ "https://www.iiserb.ac.in": {
+  "fetched": "2026-11-28T08:26:01.158Z",
+  "status": 200,
+  "body": "User-agent: *\r\nDisallow: \r\n\r\nDisallow: /old/*\r\nDisallow: /assets/*\r\nDisallow: /assets_external/tender/*   \r\nSitemap: https://www.iiserb.ac.in/sitemap.xml \r\n"
+ },
+ "https://www.iiserbpr.ac.in": {
+  "fetched": "2026-11-28T08:26:00.934Z",
+  "status": 200,
+  "body": "User-agent: *\r\nAllow: /\r\n\r\nSitemap: https://www.iiserbpr.ac.in/sitemap.xml"
+ },
+ "https://www.iisermohali.ac.in": {
+  "fetched": "2026-11-28T08:26:00.909Z",
+  "status": 200,
+  "body": "# If the Joomla site is installed within a folder such as at\n# e.g. www.example.com/joomla/ the robots.txt file MUST be\n# moved to the site root at e.g. www.example.com/robots.txt\n# AND the joomla folder name MUST be prefixed to the disallowed\n# path, e.g. the Disallow rule for the /administrator/ folder\n# MUST be changed to read Disallow: /joomla/administrator/\n#\n# For more information about the robots.txt standard, see:\n# http://www.robotstxt.org/orig.html\n#\n# For syntax checking, see:\n# http://tool.motoricerca.info/robots-checker.phtml\n\nUser-agent: *\nDisallow: /administrator/\nDisallow: /bin/\nDisallow: /cache/\nDisallow: /cli/\nDisallow: /components/\nDisallow: /includes/\nDisallow: /installation/\nDisallow: /language/\nDisallow: /layouts/\nDisallow: /libraries/\nDisallow: /logs/\nDisallow: /modules/\nDisallow: /plugins/\nDisallow: /tmp/\n\n"
+ },
+ "https://phdadmission.iiserb.ac.in": {
+  "fetched": "2026-11-28T08:26:00.931Z",
+  "status": 200,
+  "body": "User-agent: *\nDisallow: /system/\nDisallow: /writable/\nDisallow: /vendor/\nDisallow: /tests/\nDisallow: /app/\nDisallow: /env\nDisallow: /assests/\nDisallow: /captcha/\nDisallow: /data/\nDisallow: /temp/\n\n# Block indexing of certain file types (e.g., logs, environment files)\nDisallow: /*.log$\nDisallow: /*.env$\n\n# Allow everything else\nUser-agent: *\nAllow: /\nAllow: /assests/User Manual-Phd Admission Portal.pdf \n\nSitemap: https://phdadmission.iiserb.ac.in/sitemap.xml\n"
+ },
+ "https://www.iisertirupati.ac.in": {
+  "fetched": "2026-11-27T21:39:51.658Z",
+  "status": 200,
+  "body": "\nUser-agent: *\nDisallow: /wp-admin/\nAllow: /wp-admin/admin-ajax.php\n\nSitemap: https://www.iisertirupati.ac.in/wp-sitemap.xml\n"
+ },
+ "https://www.icts.res.in": {
+  "fetched": "2026-11-28T08:26:01.209Z",
+  "status": 200,
+  "body": "#\n# robots.txt\n#\n# This file is to prevent the crawling and indexing of certain parts\n# of your site by web crawlers and spiders run by sites like Yahoo!\n# and Google. By telling these \"robots\" where not to go on your site,\n# you save bandwidth and server resources.\n#\n# This file will be ignored unless it is at the root of your host:\n# Used:    http://example.com/robots.txt\n# Ignored: http://example.com/site/robots.txt\n#\n# For more information about the robots.txt standard, see:\n# http://www.robotstxt.org/robotstxt.html\n\nUser-agent: *\nCrawl-delay: 10\n# CSS, JS, Images\nAllow: /misc/*.css$\nAllow: /misc/*.css?\nAllow: /misc/*.js$\nAllow: /misc/*.js?\nAllow: /misc/*.gif\nAllow: /misc/*.jpg\nAllow: /misc/*.jpeg\nAllow: /misc/*.png\nAllow: /modules/*.css$\nAllow: /modules/*.css?\nAllow: /modules/*.js$\nAllow: /modules/*.js?\nAllow: /modules/*.gif\nAllow: /modules/*.jpg\nAllow: /modules/*.jpeg\nAllow: /modules/*.png\nAllow: /profiles/*.css$\nAllow: /profiles/*.css?\nAllow: /profiles/*.js$\nAllow: /profiles/*.js?\nAllow: /profiles/*.gif\nAllow: /profiles/*.jpg\nAllow: /profiles/*.jpeg\nAllow: /profiles/*.png\nAllow: /themes/*.css$\nAllow: /themes/*.css?\nAllow: /themes/*.js$\nAllow: /themes/*.js?\nAllow: /themes/*.gif\nAllow: /themes/*.jpg\nAllow: /themes/*.jpeg\nAllow: /themes/*.png\n# Directories\nDisallow: /includes/\nDisallow: /misc/\nDisallow: /modules/\nDisallow: /profiles/\nDisallow: /scripts/\nDisallow: /themes/\n# Files\nDisallow: /CHANGELOG.txt\nDisallow: /cron.php\nDisallow: /INSTALL.mysql.txt\nDisallow: /INSTALL.pgsql.txt\nDisallow: /INSTALL.sqlite.txt\nDisallow: /install.php\nDisallow: /INSTALL.txt\nDisallow: /LICENSE.txt\nDisallow: /MAINTAINERS.txt\nDisallow: /update.php\nDisallow: /UPGRADE.txt\nDisallow: /xmlrpc.php\n# Paths (clean URLs)\nDisallow: /admin/\nDisallow: /comment/reply/\nDisallow: /filter/tips/\nDisallow: /node/add/\nDisallow: /search/\nDisallow: /user/register/\nDisallow: /user/password/\nDisallow: /user/login/\nDisallow: /user/logout/\n# Paths (no clean URLs)\nDisallow: /?q=admin/\nDisallow: /?q=comment/reply/\nDisallow: /?q=filter/tips/\nDisallow: /?q=node/add/\nDisallow: /?q=search/\nDisallow: /?q=user/password/\nDisallow: /?q=user/register/\nDisallow: /?q=user/login/\nDisallow: /?q=user/logout/\n"
+ },
+ "https://www.iisc.ac.in": {
+  "fetched": "2026-11-28T08:26:01.235Z",
+  "status": 200,
+  "body": "\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\nUser-agent: *\nDisallow: /wp-admin/\nAllow: /wp-admin/admin-ajax.php\n"
+ },
+ "https://www.saha.ac.in": {
+  "fetched": "2026-11-28T08:26:02.193Z",
+  "status": 404,
+  "body": ""
+ },
+ "https://www.rri.res.in": {
+  "fetched": "2026-11-28T08:26:01.941Z",
+  "status": 200,
+  "body": "#\n# robots.txt\n#\n# This file is to prevent the crawling and indexing of certain parts\n# of your site by web crawlers and spiders run by sites like Yahoo!\n# and Google. By telling these \"robots\" where not to go on your site,\n# you save bandwidth and server resources.\n#\n# This file will be ignored unless it is at the root of your host:\n# Used:    http://example.com/robots.txt\n# Ignored: http://example.com/site/robots.txt\n#\n# For more information about the robots.txt standard, see:\n# http://www.robotstxt.org/robotstxt.html\n\nUser-agent: *\n# CSS, JS, Images\nAllow: /core/*.css$\nAllow: /core/*.css?\nAllow: /core/*.js$\nAllow: /core/*.js?\nAllow: /core/*.gif\nAllow: /core/*.jpg\nAllow: /core/*.jpeg\nAllow: /core/*.png\nAllow: /core/*.svg\nAllow: /profiles/*.css$\nAllow: /profiles/*.css?\nAllow: /profiles/*.js$\nAllow: /profiles/*.js?\nAllow: /profiles/*.gif\nAllow: /profiles/*.jpg\nAllow: /profiles/*.jpeg\nAllow: /profiles/*.png\nAllow: /profiles/*.svg\n# Directories\nDisallow: /core/\nDisallow: /profiles/\n# Files\nDisallow: /README.md\nDisallow: /composer/Metapackage/README.txt\nDisallow: /composer/Plugin/ProjectMessage/README.md\nDisallow: /composer/Plugin/Scaffold/README.md\nDisallow: /composer/Plugin/VendorHardening/README.txt\nDisallow: /composer/Template/README.txt\nDisallow: /modules/README.txt\nDisallow: /sites/README.txt\nDisallow: /themes/README.txt\n# Paths (clean URLs)\nDisallow: /admin/\nDisallow: /comment/reply/\nDisallow: /filter/tips\nDisallow: /node/add/\nDisallow: /search/\nDisallow: /user/register\nDisallow: /user/password\nDisallow: /user/login\nDisallow: /user/logout\nDisallow: /media/oembed\nDisallow: /*/media/oembed\n# Paths (no clean URLs)\nDisallow: /index.php/admin/\nDisallow: /index.php/comment/reply/\nDisallow: /index.php/filter/tips\nDisallow: /index.php/node/add/\nDisallow: /index.php/search/\nDisallow: /index.php/user/password\nDisallow: /index.php/user/register\nDisallow: /index.php/user/login\nDisallow: /index.php/user/logout\nDisallow: /index.php/media/oembed\nDisallow: /index.php/*/media/oembed\n"
+ },
+ "https://www.iopb.res.in": {
+  "fetched": "2026-11-28T08:26:01.934Z",
+  "status": 200,
+  "body": "User-agent: *\nDisallow: /wp-admin/\nAllow: /wp-admin/admin-ajax.php\n\nSitemap: https://www.iopb.res.in/wp-sitemap.xml\n"
+ },
+ "https://www.iucaa.in": {
+  "fetched": "2026-11-28T08:26:02.455Z",
+  "status": 200,
+  "body": "# If the Joomla site is installed within a folder \n# eg www.example.com/joomla/ then the robots.txt file \n# MUST be moved to the site root \n# eg www.example.com/robots.txt\n# AND the joomla folder name MUST be prefixed to all of the\n# paths. \n# eg the Disallow rule for the /administrator/ folder MUST \n# be changed to read \n# Disallow: /joomla/administrator/\n#\n# For more information about the robots.txt standard, see:\n# http://www.robotstxt.org/orig.html\n#\n# For syntax checking, see:\n# http://tool.motoricerca.info/robots-checker.phtml\n\nUser-agent: *\nDisallow: /administrator/\nDisallow: /bin/\nDisallow: /cache/\nDisallow: /cli/\nDisallow: /components/\nDisallow: /includes/\nDisallow: /installation/\nDisallow: /language/\nDisallow: /layouts/\nDisallow: /libraries/\nDisallow: /logs/\nDisallow: /modules/\nDisallow: /plugins/\nDisallow: /tmp/\n\n"
+ },
+ "https://www.tifrh.res.in": {
+  "fetched": "2026-11-28T08:26:02.445Z",
+  "status": 200,
+  "body": "User-agent: *\nDisallow: /wp-admin/\nAllow: /wp-admin/admin-ajax.php\n\nSitemap: https://www.tifrh.res.in/wp-sitemap.xml\n"
+ },
+ "https://www.bose.res.in": {
+  "fetched": "2026-11-27T21:39:54.289Z",
+  "status": 200,
+  "body": "User-agent: *\nDisallow: /site-admin"
+ },
+ "https://www.isibang.ac.in": {
+  "fetched": "2026-11-28T08:26:07.927Z",
+  "status": 404,
+  "body": ""
+ },
+ "https://www.aries.res.in": {
+  "fetched": "2026-11-28T08:26:12.869Z",
+  "status": 200,
+  "body": "#\n# robots.txt\n#\n# This file is to prevent the crawling and indexing of certain parts\n# of your site by web crawlers and spiders run by sites like Yahoo!\n# and Google. By telling these \"robots\" where not to go on your site,\n# you save bandwidth and server resources.\n#\n# This file will be ignored unless it is at the root of your host:\n# Used:    http://example.com/robots.txt\n# Ignored: http://example.com/site/robots.txt\n#\n# For more information about the robots.txt standard, see:\n# http://www.robotstxt.org/robotstxt.html\n\nUser-agent: *\n# CSS, JS, Images\nAllow: /core/*.css$\nAllow: /core/*.css?\nAllow: /core/*.js$\nAllow: /core/*.js?\nAllow: /core/*.gif\nAllow: /core/*.jpg\nAllow: /core/*.jpeg\nAllow: /core/*.png\nAllow: /core/*.svg\nAllow: /profiles/*.css$\nAllow: /profiles/*.css?\nAllow: /profiles/*.js$\nAllow: /profiles/*.js?\nAllow: /profiles/*.gif\nAllow: /profiles/*.jpg\nAllow: /profiles/*.jpeg\nAllow: /profiles/*.png\nAllow: /profiles/*.svg\n# Directories\nDisallow: /core/\nDisallow: /profiles/\n# Files\nDisallow: /README.txt\nDisallow: /web.config\n# Paths (clean URLs)\nDisallow: /admin/\nDisallow: /comment/reply/\nDisallow: /filter/tips\nDisallow: /node/add/\nDisallow: /search/\nDisallow: /user/register/\nDisallow: /user/password/\nDisallow: /user/login/\nDisallow: /user/logout/\n# Paths (no clean URLs)\nDisallow: /index.php/admin/\nDisallow: /index.php/comment/reply/\nDisallow: /index.php/filter/tips\nDisallow: /index.php/node/add/\nDisallow: /index.php/search/\nDisallow: /index.php/user/password/\nDisallow: /index.php/user/register/\nDisallow: /index.php/user/login/\nDisallow: /index.php/user/logout/\n"
+ },
+ "https://www.ncra.tifr.res.in": {
+  "fetched": "2026-11-28T08:26:07.094Z",
+  "status": 200,
+  "body": "User-agent: *\nDisallow:\n"
+ },
+ "https://www.jncasr.ac.in": {
+  "fetched": "2026-11-28T08:26:08.420Z",
+  "status": 200,
+  "body": "#\n# robots.txt\n#\n# This file is to prevent the crawling and indexing of certain parts\n# of your site by web crawlers and spiders run by sites like Yahoo!\n# and Google. By telling these \"robots\" where not to go on your site,\n# you save bandwidth and server resources.\n#\n# This file will be ignored unless it is at the root of your host:\n# Used:    http://example.com/robots.txt\n# Ignored: http://example.com/site/robots.txt\n#\n# For more information about the robots.txt standard, see:\n# http://www.robotstxt.org/robotstxt.html\n\nUser-agent: *\n# CSS, JS, Images\nAllow: /core/*.css$\nAllow: /core/*.css?\nAllow: /core/*.js$\nAllow: /core/*.js?\nAllow: /core/*.gif\nAllow: /core/*.jpg\nAllow: /core/*.jpeg\nAllow: /core/*.png\nAllow: /core/*.svg\nAllow: /profiles/*.css$\nAllow: /profiles/*.css?\nAllow: /profiles/*.js$\nAllow: /profiles/*.js?\nAllow: /profiles/*.gif\nAllow: /profiles/*.jpg\nAllow: /profiles/*.jpeg\nAllow: /profiles/*.png\nAllow: /profiles/*.svg\n\n# Keep aggregated CSS/JS and site chrome crawlable so Google can\n# render pages correctly. Remove these if you want a total block.\nAllow: /sites/default/files/css/\nAllow: /sites/default/files/js/\n\n# Directories\nDisallow: /core/\nDisallow: /profiles/\n\n# Restricted / internal-access areas\nDisallow: /vpn\nDisallow: /vpn/\nDisallow: /vpn/*\nDisallow: /intraweb\nDisallow: /intraweb/\nDisallow: /intraweb/*\nDisallow: /index.php/vpn\nDisallow: /index.php/intraweb\nDisallow: /hi/vpn\nDisallow: /hi/intraweb\n\n# Block all public file uploads\nDisallow: /sites/default/files/\nDisallow: /sites/default/files/*\nDisallow: /index.php/sites/default/files/\n\n# Directories\nDisallow: /core/\nDisallow: /profiles/\nDisallow: /modules/\nDisallow: /themes/\nDisallow: /includes/\nDisallow: /misc/\nDisallow: /scripts/\n\n# Files\nDisallow: /README.md\nDisallow: /composer/Metapackage/README.txt\nDisallow: /composer/Plugin/ProjectMessage/README.md\nDisallow: /composer/Plugin/Scaffold/README.md\nDisallow: /composer/Plugin/VendorHardening/README.txt\nDisallow: /composer/Template/README.txt\nDisallow: /modules/README.txt\nDisallow: /sites/README.txt\nDisallow: /themes/README.txt\nDisallow: /INSTALL.txt\nDisallow: /CHANGELOG.txt\nDisallow: /LICENSE.txt\nDisallow: /MAINTAINERS.txt\nDisallow: /UPGRADE.txt\nDisallow: /composer.json\nDisallow: /composer.lock\nDisallow: /web.config\n\n# Paths (clean URLs)\nDisallow: /admin/\nDisallow: /comment/reply/\nDisallow: /filter/tips\nDisallow: /node/add/\nDisallow: /search/\nDisallow: /user/register\nDisallow: /user/password\nDisallow: /user/login\nDisallow: /user/logout\nDisallow: /media/oembed\nDisallow: /*/media/oembed\n\n# Paths (no clean URLs)\nDisallow: /index.php/admin/\nDisallow: /index.php/comment/reply/\nDisallow: /index.php/filter/tips\nDisallow: /index.php/node/add/\nDisallow: /index.php/search/\nDisallow: /index.php/user/password\nDisallow: /index.php/user/register\nDisallow: /index.php/user/login\nDisallow: /index.php/user/logout\nDisallow: /index.php/media/oembed\nDisallow: /index.php/*/media/oembed\n\n# Query-string noise (sorting, pagination, tracking)\nDisallow: /*?page=\nDisallow: /*?sort=\nDisallow: /*?order=\nDisallow: /*?destination=\n\n# Optional: slow down aggressive crawlers (ignored by Googlebot)\n# Crawl-delay: 10\n\n# NOTE: /sitemap is the human-readable HTML sitemap page and is NOT\n# valid here. This directive needs an XML sitemap. Verify the URL below\n# returns XML before deploying; if it 404s, install the\n# \"Simple XML Sitemap\" (simple_sitemap) contrib module first, or delete\n# this line entirely rather than leave a broken reference.\n# Sitemap: https://www.jncasr.ac.in/sitemap.xml\n"
+ },
+ "https://www.iiap.res.in": {
+  "fetched": "2026-11-28T08:26:08.033Z",
+  "status": 200,
+  "body": "# robots.txt\nUser-agent: *\nDisallow: /admin/\nDisallow: /django-admin/\nDisallow: /*.pdf$\nDisallow: /*.gif$\n\nSitemap: https://www.iiap.res.in/sitemap.xml\n"
+ },
+ "https://www.niser.ac.in": {
+  "fetched": "2026-11-28T08:26:12.957Z",
+  "status": 200,
+  "body": "User-agent: *\r\nDisallow: /storage/\r\nDisallow: /dashboard\r\nDisallow: /login\r\nDisallow: /password\r\nDisallow: /intranet\r\nAllow: /~\r\n\r\nSitemap: https://www.niser.ac.in/sitemap.xml\r\n"
+ },
+ "https://aries.res.in": {
+  "fetched": "2026-11-24T09:13:26.995Z",
+  "status": 200,
+  "body": "#\n# robots.txt\n#\n# This file is to prevent the crawling and indexing of certain parts\n# of your site by web crawlers and spiders run by sites like Yahoo!\n# and Google. By telling these \"robots\" where not to go on your site,\n# you save bandwidth and server resources.\n#\n# This file will be ignored unless it is at the root of your host:\n# Used:    http://example.com/robots.txt\n# Ignored: http://example.com/site/robots.txt\n#\n# For more information about the robots.txt standard, see:\n# http://www.robotstxt.org/robotstxt.html\n\nUser-agent: *\n# CSS, JS, Images\nAllow: /core/*.css$\nAllow: /core/*.css?\nAllow: /core/*.js$\nAllow: /core/*.js?\nAllow: /core/*.gif\nAllow: /core/*.jpg\nAllow: /core/*.jpeg\nAllow: /core/*.png\nAllow: /core/*.svg\nAllow: /profiles/*.css$\nAllow: /profiles/*.css?\nAllow: /profiles/*.js$\nAllow: /profiles/*.js?\nAllow: /profiles/*.gif\nAllow: /profiles/*.jpg\nAllow: /profiles/*.jpeg\nAllow: /profiles/*.png\nAllow: /profiles/*.svg\n# Directories\nDisallow: /core/\nDisallow: /profiles/\n# Files\nDisallow: /README.txt\nDisallow: /web.config\n# Paths (clean URLs)\nDisallow: /admin/\nDisallow: /comment/reply/\nDisallow: /filter/tips\nDisallow: /node/add/\nDisallow: /search/\nDisallow: /user/register/\nDisallow: /user/password/\nDisallow: /user/login/\nDisallow: /user/logout/\n# Paths (no clean URLs)\nDisallow: /index.php/admin/\nDisallow: /index.php/comment/reply/\nDisallow: /index.php/filter/tips\nDisallow: /index.php/node/add/\nDisallow: /index.php/search/\nDisallow: /index.php/user/password/\nDisallow: /index.php/user/register/\nDisallow: /index.php/user/login/\nDisallow: /index.php/user/logout/\n"
+ }
+}
